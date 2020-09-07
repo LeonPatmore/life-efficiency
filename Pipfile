@@ -1,0 +1,7 @@
+[requires]
+python_version = '3.6'
+
+[packages]
+google-api-python-client = '*'
+google-auth-oauthlib = '*'
+gspread = "*"
