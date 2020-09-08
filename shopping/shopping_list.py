@@ -14,3 +14,4 @@ class ShoppingListWorksheet(ShoppingList):
 
     def add_item(self, item: str):
         self.worksheet.insert_row([item], 1)
+

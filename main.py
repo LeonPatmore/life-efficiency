@@ -1,6 +1,6 @@
 import gspread
 
-from shopping_list import ShoppingListWorksheet
+from shopping.shopping_list import ShoppingListWorksheet
 
 
 def main():
