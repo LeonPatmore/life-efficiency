@@ -1,6 +1,6 @@
 import gspread
 
-from shopping.shopping_item import ShoppingItems
+from shopping.shopping_items import ShoppingItems
 
 
 class ShoppingList(object):
