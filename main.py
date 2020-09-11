@@ -1,5 +1,8 @@
 import gspread
 
+from shopping.history.shopping_history import ShoppingHistoryWorksheet
+from shopping.shopping_item_purchase import ShoppingItemPurchase
+from shopping.shopping_items import ShoppingItems
 from shopping.shopping_list import ShoppingListWorksheet
 
 
@@ -10,7 +13,11 @@ def main():
 
     shopping_list_worksheet = spreadsheet.worksheet("Sheet1")
     shopping_list = ShoppingListWorksheet(shopping_list_worksheet)
-    shopping_list.add_item("hello")
+
+    if not [x for x in spreadsheet.worksheets() if x.title == "History"]:
+        spreadsheet.add_worksheet('History', 100, 100)
+    shopping_history_worksheet = ShoppingHistoryWorksheet(spreadsheet.worksheet("History"))
+    shopping_history_worksheet.add_purchase(ShoppingItemPurchase(ShoppingItems.CHOCOLATE_MILKSHAKE, 2))
 
 
 if __name__ == '__main__':

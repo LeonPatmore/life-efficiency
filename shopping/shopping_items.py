@@ -6,13 +6,15 @@ class ShoppingItems(enum.Enum):
     Represents a shopping item.
     """
 
-    def __new__(cls, *args, **kwargs):
-        value = len(cls.__members__) + 1
+    def __new__(cls, *args, **kwds):
         obj = object.__new__(cls)
-        obj._value_ = value
+        obj._value_ = args[0]
         return obj
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, _: str):
+        pass
+
+    def __str__(self):
+        return self.value
 
     CHOCOLATE_MILKSHAKE = 'chocolate milkshake'
