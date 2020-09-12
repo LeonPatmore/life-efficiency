@@ -1,6 +1,7 @@
 import logging
 import gspread
 
+from helpers.datetime import datetime_to_string, string_to_datetime
 from shopping.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_items import ShoppingItems
 
@@ -32,13 +33,16 @@ class ShoppingHistoryWorksheet(ShoppingHistory):
         for worksheet_row in worksheet_values:
             # noinspection PyBroadException
             try:
-                item = worksheet_row[0]
-                quantity = worksheet_row[1]
-                purchases.append(ShoppingItemPurchase(ShoppingItems[item], quantity))
+                item = ShoppingItems[worksheet_row[0]]
+                quantity = int(worksheet_row[1])
+                datetime = string_to_datetime(worksheet_row[2])
+                purchases.append(ShoppingItemPurchase(item, quantity, datetime))
             except Exception:
                 logging.warning("Could not parse row, [ {} ]", worksheet_row)
         return purchases
 
     def add_purchase(self, purchase: ShoppingItemPurchase):
-        self.worksheet.insert_row([purchase.item.name, purchase.quantity], 1)
+        self.worksheet.insert_row([purchase.item.name,
+                                   purchase.quantity,
+                                   datetime_to_string(purchase.purchase_datetime)], 1)
         self.purchases.append(purchase)
