@@ -9,9 +9,8 @@ jobs:
     steps:
       - checkout
       - run: pipenv install -d
-      - run: export PYTHONPATH=${PYTHONPATH}:./life-efficiency
       - run: pipenv run python -m flake8
-      - run: pipenv run python -m pytest --cov=life-efficiency
+      - run: export PYTHONPATH=${PYTHONPATH}:./life-efficiency & pipenv run python -m pytest --cov=life-efficiency
 
 workflows:
   main:
