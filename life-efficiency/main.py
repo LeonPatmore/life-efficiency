@@ -3,7 +3,7 @@ import gspread
 from shopping.history.shopping_history import ShoppingHistoryWorksheet
 from shopping.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_items import ShoppingItems
-from shopping.shopping_list import ShoppingListWorksheet
+# from shopping.shopping_list import ShoppingListWorksheet
 
 
 def main():
@@ -11,8 +11,8 @@ def main():
     spreadsheet = gc.open_by_url(
         "https://docs.google.com/spreadsheets/d/12vPGwr5Ds3ZygiHf0-XXVXuOZFhH7VTLrWioUroeUbA/edit#gid=0")
 
-    shopping_list_worksheet = spreadsheet.worksheet("Sheet1")
-    shopping_list = ShoppingListWorksheet(shopping_list_worksheet)
+    # shopping_list_worksheet = spreadsheet.worksheet("Sheet1")
+    # shopping_list = ShoppingListWorksheet(shopping_list_worksheet)
 
     if not [x for x in spreadsheet.worksheets() if x.title == "History"]:
         spreadsheet.add_worksheet('History', 100, 100)

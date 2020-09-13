@@ -1,0 +1,18 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@0.2.1
+
+jobs:
+  test_and_lint:
+    executor: python/default
+    steps:
+      - checkout
+      - run: pipenv install -d
+      - run: pipenv run python -m flake8
+      - run: pipenv run python -m pytest --cov=life-efficiency
+
+workflows:
+  main:
+    jobs:
+      - test_and_lint
