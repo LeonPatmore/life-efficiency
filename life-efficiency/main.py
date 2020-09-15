@@ -5,10 +5,11 @@ from shopping.history.shopping_history import ShoppingHistoryWorksheet
 from shopping.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_items import ShoppingItems
 # from shopping.shopping_list import ShoppingListWorksheet
+from shopping_commands import shopping
 
 
 @click.group()
-def main():
+def main_group():
     pass
 
 
@@ -28,8 +29,8 @@ def create():
     shopping_history_worksheet.add_purchase(ShoppingItemPurchase(ShoppingItems.CHOCOLATE_MILKSHAKE, 2))
 
 
-main.add_command(create)
+main_group.add_command(shopping)
 
 
 if __name__ == '__main__':
-    main()
+    main_group()

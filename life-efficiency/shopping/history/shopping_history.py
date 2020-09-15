@@ -14,8 +14,11 @@ class ShoppingHistory(object):
     def _load_all_purchases(self):
         raise NotImplementedError()
 
-    def get_purchases_for_item(self, item: ShoppingItems):
+    def get_purchases_for_item(self, item: ShoppingItems) -> list:
         return [x for x in self.purchases if x.item == item]
+
+    def get_all_purchases(self) -> list:
+        return self.purchases
 
     def add_purchase(self, purchase: ShoppingItemPurchase):
         raise NotImplementedError()
