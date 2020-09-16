@@ -18,3 +18,8 @@ class ShoppingItems(enum.Enum):
         return self.value
 
     CHOCOLATE_MILKSHAKE = 'chocolate milkshake'
+    MOUTHWASH = 'mouthwash'
+    APPLES = 'apples'
+    GRAPES = 'grapes'
+    PEARS = 'pears'
+
