@@ -22,4 +22,3 @@ class ShoppingItems(enum.Enum):
     APPLES = 'apples'
     GRAPES = 'grapes'
     PEARS = 'pears'
-
