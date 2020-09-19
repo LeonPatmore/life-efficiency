@@ -2,10 +2,10 @@ import gspread
 import click
 
 from shopping.history.shopping_history import ShoppingHistoryWorksheet
-from shopping.shopping_item_purchase import ShoppingItemPurchase
+from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_items import ShoppingItems
 # from shopping.shopping_list import ShoppingListWorksheet
-from shopping_commands import shopping
+from shopping.shopping_commands import shopping
 
 
 @click.group()

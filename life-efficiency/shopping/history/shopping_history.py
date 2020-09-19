@@ -2,7 +2,7 @@ import logging
 import gspread
 
 from helpers.datetime import datetime_to_string, string_to_datetime
-from shopping.shopping_item_purchase import ShoppingItemPurchase
+from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_items import ShoppingItems
 
 
