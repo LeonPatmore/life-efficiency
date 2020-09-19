@@ -1,5 +1,8 @@
 # Life Efficiency
 
+[![<LeonPatmore>](https://circleci.com/gh/LeonPatmore/life-efficiency.svg?style=shield)](<LINK>)
+
+
 A project to improve the efficiency of my life!
 
 ## Running Locally
