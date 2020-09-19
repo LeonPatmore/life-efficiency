@@ -4,10 +4,10 @@ from helpers.datetime import datetime_to_string, string_to_datetime
 
 
 def test_datetime_to_string():
-    some_datetime = datetime(1, 3, 2, 5, 1, 2)
+    some_datetime = datetime(2012, 3, 2, 5, 1, 2)
     string = datetime_to_string(some_datetime)
 
-    assert string == "02/03/0001, 05:01:02"
+    assert string == "02/03/2012, 05:01:02"
 
 
 def test_string_to_datetime():
