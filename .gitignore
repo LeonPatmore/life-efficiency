@@ -1,5 +1,6 @@
 credentials.json
 .idea
 **/*.pyc
-.pytest_cache
+**/.pytest_cache
 .coverage
+**/__pycache__
