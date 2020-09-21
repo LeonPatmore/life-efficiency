@@ -4,3 +4,4 @@ credentials.json
 **/.pytest_cache
 .coverage
 **/__pycache__
+.aws-sam
