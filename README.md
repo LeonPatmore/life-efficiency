@@ -35,7 +35,9 @@ We are using flake8 as our super cool Python linter.
 
 1. Update the requirements file: `pipenv lock -r > requirements.txt`.
 
-2. Build
+2. Build `sam build`
+
+## Running `sam local start-api`
 
 ## TODO
 https://github.com/todotxt/todo.txt
