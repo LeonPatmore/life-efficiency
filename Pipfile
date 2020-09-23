@@ -5,9 +5,11 @@ python_version = '3'
 google-api-python-client = '*'
 google-auth-oauthlib = '*'
 gspread = "*"
-click="*"
+click = "*"
+boto3 = "*"
 
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
 flake8 = "*"
+python-dotenv = "*"

@@ -15,6 +15,12 @@ All commands should be ran from the root of the repo.
 
     `set PYTHONPATH=%PYTHONPATH%;.\life-efficiency`
 
+2. Make sure your AWS credentials are setup:
+
+    **Windows**:
+
+    `set AWS_CONFIG_FILE=D:\Tools\cygwin\home\Leon\.aws\config`
+
 2. `pipenv install -d`
 
 3. `pipenv run python life-efficiency/main.py`
@@ -33,11 +39,13 @@ We are using flake8 as our super cool Python linter.
 
 ## Building
 
-1. Update the requirements file: `pipenv lock -r > requirements.txt`.
+1. Update the requirements file: `pipenv lock -r > life-efficiency/requirements.txt`.
 
 2. Build `sam build`
 
-## Running `sam local start-api`
+## Running
+
+`sam local start-api`
 
 ## TODO
 https://github.com/todotxt/todo.txt

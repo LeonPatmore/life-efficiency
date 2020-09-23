@@ -1,5 +1,13 @@
-import gspread
+import boto3
 
-gc = gspread.service_account(filename="credentials.json")
-spreadsheet = gc.open_by_url(
-    "https://docs.google.com/spreadsheets/d/12vPGwr5Ds3ZygiHf0-XXVXuOZFhH7VTLrWioUroeUbA/edit#gid=0")
+from spreadsheet.spreadsheet_client_loader import SpreadsheetLoaderAWS
+
+# Only load env in dev.
+try:
+    import dotenv
+except ImportError as e:
+    dotenv = None
+if dotenv:
+    dotenv.load_dotenv()
+
+spreadsheet = SpreadsheetLoaderAWS(boto3.client("s3")).spreadsheet
