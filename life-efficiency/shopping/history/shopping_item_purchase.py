@@ -18,3 +18,10 @@ class ShoppingItemPurchase(object):
 
     def __repr__(self):
         return self.__str__()
+
+    def to_json(self):
+        return {
+            "item": self.item.name,
+            "quantity": self.quantity,
+            "date": self.purchase_datetime
+        }

@@ -21,6 +21,8 @@ All commands should be ran from the root of the repo.
 
     `set AWS_CONFIG_FILE=D:\Tools\cygwin\home\Leon\.aws\config`
 
+    `set AWS_SHARED_CREDENTIALS_FILE=D:\Tools\cygwin\home\Leon\.aws\credentials`
+
 2. `pipenv install -d`
 
 3. `pipenv run python life-efficiency/main.py`
@@ -41,11 +43,15 @@ We are using flake8 as our super cool Python linter.
 
 1. Update the requirements file: `pipenv lock -r > life-efficiency/requirements.txt`.
 
-2. Build `sam build`
+2. Build `sam build -u`
 
-## Running
+## Running Lambda Locally
 
 `sam local start-api`
+
+## Deploying
+
+`sam deploy`
 
 ## TODO
 https://github.com/todotxt/todo.txt

@@ -1,3 +1,4 @@
 x 19/09/2020 11/09/2020 Add CI @ci
 11/09/2020 Add package
 19/09/2020 Fix git ignore file
+24/09/2020 Add auth to lambda endpoints

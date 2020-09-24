@@ -34,6 +34,6 @@ class SpreadsheetLoaderAWS(SpreadsheetLoader):
         super().__init__()
 
     def _get_credentials_filename(self):
-        file_name = "credentials.json"
+        file_name = "/tmp/credentials.json"
         self.s3_client.download_file(self.bucket_name, self.s3_file_name, file_name)
         return file_name

@@ -1,15 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description:
+Description: "Life efficiency endpoints!"
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
     Function:
-        Timeout: 5
+        Timeout: 15
         Runtime: python3.8
         Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
-        AutoPublishAlias: live # More info about Safe Deployments: https://github.com/awslabs/serverless-application-model/blob/master/docs/safe_lambda_deployments.rst
-        DeploymentPreference:
-            Type: Linear10PercentEvery1Minute {% endif %}
         Environment:
             Variables:
                 # Powertools env vars: https://awslabs.github.io/aws-lambda-powertools-python/#environment-variables
@@ -18,6 +15,7 @@ Globals:
                 POWERTOOLS_LOGGER_LOG_EVENT: true
                 POWERTOOLS_METRICS_NAMESPACE: MyServerlessApplication
                 POWERTOOLS_SERVICE_NAME: hello
+                SPREADSHEET_KEY: "12vPGwr5Ds3ZygiHf0-XXVXuOZFhH7VTLrWioUroeUbA"
 
 Resources:
     HelloWorldFunction:
@@ -26,41 +24,18 @@ Resources:
             Handler: shopping.shopping_lambda_handlers.get_history
             CodeUri: life-efficiency
             Description: Hello World function
+            Policies:
+              - S3ReadPolicy:
+                  BucketName: "life-efficiency"
             Events:
                 CatchAll:
-                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+                    Type: Api
                     Properties:
-                        Path: /hello
+                        Path: /shopping/history
                         Method: GET
-            # Policies: # Example inline policy
-            #     - Version: "2012-10-17"
-            #     Statement:
-            #         - Effect: "Allow"
-            #         Action:
-            #             - "ssm:GetParameter"
-            #         Resource:
-            #             - "*"
-            Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
-                Variables:
-                    PARAM1: VALUE
             Tags:
-                SOLUTION: MyServerlessApplication
-                SOLUTION_MODULE: MyHelloWorldFunction
-
-    # Sample policy to add additional permissions to your Lambda
-    HelloWorldFunctionAdditionalPermission:
-        Type: "AWS::IAM::Policy"
-        Properties:
-            PolicyName: "root"
-            PolicyDocument:
-                Version: "2012-10-17"
-                Statement:
-                    -
-                        Effect: "Allow"
-                        Action: "ssm:GetParameters"
-                        Resource: "*"
-            Roles:
-                - !Ref HelloWorldFunctionRole # Sample policy to demonstrate Implicit IAM Role created with SAM
+                PARENT_COMMAND: SHOPPING
+                COMMAND: HISTORY
 
 Outputs:
     HelloWorldApigwURL:
