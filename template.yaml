@@ -21,7 +21,7 @@ Resources:
     HelloWorldFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
-            Handler: shopping.shopping_lambda_handlers.get_history
+            Handler: shopping.shopping_lambda_handlers.shopping_handler
             CodeUri: life-efficiency
             Description: Hello World function
             Policies:
@@ -31,7 +31,7 @@ Resources:
                 CatchAll:
                     Type: Api
                     Properties:
-                        Path: /shopping/history
+                        Path: /shopping/{subcommand+}
                         Method: GET
             Tags:
                 PARENT_COMMAND: SHOPPING
