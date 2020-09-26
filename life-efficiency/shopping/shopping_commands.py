@@ -1,6 +1,5 @@
 import click
 
-from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_configuration import shopping_manager
 
 
@@ -21,8 +20,7 @@ def today():
 
 @click.command()
 def complete_today():
-    for item in shopping_manager.todays_items():
-        shopping_manager.shopping_history.add_purchase(ShoppingItemPurchase(item, 1))
+    shopping_manager.complete_today()
 
 
 shopping.add_command(list_history)

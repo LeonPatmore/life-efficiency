@@ -5,7 +5,7 @@ from spreadsheet.spreadsheet_client_loader import SpreadsheetLoaderAWS
 # Only load env in dev.
 try:
     import dotenv
-except ImportError as e:
+except ImportError:
     dotenv = None
 if dotenv:
     dotenv.load_dotenv()

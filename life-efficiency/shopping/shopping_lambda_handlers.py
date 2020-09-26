@@ -13,5 +13,21 @@ def get_history():
     }
 
 
+def get_today():
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'items': shopping_manager.todays_items()
+        }, default=str)
+    }
+
+
+def complete_today():
+    shopping_manager.complete_today()
+    return {'statusCode': 200}
+
+
 shopping_handler = LambdaSplitter('subcommand')
 shopping_handler.add_sub_handler('history', get_history)
+shopping_handler.add_sub_handler('today', get_today)
+shopping_handler.add_sub_handler('today', complete_today, 'POST')

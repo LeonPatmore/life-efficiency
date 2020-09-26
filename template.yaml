@@ -32,7 +32,7 @@ Resources:
                     Type: Api
                     Properties:
                         Path: /shopping/{subcommand+}
-                        Method: GET
+                        Method: any
             Tags:
                 PARENT_COMMAND: SHOPPING
                 COMMAND: HISTORY

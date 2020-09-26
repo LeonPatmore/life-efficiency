@@ -3,6 +3,7 @@ from gspread import Spreadsheet
 from helpers.datetime import get_current_datetime_utc, Day
 from helpers.worksheets import init_worksheet
 from shopping.history.shopping_history import ShoppingHistoryWorksheet, ShoppingHistory
+from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.mealplan.mealplan import MealPlan
 from shopping.predictor.shopping_predictor import ShoppingPredictor
 
@@ -20,6 +21,10 @@ class ShoppingManager(object):
         todays_meal = self.meal_plan.get_meal_for_day(Day(get_current_datetime_utc().weekday()))
         tomorrows_meal = self.meal_plan.get_meal_for_day(Day((get_current_datetime_utc().weekday() + 1) % 7))
         return predicted_repeating_items + todays_meal + tomorrows_meal
+
+    def complete_today(self):
+        for item in self.todays_items():
+            self.shopping_history.add_purchase(ShoppingItemPurchase(item, 1))
 
 
 class ShoppingManagerSpreadsheet(ShoppingManager):
