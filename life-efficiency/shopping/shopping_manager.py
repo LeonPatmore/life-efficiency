@@ -13,7 +13,7 @@ class ShoppingManager(object):
     def __init__(self, meal_plan: MealPlan, shopping_history: ShoppingHistory, repeating_items: list):
         self.meal_plan = meal_plan
         self.shopping_history = shopping_history
-        self.shopping_predictor = ShoppingPredictor(shopping_history)
+        self.shopping_predictor = ShoppingPredictor(shopping_history, get_current_datetime_utc)
         self.repeating_items = repeating_items
 
     def todays_items(self) -> list:
