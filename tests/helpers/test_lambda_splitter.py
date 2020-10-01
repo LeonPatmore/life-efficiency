@@ -31,6 +31,21 @@ def setup_lambda_splitter_with_method_handler():
 _setup_lambda_splitter_with_method_handler = setup_lambda_splitter_with_method_handler
 
 
+@pytest.fixture
+def setup_embedded_lambda_splitter(_setup_lambda_splitter_with_method_handler):
+    lambda_splitter, mock_method, return_value, sub_path = _setup_lambda_splitter_with_method_handler
+
+    top_path_parameter_key = 'path_parameter_2'
+    lambda_splitter_top = LambdaSplitter(top_path_parameter_key)
+    top_sub_path = 'sub_path_2'
+    lambda_splitter_top.add_sub_handler(top_sub_path, lambda_splitter)
+
+    return lambda_splitter_top, top_sub_path, sub_path, top_path_parameter_key, return_value, mock_method
+
+
+_setup_embedded_lambda_splitter = setup_embedded_lambda_splitter
+
+
 def test_sanitise_path_leading_slash():
     some_path = '/hello/bye'
 
@@ -78,9 +93,19 @@ def test_call_when_no_subpath_match(_setup_lambda_splitter_with_method_handler):
         .format(sub_path)
 
 
-# def test_call_when_handler_is_a_lambda_splitter(_setup_lambda_splitter_with_method_handler):
-#     lambda_splitter, mock_method, return_value, sub_path = _setup_lambda_splitter_with_method_handler
-#
-#     lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path), {})
-#
-#     mock_method.assert_called_once_with()
+def test_call_embedded_splitter(_setup_embedded_lambda_splitter):
+    lambda_splitter_top, top_sub_path, sub_path, top_path_parameter_key, return_value, mock_method = \
+        _setup_embedded_lambda_splitter
+
+    event = {
+        'httpMethod': 'GET',
+        'pathParameters': {
+            top_path_parameter_key: top_sub_path,
+            PATH_PARAMETER_KEY: sub_path
+        }
+    }
+
+    result = lambda_splitter_top.__call__(event, {})
+
+    mock_method.assert_called_once_with()
+    assert result == return_value
