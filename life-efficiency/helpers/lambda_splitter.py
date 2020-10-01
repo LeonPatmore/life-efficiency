@@ -10,11 +10,11 @@ class LambdaSplitter(object):
 
     def add_sub_handler(self, sub_path: str, handler: object, method: str = "GET"):
         """
-
-        :param sub_path:
-        :param handler:
-        :param method:
-        :return:
+        Add a sub handler to this splitter.
+        :param str sub_path: Sub path to match.
+        :param types.FunctionType or LambdaSplitter handler: A handler. If it is a function, will call the function with
+            no args. If it is a lambda splitter, will call the lambda splitter.
+        :param str method: The method to match.
         """
         sanitised_sub_path = self.sanitise_path(sub_path)
         if sanitised_sub_path not in self.sub_handlers:

@@ -46,6 +46,18 @@ def setup_embedded_lambda_splitter(_setup_lambda_splitter_with_method_handler):
 _setup_embedded_lambda_splitter = setup_embedded_lambda_splitter
 
 
+@pytest.fixture
+def setup_lambda_splitter_with_unsupported_handler():
+    lambda_splitter = LambdaSplitter(PATH_PARAMETER_KEY)
+    sub_path = 'sub_path'
+    lambda_splitter.add_sub_handler(sub_path, "unsupported-handler")
+
+    return lambda_splitter, sub_path
+
+
+_setup_lambda_splitter_with_unsupported_handler = setup_lambda_splitter_with_unsupported_handler
+
+
 def test_sanitise_path_leading_slash():
     some_path = '/hello/bye'
 
@@ -109,3 +121,9 @@ def test_call_embedded_splitter(_setup_embedded_lambda_splitter):
 
     mock_method.assert_called_once_with()
     assert result == return_value
+
+
+def test_runtime_error_when_handler_is_not_supported(_setup_lambda_splitter_with_unsupported_handler):
+    lambda_splitter, sub_path = _setup_lambda_splitter_with_unsupported_handler
+    with pytest.raises(RuntimeError):
+        lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path), {})
