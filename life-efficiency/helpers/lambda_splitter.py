@@ -1,4 +1,5 @@
 import json
+import types
 
 
 class LambdaSplitter(object):
@@ -7,7 +8,14 @@ class LambdaSplitter(object):
         self.path_parameter_key = path_parameter_key
         self.sub_handlers = dict()
 
-    def add_sub_handler(self, sub_path: str, handler: callable, method: str = "GET"):
+    def add_sub_handler(self, sub_path: str, handler: object, method: str = "GET"):
+        """
+        Add a sub handler to this splitter.
+        :param str sub_path: Sub path to match.
+        :param types.FunctionType or LambdaSplitter handler: A handler. If it is a function, will call the function with
+            no args. If it is a lambda splitter, will call the lambda splitter.
+        :param str method: The method to match.
+        """
         sanitised_sub_path = self.sanitise_path(sub_path)
         if sanitised_sub_path not in self.sub_handlers:
             self.sub_handlers[sanitised_sub_path] = dict()
@@ -27,12 +35,17 @@ class LambdaSplitter(object):
         return path
 
     def __call__(self, event, context, **kwargs):
-        print(event)
         sub_path = self.sanitise_path(event['pathParameters'][self.path_parameter_key])
         if sub_path in self.sub_handlers:
             method = self.sanitise_method(event['httpMethod'])
             if method in self.sub_handlers[sub_path]:
-                return self.sub_handlers[sub_path][method]()
+                handler = self.sub_handlers[sub_path][method]
+                if isinstance(handler, types.FunctionType):
+                    return handler()
+                elif isinstance(handler, LambdaSplitter):
+                    return handler(event, context, **kwargs)
+                else:
+                    raise RuntimeError('Handler not of expected type!')
             else:
                 return {'statusCode': 405}
         else:
