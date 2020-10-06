@@ -35,6 +35,7 @@ class LambdaSplitter(object):
         return path
 
     def __call__(self, event, context, **kwargs):
+        print(event)
         sub_path = self.sanitise_path(event['pathParameters'][self.path_parameter_key])
         if sub_path in self.sub_handlers:
             method = self.sanitise_method(event['httpMethod'])

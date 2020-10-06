@@ -5,8 +5,7 @@ import pytest
 
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.predictor.shopping_predictor import ShoppingPredictor
-from shopping.shopping_items import ShoppingItems
-
+from shopping.shopping_items import PESTO
 
 CURRENT_DAY = 10
 
@@ -28,33 +27,33 @@ _setup_shopping_predictor = setup_shopping_predictor
 
 @pytest.mark.parametrize('_setup_shopping_predictor', [[]], indirect=True)
 def test_should_buy_today_when_no_items_return_false(_setup_shopping_predictor):
-    assert not _setup_shopping_predictor.should_buy_today(ShoppingItems.PESTO)
+    assert not _setup_shopping_predictor.should_buy_today(PESTO)
 
 
-@pytest.mark.parametrize('_setup_shopping_predictor', [[ShoppingItemPurchase(ShoppingItems.PESTO, 1)]], indirect=True)
+@pytest.mark.parametrize('_setup_shopping_predictor', [[ShoppingItemPurchase(PESTO, 1)]], indirect=True)
 def test_should_buy_today_when_one_item_return_false(_setup_shopping_predictor):
-    assert not _setup_shopping_predictor.should_buy_today(ShoppingItems.PESTO)
+    assert not _setup_shopping_predictor.should_buy_today(PESTO)
 
 
 @pytest.mark.parametrize('_setup_shopping_predictor',
-                         [[ShoppingItemPurchase(ShoppingItems.PESTO, 1, _datetime_from_day(9)),
-                           ShoppingItemPurchase(ShoppingItems.PESTO, 1, _datetime_from_day(5))]],
+                         [[ShoppingItemPurchase(PESTO, 1, _datetime_from_day(9)),
+                           ShoppingItemPurchase(PESTO, 1, _datetime_from_day(5))]],
                          indirect=True)
 def test_should_buy_today_when_two_item_recent_return_false(_setup_shopping_predictor):
-    assert not _setup_shopping_predictor.should_buy_today(ShoppingItems.PESTO)
+    assert not _setup_shopping_predictor.should_buy_today(PESTO)
 
 
 @pytest.mark.parametrize('_setup_shopping_predictor',
-                         [[ShoppingItemPurchase(ShoppingItems.PESTO, 1, _datetime_from_day(6)),
-                           ShoppingItemPurchase(ShoppingItems.PESTO, 1, _datetime_from_day(2))]],
+                         [[ShoppingItemPurchase(PESTO, 1, _datetime_from_day(6)),
+                           ShoppingItemPurchase(PESTO, 1, _datetime_from_day(2))]],
                          indirect=True)
 def test_should_buy_today_when_two_item_not_recent_return_true(_setup_shopping_predictor):
-    assert _setup_shopping_predictor.should_buy_today(ShoppingItems.PESTO)
+    assert _setup_shopping_predictor.should_buy_today(PESTO)
 
 
 @pytest.mark.parametrize('_setup_shopping_predictor',
-                         [[ShoppingItemPurchase(ShoppingItems.PESTO, 1, _datetime_from_day(7)),
-                           ShoppingItemPurchase(ShoppingItems.PESTO, 1, _datetime_from_day(3))]],
+                         [[ShoppingItemPurchase(PESTO, 1, _datetime_from_day(7)),
+                           ShoppingItemPurchase(PESTO, 1, _datetime_from_day(3))]],
                          indirect=True)
 def test_should_buy_today_when_two_item_buy_for_tomorrow(_setup_shopping_predictor):
-    assert _setup_shopping_predictor.should_buy_today(ShoppingItems.PESTO)
+    assert _setup_shopping_predictor.should_buy_today(PESTO)

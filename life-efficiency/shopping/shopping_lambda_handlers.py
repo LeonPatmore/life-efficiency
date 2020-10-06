@@ -27,6 +27,11 @@ def complete_today():
     return {'statusCode': 200}
 
 
+# def insert_purchase():
+#     ShoppingItemPurchase()
+#     shopping_manager.shopping_history.add_purchase()
+
+
 shopping_handler = LambdaSplitter('subcommand')
 shopping_handler.add_sub_handler('history', get_history)
 shopping_handler.add_sub_handler('today', get_today)

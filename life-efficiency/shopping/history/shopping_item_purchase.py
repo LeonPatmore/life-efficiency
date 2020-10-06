@@ -1,6 +1,6 @@
-from helpers.datetime import get_current_datetime_utc
-from shopping.shopping_items import ShoppingItems
 from datetime import datetime
+
+from helpers.datetime import get_current_datetime_utc
 
 
 class ShoppingItemPurchase(object):
@@ -8,20 +8,20 @@ class ShoppingItemPurchase(object):
     An shopping purchase.
     """
 
-    def __init__(self, item: ShoppingItems, quantity: int, purchase_datetime: datetime = get_current_datetime_utc()):
-        self.item = item
+    def __init__(self, item: str, quantity: int, purchase_datetime: datetime = get_current_datetime_utc()):
+        self.item = item.upper()
         self.quantity = quantity
         self.purchase_datetime = purchase_datetime
 
     def __str__(self):
-        return "[ {} ] {} #{}".format(self.purchase_datetime, self.item.name, self.quantity)
+        return "[ {} ] {} #{}".format(self.purchase_datetime, self.item, self.quantity)
 
     def __repr__(self):
         return self.__str__()
 
     def to_json(self):
         return {
-            "item": self.item.name,
+            "item": self.item,
             "quantity": self.quantity,
             "date": self.purchase_datetime
         }

@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from shopping.history.shopping_history import ShoppingHistory
-from shopping.shopping_items import ShoppingItems
 
 
 class ShoppingPredictor(object):
@@ -17,7 +16,7 @@ class ShoppingPredictor(object):
     def _get_today_with_buffer(self):
         return self.current_timestamp_provider() + timedelta(days=self.buy_buffer_days)
 
-    def should_buy_today(self, item: ShoppingItems) -> bool:
+    def should_buy_today(self, item: str) -> bool:
         purchases = self.shopping_history.get_purchases_for_item(item)
         if len(purchases) < 2:
             return False
