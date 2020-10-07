@@ -76,6 +76,6 @@ def test_load_all_purchases_when_invalid_row_ignore(_setup_shopping_history_work
 def test_add_purchase(_setup_shopping_history_worksheet_with_insert_mock):
     worksheet_mock, shopping_history_worksheet = _setup_shopping_history_worksheet_with_insert_mock
 
-    shopping_history_worksheet.add_purchase(ShoppingItemPurchase('some-item', 1, datetime(1, 1, 1, 1, 1, 1, 0)))
+    shopping_history_worksheet.add_purchase(ShoppingItemPurchase('some-item', 1, datetime(2001, 1, 1, 1, 1, 1, 0)))
 
-    worksheet_mock.insert_row.assert_called_once_with(['SOME-ITEM', 1, '01/01/0001, 01:01:01'], 1)
+    worksheet_mock.insert_row.assert_called_once_with(['SOME-ITEM', 1, '01/01/2001, 01:01:01'], 1)
