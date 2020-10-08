@@ -1,5 +1,5 @@
 x 19/09/2020 11/09/2020 Add CI @ci
-11/09/2020 Add package
 x 25/09/2020 19/09/2020 Fix git ignore file
 24/09/2020 Add auth to lambda endpoints
-26/09/2020 Improve tests by adding mocks
+x 08/10/2020 6/09/2020 Improve tests by adding mocks
+08/10/2020 Add validation to insert purchase endpoint

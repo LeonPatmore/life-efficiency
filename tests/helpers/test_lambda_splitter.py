@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from helpers.lambda_splitter import LambdaSplitter
+from helpers.lambda_splitter import LambdaSplitter, HTTPAwareException
 
 PATH_PARAMETER_KEY = 'path_parameter'
 
@@ -10,9 +10,9 @@ RESPONSE_STATUS_CODE_FIELD = 'statusCode'
 RESPONSE_BODY_FIELD = 'body'
 
 
-def _generate_event(path_parameter: str, sub_path: str, body: str = None) -> dict:
+def _generate_event(path_parameter: str, sub_path: str, body: str = None, method='GET') -> dict:
     return {
-        'httpMethod': 'GET',
+        'httpMethod': method,
         'pathParameters': {
             path_parameter: sub_path
         },
@@ -77,6 +77,21 @@ def setup_lambda_splitter_with_json_handler():
 _setup_lambda_splitter_with_json_handler = setup_lambda_splitter_with_json_handler
 
 
+@pytest.fixture
+def setup_lambda_splitter_with_method_handler_throws_http_aware_exception(request):
+    mock_method = Mock(side_effect=request.param)
+
+    def handler_method(): return mock_method()
+    lambda_splitter = LambdaSplitter(PATH_PARAMETER_KEY)
+    sub_path = 'sub_path'
+    lambda_splitter.add_sub_handler(sub_path, handler_method)
+    return lambda_splitter, mock_method, sub_path
+
+
+_setup_lambda_splitter_with_method_handler_throws_http_aware_exception = \
+    setup_lambda_splitter_with_method_handler_throws_http_aware_exception
+
+
 def test_sanitise_path_leading_slash():
     some_path = '/hello/bye'
 
@@ -108,6 +123,17 @@ def test_call_when_handler_is_a_method(_setup_lambda_splitter_with_method_handle
 
     mock_method.assert_called_once_with()
     assert result == return_value
+
+
+def test_call_when_method_not_supported(_setup_lambda_splitter_with_method_handler):
+    lambda_splitter, mock_method, return_value, sub_path = _setup_lambda_splitter_with_method_handler
+
+    result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path, method='POST'), {})
+
+    mock_method.assert_not_called()
+    assert isinstance(result, dict)
+    assert RESPONSE_STATUS_CODE_FIELD in result
+    assert result[RESPONSE_STATUS_CODE_FIELD] == 405
 
 
 def test_call_when_no_subpath_match(_setup_lambda_splitter_with_method_handler):
@@ -185,3 +211,20 @@ def test_json_body_when_unexpected_exception(_setup_lambda_splitter_with_json_ha
     assert RESPONSE_BODY_FIELD in result
     assert result[RESPONSE_BODY_FIELD] == '{"error": "error while trying to handle body", "exception": "the JSON ' \
                                           'object must be str, bytes or bytearray, not NoneType"}'
+
+
+@pytest.mark.parametrize('_setup_lambda_splitter_with_method_handler_throws_http_aware_exception',
+                         [HTTPAwareException(status_code=400, error_message='some error!')],
+                         ids=['400'],
+                         indirect=True)
+def test_http_aware_exception(_setup_lambda_splitter_with_method_handler_throws_http_aware_exception):
+    lambda_splitter, mock_method, sub_path = _setup_lambda_splitter_with_method_handler_throws_http_aware_exception
+
+    result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path, None), {})
+
+    mock_method.assert_called_once_with()
+    assert isinstance(result, dict)
+    assert RESPONSE_STATUS_CODE_FIELD in result
+    assert result[RESPONSE_STATUS_CODE_FIELD] == 400
+    assert RESPONSE_BODY_FIELD in result
+    assert result[RESPONSE_BODY_FIELD] == '{"error": "some error!"}'

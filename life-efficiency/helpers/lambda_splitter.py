@@ -1,8 +1,27 @@
 import json
-import logging
 import types
 from inspect import signature
 from json import JSONDecodeError
+
+
+class HTTPAwareException(Exception):
+
+    def __init__(self,
+                 status_code: int = 500,
+                 error_message: str = None,
+                 root_cause: Exception = None):
+        self.root_cause = root_cause
+        self.status_code = status_code
+        self.error_message = error_message
+
+    def get_body(self):
+        if self.error_message:
+            return {'error': self.error_message}
+        elif self.root_cause:
+            return {'error': 'exception during request processing',
+                    'exception': self.root_cause}
+        else:
+            return {}
 
 
 class LambdaSplitter(object):
@@ -55,25 +74,41 @@ class LambdaSplitter(object):
                 })
             }
 
-    def __call__(self, event, context, **kwargs):
+    def _handle_function(self, event, handler: types.FunctionType) -> dict:
+        kwargs = {}
+        # JSON
+        try:
+            if 'json' in list(signature(handler).parameters.keys()):
+                kwargs['json'] = json.loads(event['body'])
+        except Exception as e:
+            return self._handle_json_exception(e)
+        response = handler(**kwargs)
+        if not response:
+            return {'statusCode': 200}
+        return response
+
+    @staticmethod
+    def _handle_lambda_splitter(event, context, handler) -> dict:
+        return handler(event, context)
+
+    def __call__(self, event, context, **kwargs) -> dict:
         sub_path = self.sanitise_path(event['pathParameters'][self.path_parameter_key])
         if sub_path in self.sub_handlers:
             method = self.sanitise_method(event['httpMethod'])
             if method in self.sub_handlers[sub_path]:
                 handler = self.sub_handlers[sub_path][method]
-                if isinstance(handler, types.FunctionType):
-                    kwargs = {}
-                    # JSON
-                    try:
-                        if 'json' in list(signature(handler).parameters.keys()):
-                            kwargs['json'] = json.loads(event['body'])
-                    except Exception as e:
-                        return self._handle_json_exception(e)
-                    return handler(**kwargs)
-                elif isinstance(handler, LambdaSplitter):
-                    return handler(event, context, **kwargs)
-                else:
-                    raise RuntimeError('Handler not of expected type!')
+                try:
+                    if isinstance(handler, types.FunctionType):
+                        return self._handle_function(event, handler)
+                    elif isinstance(handler, LambdaSplitter):
+                        return self._handle_lambda_splitter(event, context, handler)
+                    else:
+                        raise RuntimeError('Handler not of expected type!')
+                except HTTPAwareException as e:
+                    return {
+                        'statusCode': e.status_code,
+                        'body': json.dumps(e.get_body())
+                    }
             else:
                 return {'statusCode': 405}
         else:

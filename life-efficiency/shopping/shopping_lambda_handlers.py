@@ -1,6 +1,8 @@
 import json
+import logging
 
-from helpers.lambda_splitter import LambdaSplitter
+from helpers.lambda_splitter import LambdaSplitter, HTTPAwareException
+from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_configuration import shopping_manager
 
 
@@ -24,15 +26,21 @@ def get_today():
 
 def complete_today():
     shopping_manager.complete_today()
-    return {'statusCode': 200}
 
 
-# def insert_purchase():
-#     ShoppingItemPurchase()
-#     shopping_manager.shopping_history.add_purchase()
+def insert_purchase(json):
+    logging.error(json)
+    item = json['item']
+    try:
+        quantity = int(json['quantity'])
+    except ValueError:
+        raise HTTPAwareException(400, 'quantity must be an integer')
+    purchase = ShoppingItemPurchase(item, quantity)
+    shopping_manager.shopping_history.add_purchase(purchase)
 
 
 shopping_handler = LambdaSplitter('subcommand')
 shopping_handler.add_sub_handler('history', get_history)
+shopping_handler.add_sub_handler('history', insert_purchase, 'POST')
 shopping_handler.add_sub_handler('today', get_today)
 shopping_handler.add_sub_handler('today', complete_today, 'POST')
