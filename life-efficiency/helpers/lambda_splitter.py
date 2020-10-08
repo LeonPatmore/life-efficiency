@@ -1,5 +1,8 @@
 import json
+import logging
 import types
+from inspect import signature
+from json import JSONDecodeError
 
 
 class LambdaSplitter(object):
@@ -34,15 +37,39 @@ class LambdaSplitter(object):
             path = path[:-1]
         return path
 
+    @staticmethod
+    def _handle_json_exception(exception: Exception) -> dict:
+        if isinstance(exception, JSONDecodeError):
+            return {
+                'statusCode': 400,
+                'body': json.dumps({
+                    'error': 'body must be a valid JSON'
+                })
+            }
+        else:
+            return {
+                'statusCode': 400,
+                'body': json.dumps({
+                    'error': 'error while trying to handle body',
+                    'exception': str(exception)
+                })
+            }
+
     def __call__(self, event, context, **kwargs):
-        print(event)
         sub_path = self.sanitise_path(event['pathParameters'][self.path_parameter_key])
         if sub_path in self.sub_handlers:
             method = self.sanitise_method(event['httpMethod'])
             if method in self.sub_handlers[sub_path]:
                 handler = self.sub_handlers[sub_path][method]
                 if isinstance(handler, types.FunctionType):
-                    return handler()
+                    kwargs = {}
+                    # JSON
+                    try:
+                        if 'json' in list(signature(handler).parameters.keys()):
+                            kwargs['json'] = json.loads(event['body'])
+                    except Exception as e:
+                        return self._handle_json_exception(e)
+                    return handler(**kwargs)
                 elif isinstance(handler, LambdaSplitter):
                     return handler(event, context, **kwargs)
                 else:

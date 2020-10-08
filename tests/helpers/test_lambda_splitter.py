@@ -6,19 +6,23 @@ from helpers.lambda_splitter import LambdaSplitter
 
 PATH_PARAMETER_KEY = 'path_parameter'
 
+RESPONSE_STATUS_CODE_FIELD = 'statusCode'
+RESPONSE_BODY_FIELD = 'body'
 
-def _generate_event(path_parameter: str, sub_path: str) -> dict:
+
+def _generate_event(path_parameter: str, sub_path: str, body: str = None) -> dict:
     return {
         'httpMethod': 'GET',
         'pathParameters': {
             path_parameter: sub_path
-        }
+        },
+        'body': body
     }
 
 
 @pytest.fixture
 def setup_lambda_splitter_with_method_handler():
-    return_value = {'statusCode': 200}
+    return_value = {RESPONSE_STATUS_CODE_FIELD: 200}
     mock_method = Mock(return_value=return_value)
 
     def handler_method(*args, **kwargs): return mock_method(*args, **kwargs)
@@ -56,6 +60,21 @@ def setup_lambda_splitter_with_unsupported_handler():
 
 
 _setup_lambda_splitter_with_unsupported_handler = setup_lambda_splitter_with_unsupported_handler
+
+
+@pytest.fixture
+def setup_lambda_splitter_with_json_handler():
+    return_value = {RESPONSE_STATUS_CODE_FIELD: 200}
+    mock_method = Mock(return_value=return_value)
+
+    def handler_method(json): return mock_method(json=json)
+    lambda_splitter = LambdaSplitter(PATH_PARAMETER_KEY)
+    sub_path = 'sub_path'
+    lambda_splitter.add_sub_handler(sub_path, handler_method)
+    return lambda_splitter, mock_method, return_value, sub_path
+
+
+_setup_lambda_splitter_with_json_handler = setup_lambda_splitter_with_json_handler
 
 
 def test_sanitise_path_leading_slash():
@@ -98,11 +117,11 @@ def test_call_when_no_subpath_match(_setup_lambda_splitter_with_method_handler):
 
     mock_method.assert_not_called()
 
-    assert 'statusCode' in result
-    assert result['statusCode'] == 404
-    assert 'body' in result
-    assert result['body'] == "{{\"error\": \"could not find path for this command, possible paths are [ {} ]\"}}"\
-        .format(sub_path)
+    assert RESPONSE_STATUS_CODE_FIELD in result
+    assert result[RESPONSE_STATUS_CODE_FIELD] == 404
+    assert RESPONSE_BODY_FIELD in result
+    assert result[RESPONSE_BODY_FIELD] == "{{\"error\": \"could not find path for this command, " \
+                                          "possible paths are [ {} ]\"}}".format(sub_path)
 
 
 def test_call_embedded_splitter(_setup_embedded_lambda_splitter):
@@ -114,7 +133,8 @@ def test_call_embedded_splitter(_setup_embedded_lambda_splitter):
         'pathParameters': {
             top_path_parameter_key: top_sub_path,
             PATH_PARAMETER_KEY: sub_path
-        }
+        },
+        'body': ''
     }
 
     result = lambda_splitter_top.__call__(event, {})
@@ -127,3 +147,41 @@ def test_runtime_error_when_handler_is_not_supported(_setup_lambda_splitter_with
     lambda_splitter, sub_path = _setup_lambda_splitter_with_unsupported_handler
     with pytest.raises(RuntimeError):
         lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path), {})
+
+
+def test_json_body(_setup_lambda_splitter_with_json_handler):
+    lambda_splitter, mock_method, _, sub_path = _setup_lambda_splitter_with_json_handler
+
+    result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path, '{"some-field": "some-value"}'), {})
+
+    mock_method.assert_called_once_with(json={'some-field': 'some-value'})
+    assert isinstance(result, dict)
+    assert RESPONSE_STATUS_CODE_FIELD in result
+    assert result[RESPONSE_STATUS_CODE_FIELD] == 200
+
+
+def test_json_body_when_not_valid_json(_setup_lambda_splitter_with_json_handler):
+    lambda_splitter, mock_method, _, sub_path = _setup_lambda_splitter_with_json_handler
+
+    result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path, ''), {})
+
+    mock_method.assert_not_called()
+    assert isinstance(result, dict)
+    assert RESPONSE_STATUS_CODE_FIELD in result
+    assert result[RESPONSE_STATUS_CODE_FIELD] == 400
+    assert RESPONSE_BODY_FIELD in result
+    assert result[RESPONSE_BODY_FIELD] == '{"error": "body must be a valid JSON"}'
+
+
+def test_json_body_when_unexpected_exception(_setup_lambda_splitter_with_json_handler):
+    lambda_splitter, mock_method, _, sub_path = _setup_lambda_splitter_with_json_handler
+
+    result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path, None), {})
+
+    mock_method.assert_not_called()
+    assert isinstance(result, dict)
+    assert RESPONSE_STATUS_CODE_FIELD in result
+    assert result[RESPONSE_STATUS_CODE_FIELD] == 400
+    assert RESPONSE_BODY_FIELD in result
+    assert result[RESPONSE_BODY_FIELD] == '{"error": "error while trying to handle body", "exception": "the JSON ' \
+                                          'object must be str, bytes or bytearray, not NoneType"}'
