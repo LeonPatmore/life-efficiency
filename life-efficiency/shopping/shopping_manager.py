@@ -5,7 +5,7 @@ from helpers.worksheets import init_worksheet
 from shopping.history.shopping_history import ShoppingHistory
 from shopping.history.shopping_history_worksheet import ShoppingHistoryWorksheet
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
-from shopping.mealplan.mealplan import MealPlan
+from shopping.mealplan.meal_plan import MealPlan
 from shopping.predictor.shopping_predictor import ShoppingPredictor
 
 

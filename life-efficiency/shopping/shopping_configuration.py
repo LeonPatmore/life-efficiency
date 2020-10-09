@@ -1,6 +1,6 @@
 from configuration import spreadsheet
 from helpers.datetime import Day
-from shopping.mealplan.mealplan import MealPlan
+from shopping.mealplan.meal_plan import MealPlan
 from shopping.shopping_items import CHOCOLATE_MILKSHAKE, APPLES, GRAPES, PEARS, MOUTHWASH, PASTA, PESTO
 from shopping.shopping_manager import ShoppingManagerSpreadsheet
 
