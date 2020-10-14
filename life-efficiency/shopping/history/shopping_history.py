@@ -6,7 +6,7 @@ class ShoppingHistory(object):
     def __init__(self):
         self.purchases = self._load_all_purchases()  # type: list
 
-    def _load_all_purchases(self):
+    def _load_all_purchases(self) -> list:
         raise NotImplementedError()
 
     def get_purchases_for_item(self, item: str) -> list:
