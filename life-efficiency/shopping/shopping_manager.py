@@ -24,6 +24,7 @@ class ShoppingManager(object):
         return predicted_repeating_items + todays_meal + tomorrows_meal
 
     def complete_today(self):
+        # TODO: Come up with a way to accept items for meal plan and list, as-well as repeating items.
         for item in self.todays_items():
             self.shopping_history.add_purchase(ShoppingItemPurchase(item, 1))
 
