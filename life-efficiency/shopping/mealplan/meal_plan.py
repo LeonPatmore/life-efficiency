@@ -6,6 +6,9 @@ class MealPlan(object):
     def __init__(self):
         self.mean_plan = dict()
 
+    def _load_meal_plans(self):
+        raise NotImplementedError()
+
     def get_meal_for_day(self, day: Day) -> list:
         return self.mean_plan.get(day, [])
 
