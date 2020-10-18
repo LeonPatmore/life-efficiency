@@ -10,9 +10,9 @@ from shopping.mealplan.meal_plan import MealPlan
 class MealPlanWorksheet(MealPlan):
 
     def __init__(self, meal_plan_worksheet: gspread.Worksheet, meal_purchase_worksheet: gspread.Worksheet):
-        super().__init__()
         self.meal_plan_worksheet = meal_plan_worksheet
         self.meal_purchase_worksheet = meal_purchase_worksheet
+        super().__init__()
         self._init_worksheet()
 
     def _init_worksheet(self):
