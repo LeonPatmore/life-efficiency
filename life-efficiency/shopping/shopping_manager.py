@@ -5,13 +5,12 @@ from helpers.worksheets import init_worksheet
 from shopping.history.shopping_history import ShoppingHistory
 from shopping.history.shopping_history_worksheet import ShoppingHistoryWorksheet
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
-from shopping.mealplan.meal_plan import MealPlan
 from shopping.predictor.shopping_predictor import ShoppingPredictor
 
 
 class ShoppingManager(object):
 
-    def __init__(self, meal_plan: MealPlan, shopping_history: ShoppingHistory, repeating_items: list):
+    def __init__(self, meal_plan, shopping_history: ShoppingHistory, repeating_items: list):
         self.meal_plan = meal_plan
         self.shopping_history = shopping_history
         self.shopping_predictor = ShoppingPredictor(shopping_history, get_current_datetime_utc)
@@ -31,6 +30,6 @@ class ShoppingManager(object):
 
 class ShoppingManagerSpreadsheet(ShoppingManager):
 
-    def __init__(self, spreadsheet: Spreadsheet, meal_plan: MealPlan, repeating_items: list):
+    def __init__(self, spreadsheet: Spreadsheet, meal_plan, repeating_items: list):
         shopping_history_worksheet = ShoppingHistoryWorksheet(init_worksheet(spreadsheet, "History"))
         super(ShoppingManagerSpreadsheet, self).__init__(meal_plan, shopping_history_worksheet, repeating_items)

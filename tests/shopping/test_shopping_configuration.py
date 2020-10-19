@@ -15,6 +15,7 @@ def setup_configuration_mock():
     spreadsheet_mock.add_worksheet.return_value = worksheet_mock
     configuration_mock = Mock(spreadsheet=spreadsheet_mock)
     configuration_mock.spreadsheet.return_value = spreadsheet_mock
+    # TODO: Fix issue with testing caused by this mock.
     sys.modules['configuration'] = configuration_mock
 
 

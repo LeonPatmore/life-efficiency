@@ -34,8 +34,8 @@ class MealPlanWorksheet(MealPlan):
             self.meal_purchase_worksheet.update_cell(day.value + 1, 0, "False")
 
     def _is_meal_purchased_implementation(self, day: Day) -> bool:
-        purchased_string = self.meal_purchase_worksheet.get_all_values()[day.value][0]  # type: str
+        purchased_string = self.meal_purchase_worksheet.get_all_values()[day.value + 1][0]  # type: str
         return strtobool(purchased_string)
 
     def _purchase_meal_implementation(self, day: Day):
-        self.meal_purchase_worksheet.update_cell(day.value, 0, "True")
+        self.meal_purchase_worksheet.update_cell(day.value + 1, 0, "True")
