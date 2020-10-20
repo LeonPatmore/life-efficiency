@@ -1,5 +1,4 @@
 import json
-import logging
 
 from helpers.lambda_splitter import LambdaSplitter, HTTPAwareException
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
@@ -29,7 +28,6 @@ def complete_today():
 
 
 def insert_purchase(json):
-    logging.error(json)
     item = json['item']
     try:
         quantity = int(json['quantity'])

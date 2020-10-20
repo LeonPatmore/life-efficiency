@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from helpers.datetime import datetime_to_string, string_to_datetime
+from helpers.datetime import datetime_to_string
 
 CURRENT_DATETIME = datetime(2001, 1, 1, 1, 1, 1, 0)
 CURRENT_DATETIME_STRING = datetime_to_string(CURRENT_DATETIME)
@@ -28,12 +28,14 @@ def setup_meal_plan_worksheet(request):
     meal_purchase_worksheet = Mock()
     meal_purchase_worksheet.get_all_values.return_value = request.param[1]
 
-    datetime_mock = Mock(Day=TestDays, string_to_datetime=string_to_datetime)
-    datetime_mock.get_current_datetime_utc.return_value = CURRENT_DATETIME
+    datetime_mock = Mock(Day=TestDays)
 
     sys.modules['helpers.datetime'] = datetime_mock
     from shopping.mealplan.meal_plan_worksheet import MealPlanWorksheet
-    meal_plan = MealPlanWorksheet(meal_plan_worksheet, meal_purchase_worksheet)
+    meal_plan = MealPlanWorksheet(lambda: CURRENT_DATETIME,
+                                  TestDays,
+                                  meal_plan_worksheet,
+                                  meal_purchase_worksheet)
 
     return meal_plan, meal_purchase_worksheet
 
