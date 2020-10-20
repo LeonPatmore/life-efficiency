@@ -1,4 +1,3 @@
-import sys
 from datetime import datetime, timedelta
 from enum import Enum
 from unittest.mock import Mock
@@ -28,9 +27,6 @@ def setup_meal_plan_worksheet(request):
     meal_purchase_worksheet = Mock()
     meal_purchase_worksheet.get_all_values.return_value = request.param[1]
 
-    datetime_mock = Mock(Day=TestDays)
-
-    sys.modules['helpers.datetime'] = datetime_mock
     from shopping.mealplan.meal_plan_worksheet import MealPlanWorksheet
     meal_plan = MealPlanWorksheet(lambda: CURRENT_DATETIME,
                                   TestDays,
