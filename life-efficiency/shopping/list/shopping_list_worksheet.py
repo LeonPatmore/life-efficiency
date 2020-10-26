@@ -24,4 +24,20 @@ class ShoppingListWorksheet(ShoppingList):
         return items
 
     def add_item(self, item: str, quantity: int, date_added: datetime):
-        self.worksheet.insert_row([item, str(quantity), datetime_to_string(date_added)], 1)
+        # Lets search for a row with this value already.
+        worksheet_values = self.worksheet.get_all_values()
+        for index, worksheet_row in enumerate(worksheet_values):
+            try:
+                this_item = worksheet_row[0]
+                if item.lower() == this_item.lower():
+                    quantity = int(worksheet_row[1])
+                    self.worksheet.update_cell(index, 1, str(quantity + 1))
+                    break
+            except Exception:
+                pass
+        else:
+            self.worksheet.insert_row([item, str(quantity), datetime_to_string(date_added)], 1)
+
+    def remove_item(self, item: str, quantity: int):
+        # TODO: Add remove item implementation.
+        pass

@@ -8,3 +8,6 @@ class ShoppingList(object):
 
     def add_item(self, item: str, quantity: int, date_added: datetime):
         raise NotImplementedError()
+
+    def remove_item(self, item: str, quantity: int):
+        raise NotImplementedError()

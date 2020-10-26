@@ -26,7 +26,8 @@ class ShoppingManager(object):
         predicted_repeating_items = [x for x in self.repeating_items if self.shopping_predictor.should_buy_today(x)]
         todays_meal = self.meal_plan.get_meal_for_day(Day(get_current_datetime_utc().weekday()))
         tomorrows_meal = self.meal_plan.get_meal_for_day(Day((get_current_datetime_utc().weekday() + 1) % 7))
-        return predicted_repeating_items + todays_meal + tomorrows_meal
+        list = self.shopping_list.get_items()
+        return predicted_repeating_items + todays_meal + tomorrows_meal + list
 
     def complete_today(self):
         # TODO: Come up with a way to accept items for meal plan and list, as-well as repeating items.
