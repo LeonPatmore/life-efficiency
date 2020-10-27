@@ -5,6 +5,12 @@ from helpers.datetime import datetime_to_string
 from shopping.list.shopping_list import ShoppingList
 
 
+class NotEnoughItemsInList(Exception):
+
+    def __init__(self):
+        pass
+
+
 class ShoppingListWorksheet(ShoppingList):
 
     def __init__(self, worksheet):
@@ -24,20 +30,25 @@ class ShoppingListWorksheet(ShoppingList):
         return items
 
     def add_item(self, item: str, quantity: int, date_added: datetime):
-        # Lets search for a row with this value already.
+        self.worksheet.insert_row([item, str(quantity), datetime_to_string(date_added)], 1)
+
+    def remove_item(self, item: str, quantity: int):
         worksheet_values = self.worksheet.get_all_values()
-        for index, worksheet_row in enumerate(worksheet_values):
+        for index, worksheet_row in reversed(list(enumerate(worksheet_values))):
+            if quantity == 0:
+                return
             try:
                 this_item = worksheet_row[0]
                 if item.lower() == this_item.lower():
-                    quantity = int(worksheet_row[1])
-                    self.worksheet.update_cell(index, 1, str(quantity + 1))
-                    break
+                    this_quantity = int(worksheet_row[1])
+                    if this_quantity > quantity:
+                        new_quantity = this_quantity - quantity
+                        self.worksheet.update_cell(index, 1, str(new_quantity))
+                        return
+                    else:
+                        self.worksheet.delete_row(index)
+                        quantity = quantity - this_quantity
             except Exception:
                 pass
-        else:
-            self.worksheet.insert_row([item, str(quantity), datetime_to_string(date_added)], 1)
 
-    def remove_item(self, item: str, quantity: int):
-        # TODO: Add remove item implementation.
-        pass
+        raise NotEnoughItemsInList()

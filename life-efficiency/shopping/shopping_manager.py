@@ -22,6 +22,19 @@ class ShoppingManager(object):
         self.shopping_predictor = ShoppingPredictor(shopping_history, get_current_datetime_utc)
         self.repeating_items = repeating_items
 
+    def _get_quantity_reduction_items(self) -> list:
+
+        def _check_shopping_list(item: str, quantity: int) -> int:
+            num = min(self.shopping_list.get_item_count(item), quantity)
+            self.shopping_list.remove_item(item, num)
+            return num
+
+        def _check_meal_plan(item: str, quantity: int) -> int:
+            # TODO: Check to see if any un-purchased meal matches this item.
+            pass
+
+        return [_check_shopping_list, _check_meal_plan]
+
     def todays_items(self) -> list:
         predicted_repeating_items = [x for x in self.repeating_items if self.shopping_predictor.should_buy_today(x)]
         todays_meal = self.meal_plan.get_meal_for_day(Day(get_current_datetime_utc().weekday()))
@@ -29,12 +42,21 @@ class ShoppingManager(object):
         list = self.shopping_list.get_items()
         return predicted_repeating_items + todays_meal + tomorrows_meal + list
 
+    def complete_item(self, item: str, quantity: int):
+        self.shopping_history.add_purchase(ShoppingItemPurchase(item, quantity))
+        for quantity_reduction_function in self._get_quantity_reduction_items():
+            quantity_taken = quantity_reduction_function(item, quantity)
+            quantity = quantity - quantity_taken
+        else:
+            # TODO: There is still some quantity left over, so it must be a repeating item otherwise a mistake?
+            pass
+
     def complete_today(self):
-        # TODO: Come up with a way to accept items for meal plan and list, as-well as repeating items.
         for item in self.todays_items():
-            self.shopping_history.add_purchase(ShoppingItemPurchase(item, 1))
+            self.complete_item(item, 1)
 
 
+# TODO: Split into new file.
 class ShoppingManagerSpreadsheet(ShoppingManager):
 
     def __init__(self, spreadsheet: Spreadsheet, meal_plan, repeating_items: list):
