@@ -3,7 +3,7 @@ from helpers.datetime import Day, get_current_datetime_utc
 from helpers.worksheets import init_worksheet
 from shopping.mealplan.meal_plan_worksheet import MealPlanWorksheet
 from shopping.shopping_items import CHOCOLATE_MILKSHAKE, APPLES, GRAPES, PEARS, MOUTHWASH
-from shopping.shopping_manager import ShoppingManagerSpreadsheet
+from shopping.shopping_manager_spreadsheet import ShoppingManagerSpreadsheet
 
 repeating_items = [
     CHOCOLATE_MILKSHAKE,
