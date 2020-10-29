@@ -14,6 +14,25 @@ def get_history():
     }
 
 
+def insert_purchase(json):
+    item = json['item']
+    try:
+        quantity = int(json['quantity'])
+    except ValueError:
+        raise HTTPAwareException(400, 'quantity must be an integer')
+    purchase = ShoppingItemPurchase(item, quantity)
+    shopping_manager.shopping_history.add_purchase(purchase)
+
+
+def get_list():
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'items': shopping_manager.shopping_list.get_items()
+        }, default=str)
+    }
+
+
 def get_today():
     return {
         'statusCode': 200,
@@ -27,18 +46,9 @@ def complete_today():
     shopping_manager.complete_today()
 
 
-def insert_purchase(json):
-    item = json['item']
-    try:
-        quantity = int(json['quantity'])
-    except ValueError:
-        raise HTTPAwareException(400, 'quantity must be an integer')
-    purchase = ShoppingItemPurchase(item, quantity)
-    shopping_manager.shopping_history.add_purchase(purchase)
-
-
 shopping_handler = LambdaSplitter('subcommand')
 shopping_handler.add_sub_handler('history', get_history)
 shopping_handler.add_sub_handler('history', insert_purchase, 'POST')
+shopping_handler.add_sub_handler('list', get_list)
 shopping_handler.add_sub_handler('today', get_today)
 shopping_handler.add_sub_handler('today', complete_today, 'POST')

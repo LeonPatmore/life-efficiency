@@ -69,12 +69,31 @@ def test_is_meal_purchased_is_false(_setup_meal_plan_worksheet):
     assert not meal_plan.is_meal_purchased(TestDays.DAY_2)
 
 
+@pytest.mark.parametrize("_setup_meal_plan_worksheet",
+                         [([["some-item-1", "some-item-2"]],
+                           [[CURRENT_DATETIME_STRING], []])],
+                         indirect=True)
+def test_when_not_enough_meals(_setup_meal_plan_worksheet):
+    meal_plan, _ = _setup_meal_plan_worksheet
+    assert meal_plan.get_meal_for_day(TestDays.DAY_1) == ["some-item-1", "some-item-2"]
+    assert meal_plan.get_meal_for_day(TestDays.DAY_2) == []
+
+
+@pytest.mark.parametrize("_setup_meal_plan_worksheet",
+                         [([["some-item-1", "some-item-2"]],
+                           [])],
+                         indirect=True)
+def test_init_with_empty_meal_purchase_worksheet(_setup_meal_plan_worksheet):
+    meal_plan, meal_purchase_worksheet = _setup_meal_plan_worksheet
+    meal_purchase_worksheet.update_cell.assert_called_with(3, 1, "False")
+
+
 def test_purchase_meal(_setup_meal_plan_worksheet):
     meal_plan, meal_purchase_worksheet = _setup_meal_plan_worksheet
 
     meal_plan.purchase_meal(TestDays.DAY_1)
 
-    meal_purchase_worksheet.update_cell.assert_called_once_with(1, 0, "True")
+    meal_purchase_worksheet.update_cell.assert_called_once_with(2, 1, "True")
 
 
 def test_check_purchase_time_when_same_day(_setup_meal_plan_worksheet):

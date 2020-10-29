@@ -59,8 +59,8 @@ def test_remove_item_no_quantity(_setup_shopping_list_worksheet):
 def test_remove_item_remove_last_row_and_reduce_first_row(_setup_shopping_list_worksheet):
     worksheet_mock, shopping_list_worksheet = _setup_shopping_list_worksheet
     shopping_list_worksheet.remove_item("item", 3)
-    worksheet_mock.update_cell.assert_called_once_with(0, 1, "1")
-    worksheet_mock.delete_row.assert_called_once_with(1)
+    worksheet_mock.update_cell.assert_called_once_with(1, 2, "1")
+    worksheet_mock.delete_row.assert_called_once_with(2)
 
 
 @pytest.mark.parametrize("_setup_shopping_list_worksheet", [[["item", "2"], ["item", "2"]]], indirect=True)
@@ -68,7 +68,7 @@ def test_remove_item_remove_last_row(_setup_shopping_list_worksheet):
     worksheet_mock, shopping_list_worksheet = _setup_shopping_list_worksheet
     shopping_list_worksheet.remove_item("item", 2)
     worksheet_mock.update_cell.assert_not_called()
-    worksheet_mock.delete_row.assert_called_once_with(1)
+    worksheet_mock.delete_row.assert_called_once_with(2)
 
 
 @pytest.mark.parametrize("_setup_shopping_list_worksheet", [[["item", "2"], ["item", "2"]]], indirect=True)

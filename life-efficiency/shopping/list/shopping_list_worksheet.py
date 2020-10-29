@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 
+import gspread
+
 from helpers.datetime import datetime_to_string
 from shopping.list.shopping_list import ShoppingList
 
@@ -13,7 +15,7 @@ class NotEnoughItemsInList(Exception):
 
 class ShoppingListWorksheet(ShoppingList):
 
-    def __init__(self, worksheet):
+    def __init__(self, worksheet: gspread.Worksheet):
         self.worksheet = worksheet
 
     def get_items(self) -> list:
@@ -43,10 +45,10 @@ class ShoppingListWorksheet(ShoppingList):
                     this_quantity = int(worksheet_row[1])
                     if this_quantity > quantity:
                         new_quantity = this_quantity - quantity
-                        self.worksheet.update_cell(index, 1, str(new_quantity))
+                        self.worksheet.update_cell(index + 1, 2, str(new_quantity))
                         return
                     else:
-                        self.worksheet.delete_row(index)
+                        self.worksheet.delete_row(index + 1)
                         quantity = quantity - this_quantity
             except Exception:
                 pass
