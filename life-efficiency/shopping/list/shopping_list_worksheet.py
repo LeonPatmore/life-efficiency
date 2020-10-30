@@ -35,6 +35,7 @@ class ShoppingListWorksheet(ShoppingList):
         self.worksheet.insert_row([item, str(quantity), datetime_to_string(date_added)], 1)
 
     def remove_item(self, item: str, quantity: int):
+        logging.info("Removing [ {} ] of [ {} ] from shopping list!".format(quantity, item))
         worksheet_values = self.worksheet.get_all_values()
         for index, worksheet_row in reversed(list(enumerate(worksheet_values))):
             if quantity == 0:
@@ -52,5 +53,8 @@ class ShoppingListWorksheet(ShoppingList):
                         quantity = quantity - this_quantity
             except Exception:
                 pass
+        if quantity == 0:
+            return
 
+        logging.warning("Not enough of item [ {} ] in list!".format(item))
         raise NotEnoughItemsInList()
