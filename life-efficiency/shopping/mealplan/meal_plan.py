@@ -13,7 +13,8 @@ class MealPlan(object):
         self._load_meal_plans()
 
     def get_meal_for_day(self, day) -> list:
-        return self.mean_plan.get(day, [])
+        list_of_items = self.mean_plan.get(day, [])
+        return [x for x in list_of_items if x.rstrip() != ""]
 
     def _load_meal_plans(self):
         raise NotImplementedError()

@@ -1,19 +1,13 @@
 from datetime import datetime, timedelta
-from enum import Enum
 from unittest.mock import Mock
 
 import pytest
 
 from helpers.datetime import datetime_to_string
+from tests.shopping.mealplan.test_days import TestDays
 
 CURRENT_DATETIME = datetime(2001, 1, 1, 1, 1, 1, 0)
 CURRENT_DATETIME_STRING = datetime_to_string(CURRENT_DATETIME)
-
-
-class TestDays(Enum):
-
-    DAY_1 = 0
-    DAY_2 = 1
 
 
 @pytest.fixture
