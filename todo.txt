@@ -4,3 +4,4 @@ x 25/09/2020 19/09/2020 Fix git ignore file
 x 08/10/2020 6/09/2020 Improve tests by adding mocks
 08/10/2020 Add validation to insert purchase endpoint
 14/10/2020 Add functionality to add particular products to items of today
+01/11/2020 Add functional tests
