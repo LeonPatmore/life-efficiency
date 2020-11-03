@@ -10,4 +10,4 @@ mean_plan = MealPlanWorksheet(get_current_datetime_utc,
                               init_worksheet(spreadsheet, "MealPlan"),
                               init_worksheet(spreadsheet, "MealPurchase"))
 repeating_items = RepeatingItemsWorksheet(init_worksheet(spreadsheet, "RepeatingItems"))
-shopping_manager = ShoppingManagerSpreadsheet(spreadsheet, mean_plan, repeating_items)
+shopping_manager = ShoppingManagerSpreadsheet(spreadsheet, mean_plan, repeating_items, Day)

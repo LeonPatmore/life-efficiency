@@ -1,3 +1,5 @@
+from enum import Enum
+
 from gspread import Spreadsheet
 
 from helpers.worksheets import init_worksheet
@@ -8,10 +10,11 @@ from shopping.shopping_manager import ShoppingManager
 
 class ShoppingManagerSpreadsheet(ShoppingManager):
 
-    def __init__(self, spreadsheet: Spreadsheet, meal_plan, repeating_items):
+    def __init__(self, spreadsheet: Spreadsheet, meal_plan, repeating_items, days: Enum):
         shopping_history_worksheet = ShoppingHistoryWorksheet(init_worksheet(spreadsheet, "History"))
         shopping_list_worksheet = ShoppingListWorksheet(init_worksheet(spreadsheet, "List"))
         super(ShoppingManagerSpreadsheet, self).__init__(meal_plan,
                                                          shopping_history_worksheet,
                                                          shopping_list_worksheet,
-                                                         repeating_items)
+                                                         repeating_items,
+                                                         days)
