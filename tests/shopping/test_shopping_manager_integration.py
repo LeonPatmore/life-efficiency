@@ -182,7 +182,7 @@ def test_complete_item_extra_items_are_used(_setup_shopping_manager):
 
     shopping_manager.complete_item(TEST_ITEM, 2)
 
-    assert shopping_manager.todays_items() == [TEST_ITEM, TEST_ITEM]
+    assert shopping_manager.todays_items() == [TEST_ITEM]
     assert TEST_ITEM not in shopping_list.get_items()
     assert not meal_plan.is_meal_purchased(TestDays.DAY_1)
     assert meal_plan.is_meal_purchased(TestDays.DAY_2)
@@ -200,7 +200,7 @@ def test_complete_item_two_meals_are_purchased(_setup_shopping_manager):
 
     shopping_manager.complete_item(TEST_ITEM, 3)
 
-    assert shopping_manager.todays_items() == [TEST_ITEM, TEST_ITEM]
+    assert shopping_manager.todays_items() == []
     assert TEST_ITEM not in shopping_list.get_items()
     assert meal_plan.is_meal_purchased(TestDays.DAY_1)
     assert meal_plan.is_meal_purchased(TestDays.DAY_2)
@@ -218,7 +218,7 @@ def test_complete_item_too_many_purchased_but_is_repeating_item(_setup_shopping_
 
     shopping_manager.complete_item(TEST_ITEM, 4)
 
-    assert shopping_manager.todays_items() == [TEST_ITEM, TEST_ITEM]
+    assert shopping_manager.todays_items() == []
     assert TEST_ITEM not in shopping_list.get_items()
     assert meal_plan.is_meal_purchased(TestDays.DAY_1)
     assert meal_plan.is_meal_purchased(TestDays.DAY_2)
@@ -251,7 +251,7 @@ def test_complete_item_completing_meal_removes_all_items(_setup_shopping_manager
     extra_removed_items = shopping_manager.complete_item(TEST_ITEM, 1)
 
     assert extra_removed_items == [[TEST_ITEM_2, 1], [TEST_ITEM_3, 2]]
-    assert shopping_manager.todays_items() == [TEST_ITEM, TEST_ITEM_2, TEST_ITEM_3, TEST_ITEM_3]
+    assert shopping_manager.todays_items() == []
     assert meal_plan.is_meal_purchased(TestDays.DAY_2)
     assert not meal_plan.is_meal_purchased(TestDays.DAY_1)
 
@@ -268,6 +268,6 @@ def test_complete_today(_setup_shopping_manager):
 
     shopping_manager.complete_today()
 
-    assert shopping_manager.todays_items() == [TEST_ITEM, TEST_ITEM_2, TEST_ITEM_3, TEST_ITEM_3]
+    assert shopping_manager.todays_items() == []
     assert meal_plan.is_meal_purchased(TestDays.DAY_2)
     assert not meal_plan.is_meal_purchased(TestDays.DAY_1)

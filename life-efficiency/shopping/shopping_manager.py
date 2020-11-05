@@ -88,9 +88,16 @@ class ShoppingManager(object):
     def todays_items(self) -> list:
         predicted_repeating_items = [x for x in self.repeating_items.get_repeating_items()
                                      if self.shopping_predictor.should_buy_today(x)]
-        # TODO: Don't add to list if meal already bought!
-        todays_meal = self.meal_plan.get_meal_for_day(self.days(get_current_datetime_utc().weekday() % len(self.days)))
-        tomorrows_meal = self.meal_plan.get_meal_for_day(self.days((get_current_datetime_utc().weekday() + 1) % len(self.days)))
+        todays_day = self.days(get_current_datetime_utc().weekday() % len(self.days))
+        if not self.meal_plan.is_meal_purchased(todays_day):
+            todays_meal = self.meal_plan.get_meal_for_day(todays_day)
+        else:
+            todays_meal = []
+        tomorrows_day = self.days((get_current_datetime_utc().weekday() + 1) % len(self.days))
+        if not self.meal_plan.is_meal_purchased(tomorrows_day):
+            tomorrows_meal = self.meal_plan.get_meal_for_day(tomorrows_day)
+        else:
+            tomorrows_meal = []
         shopping_list = self.shopping_list.get_items()
         return predicted_repeating_items + todays_meal + tomorrows_meal + shopping_list
 
