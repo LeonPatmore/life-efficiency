@@ -6,6 +6,12 @@ from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_configuration import shopping_manager
 
 
+def validate_json_fields(json, required_fields=list()):
+    for required_field in required_fields:
+        if required_field not in json:
+            raise HTTPAwareException(400, 'field `{}` is required'.format(required_field))
+
+
 def get_history():
     return {
         'statusCode': 200,
@@ -16,6 +22,7 @@ def get_history():
 
 
 def insert_purchase(json):
+    validate_json_fields(json, ['item', 'quantity'])
     item = json['item']
     try:
         quantity = int(json['quantity'])
@@ -35,6 +42,7 @@ def get_list():
 
 
 def add_to_list(json):
+    validate_json_fields(json, ['item', 'quantity'])
     item = json['item']
     try:
         quantity = int(json['quantity'])
