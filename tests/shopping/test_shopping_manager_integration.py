@@ -184,8 +184,8 @@ def test_complete_item_extra_items_are_used(_setup_shopping_manager):
 
     assert shopping_manager.todays_items() == [TEST_ITEM]
     assert TEST_ITEM not in shopping_list.get_items()
-    assert not meal_plan.is_meal_purchased(TestDays.DAY_1)
-    assert meal_plan.is_meal_purchased(TestDays.DAY_2)
+    assert meal_plan.is_meal_purchased(TestDays.DAY_1)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_2)
 
 
 @pytest.mark.parametrize("_setup_shopping_manager",
