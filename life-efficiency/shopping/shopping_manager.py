@@ -116,9 +116,9 @@ class ShoppingManager(object):
             if item not in self.repeating_items.get_repeating_items():
                 raise UnexpectedBuyException(item, quantity)
 
-    def complete_today(self):
-        todays_items_with_removed = [[x, False] for x in self.todays_items()]
-        for item in todays_items_with_removed:
+    def complete_items(self, items: list):
+        items_with_removed = [[x, False] for x in items]
+        for item in items_with_removed:
             # Skip if already removed.
             if item[1]:
                 continue
@@ -131,7 +131,7 @@ class ShoppingManager(object):
             for extra_removed_item in extra_removed_items:
                 extra_removed_item_name = extra_removed_item[0]
                 extra_removed_item_quantity = extra_removed_item[1]
-                for todays_item_with_removed in todays_items_with_removed:
+                for todays_item_with_removed in items_with_removed:
                     if extra_removed_item_quantity <= 0:
                         break
                     if todays_item_with_removed[0] == extra_removed_item_name:
@@ -141,3 +141,6 @@ class ShoppingManager(object):
                 if extra_removed_item_quantity:
                     logging.warning("Maybe you missed buying [ {} ] of [ {} ]".format(extra_removed_item_quantity,
                                                                                       extra_removed_item_name))
+
+    def complete_today(self):
+        self.complete_items(self.todays_items())

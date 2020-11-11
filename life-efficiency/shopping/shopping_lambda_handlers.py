@@ -60,6 +60,11 @@ def get_today():
     }
 
 
+def complete_items(json):
+    validate_json_fields(json, ['items'])
+    shopping_manager.complete_items(json['items'])
+
+
 def complete_today():
     shopping_manager.complete_today()
 
@@ -69,5 +74,6 @@ shopping_handler.add_sub_handler('history', get_history)
 shopping_handler.add_sub_handler('history', insert_purchase, 'POST')
 shopping_handler.add_sub_handler('list', get_list)
 shopping_handler.add_sub_handler('list', add_to_list, 'POST')
+shopping_handler.add_sub_handler('items', complete_items, 'POST')
 shopping_handler.add_sub_handler('today', get_today)
 shopping_handler.add_sub_handler('today', complete_today, 'POST')
