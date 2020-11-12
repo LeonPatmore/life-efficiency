@@ -5,4 +5,5 @@ x 08/10/2020 6/09/2020 Improve tests by adding mocks
 x 06/11/2020 08/10/2020 Add validation to insert purchase endpoint
 14/10/2020 Add functionality to add particular products to items of today
 01/11/2020 Add functional tests
-12/11/2020 Add endpoint to get list and add to list of repeating items.
+12/11/2020 Add endpoint to get list and add to list of repeating items
+12/11/2020 Add validation so that empty items do not get processed
