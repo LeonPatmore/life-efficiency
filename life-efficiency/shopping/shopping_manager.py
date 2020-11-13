@@ -103,6 +103,9 @@ class ShoppingManager(object):
 
     def complete_item(self, item: str, quantity: int) -> list:
         extra_removed_items = []
+        if not item.strip():
+            logging.info("Skipping item since it is empty!")
+            return extra_removed_items
         self.shopping_history.add_purchase(ShoppingItemPurchase(item, quantity))
         for quantity_reduction_function in self._get_quantity_reduction_items():
             removed_items = quantity_reduction_function(item, quantity)  # type: RemovedItems

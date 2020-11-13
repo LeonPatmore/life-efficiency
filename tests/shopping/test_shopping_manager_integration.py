@@ -108,14 +108,14 @@ def setup_shopping_manager(request):
 
     shopping_manager = ShoppingManager(meal_plan, shopping_history, shopping_list, repeating_items, TestDays)
 
-    return shopping_manager, shopping_list, meal_plan
+    return shopping_manager, shopping_list, meal_plan, shopping_history
 
 
 _setup_shopping_manager = setup_shopping_manager
 
 
 def test_todays_items_no_items_is_empty_list(_setup_shopping_manager):
-    shopping_manager, _, _ = _setup_shopping_manager
+    shopping_manager, _, _, _ = _setup_shopping_manager
 
     items = shopping_manager.todays_items()
 
@@ -130,7 +130,7 @@ def test_todays_items_no_items_is_empty_list(_setup_shopping_manager):
                            None)],
                          indirect=True)
 def test_todays_items_with_repeating_items(_setup_shopping_manager):
-    shopping_manager, _, _ = _setup_shopping_manager
+    shopping_manager, _, _, _ = _setup_shopping_manager
 
     items = shopping_manager.todays_items()
 
@@ -145,7 +145,7 @@ def test_todays_items_with_repeating_items(_setup_shopping_manager):
                            [TEST_ITEM_3])],
                          indirect=True)
 def test_todays_items_multiple_items(_setup_shopping_manager):
-    shopping_manager, _, _ = _setup_shopping_manager
+    shopping_manager, _, _, _ = _setup_shopping_manager
 
     items = shopping_manager.todays_items()
 
@@ -160,7 +160,7 @@ def test_todays_items_multiple_items(_setup_shopping_manager):
                            [TEST_ITEM])],
                          indirect=True)
 def test_complete_item_shopping_list_is_most_important(_setup_shopping_manager):
-    shopping_manager, shopping_list, meal_plan = _setup_shopping_manager
+    shopping_manager, shopping_list, meal_plan, _ = _setup_shopping_manager
 
     shopping_manager.complete_item(TEST_ITEM, 1)
 
@@ -178,7 +178,7 @@ def test_complete_item_shopping_list_is_most_important(_setup_shopping_manager):
                            [TEST_ITEM])],
                          indirect=True)
 def test_complete_item_extra_items_are_used(_setup_shopping_manager):
-    shopping_manager, shopping_list, meal_plan = _setup_shopping_manager
+    shopping_manager, shopping_list, meal_plan, _ = _setup_shopping_manager
 
     shopping_manager.complete_item(TEST_ITEM, 2)
 
@@ -196,7 +196,7 @@ def test_complete_item_extra_items_are_used(_setup_shopping_manager):
                            [TEST_ITEM])],
                          indirect=True)
 def test_complete_item_two_meals_are_purchased(_setup_shopping_manager):
-    shopping_manager, shopping_list, meal_plan = _setup_shopping_manager
+    shopping_manager, shopping_list, meal_plan, _ = _setup_shopping_manager
 
     shopping_manager.complete_item(TEST_ITEM, 3)
 
@@ -214,7 +214,7 @@ def test_complete_item_two_meals_are_purchased(_setup_shopping_manager):
                            [TEST_ITEM])],
                          indirect=True)
 def test_complete_item_too_many_purchased_but_is_repeating_item(_setup_shopping_manager):
-    shopping_manager, shopping_list, meal_plan = _setup_shopping_manager
+    shopping_manager, shopping_list, meal_plan, _ = _setup_shopping_manager
 
     shopping_manager.complete_item(TEST_ITEM, 4)
 
@@ -232,7 +232,7 @@ def test_complete_item_too_many_purchased_but_is_repeating_item(_setup_shopping_
                            [TEST_ITEM])],
                          indirect=True)
 def test_complete_item_too_many_purchased_but_is_not_repeating_item(_setup_shopping_manager):
-    shopping_manager, shopping_list, meal_plan = _setup_shopping_manager
+    shopping_manager, shopping_list, meal_plan, _ = _setup_shopping_manager
 
     with pytest.raises(UnexpectedBuyException):
         shopping_manager.complete_item(TEST_ITEM, 4)
@@ -246,7 +246,7 @@ def test_complete_item_too_many_purchased_but_is_not_repeating_item(_setup_shopp
                            [])],
                          indirect=True)
 def test_complete_item_completing_meal_removes_all_items(_setup_shopping_manager):
-    shopping_manager, shopping_list, meal_plan = _setup_shopping_manager
+    shopping_manager, shopping_list, meal_plan, _ = _setup_shopping_manager
 
     extra_removed_items = shopping_manager.complete_item(TEST_ITEM, 1)
 
@@ -264,10 +264,24 @@ def test_complete_item_completing_meal_removes_all_items(_setup_shopping_manager
                            [])],
                          indirect=True)
 def test_complete_today(_setup_shopping_manager):
-    shopping_manager, shopping_list, meal_plan = _setup_shopping_manager
+    shopping_manager, shopping_list, meal_plan, _ = _setup_shopping_manager
 
     shopping_manager.complete_today()
 
     assert shopping_manager.todays_items() == []
     assert meal_plan.is_meal_purchased(TestDays.DAY_2)
     assert not meal_plan.is_meal_purchased(TestDays.DAY_1)
+
+
+@pytest.mark.parametrize("_setup_shopping_manager",
+                         [([],
+                           [' '],
+                           {TestDays.DAY_1: [], TestDays.DAY_2: [TEST_ITEM, TEST_ITEM_2, TEST_ITEM_3, TEST_ITEM_3]},
+                           [])],
+                         indirect=True)
+def test_complete_item(_setup_shopping_manager):
+    shopping_manager, _, _, shopping_history = _setup_shopping_manager
+
+    shopping_manager.complete_item(' ', 1)
+
+    assert len(shopping_history.get_all_purchases()) == 0
