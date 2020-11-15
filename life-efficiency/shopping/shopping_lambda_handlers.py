@@ -69,6 +69,20 @@ def complete_today():
     shopping_manager.complete_today()
 
 
+def get_repeating_items():
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'items': shopping_manager.repeating_items.get_repeating_items()
+        }, default=str)
+    }
+
+
+def add_to_repeating_items(json):
+    validate_json_fields(json, ['item'])
+    shopping_manager.repeating_items.add_repeating_item(json['item'])
+
+
 shopping_handler = LambdaSplitter('subcommand')
 shopping_handler.add_sub_handler('history', get_history)
 shopping_handler.add_sub_handler('history', insert_purchase, 'POST')
@@ -77,3 +91,5 @@ shopping_handler.add_sub_handler('list', add_to_list, 'POST')
 shopping_handler.add_sub_handler('items', complete_items, 'POST')
 shopping_handler.add_sub_handler('today', get_today)
 shopping_handler.add_sub_handler('today', complete_today, 'POST')
+shopping_handler.add_sub_handler('repeating', get_repeating_items)
+shopping_handler.add_sub_handler('repeating', add_to_repeating_items)
