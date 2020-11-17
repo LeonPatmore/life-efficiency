@@ -51,6 +51,14 @@ We are using flake8 as our super cool Python linter.
 
 ## Deploying
 
+### Dev
+
+`sam deploy --stack-name life-efficiency-dev`
+
+### Prod
+
+TODO
+
 `sam deploy`
 
 ## TODO
