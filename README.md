@@ -57,9 +57,7 @@ We are using flake8 as our super cool Python linter.
 
 ### Prod
 
-TODO
-
-`sam deploy`
+`sam deploy --stack-name life-efficiency-prod --parameter-overrides ParameterKey=Environment,ParameterValue=Prod`
 
 ## TODO
 https://github.com/todotxt/todo.txt
@@ -69,6 +67,3 @@ https://github.com/todotxt/todo.txt
 ### History
 
 Shopping history is stored.
-
-### Predicting Shopping Needs
-

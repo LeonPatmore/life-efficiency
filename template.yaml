@@ -15,7 +15,7 @@ Globals:
                 POWERTOOLS_LOGGER_LOG_EVENT: true
                 POWERTOOLS_METRICS_NAMESPACE: MyServerlessApplication
                 POWERTOOLS_SERVICE_NAME: hello
-                SPREADSHEET_KEY: "12vPGwr5Ds3ZygiHf0-XXVXuOZFhH7VTLrWioUroeUbA"
+                SPREADSHEET_KEY_SECRET_NAME: !Sub "life-efficiency/${Environment}/spreadsheet-key"
 
 Parameters:
     Environment:
@@ -26,7 +26,11 @@ Parameters:
             - Prod
 
 Resources:
-    HelloWorldFunction:
+    SpreadsheetKeySecret:
+        Type: AWS::SecretsManager::Secret
+        Properties:
+            Name: !Sub "life-efficiency/${Environment}/spreadsheet-key"
+    ShoppingFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
             Handler: shopping.shopping_lambda_handlers.shopping_handler
@@ -35,6 +39,8 @@ Resources:
             Policies:
               - S3ReadPolicy:
                   BucketName: "life-efficiency"
+              - AWSSecretsManagerGetSecretValuePolicy:
+                  SecretArn: !Ref SpreadsheetKeySecret
             Events:
                 CatchAll:
                     Type: Api

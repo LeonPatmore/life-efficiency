@@ -10,4 +10,4 @@ except ImportError:
 if dotenv:
     dotenv.load_dotenv()
 
-spreadsheet = SpreadsheetLoaderAWS(boto3.client("s3")).spreadsheet
+spreadsheet = SpreadsheetLoaderAWS(boto3.client("s3"), boto3.client("secretsmanager")).spreadsheet
