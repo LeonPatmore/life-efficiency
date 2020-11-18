@@ -106,7 +106,12 @@ def setup_shopping_manager(request):
     shopping_list = TestShoppingList(shopping_list)
     repeating_items = TestRepeatingItems(repeating_items)
 
-    shopping_manager = ShoppingManager(meal_plan, shopping_history, shopping_list, repeating_items, TestDays)
+    shopping_manager = ShoppingManager(meal_plan,
+                                       shopping_history,
+                                       shopping_list,
+                                       repeating_items,
+                                       TestDays,
+                                       lambda: CURRENT_TIME + timedelta(days=1))
 
     return shopping_manager, shopping_list, meal_plan, shopping_history
 

@@ -1,6 +1,5 @@
 import logging
 
-from helpers.datetime import get_current_datetime_utc
 from helpers.lambda_splitter import HTTPAwareException
 from shopping.history.shopping_history import ShoppingHistory
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
@@ -29,11 +28,13 @@ class ShoppingManager(object):
                  shopping_history: ShoppingHistory,
                  shopping_list,
                  repeating_items,
-                 days):
+                 days,
+                 current_timestamp_provider):
+        self.current_timestamp_provider = current_timestamp_provider
         self.meal_plan = meal_plan
         self.shopping_history = shopping_history
         self.shopping_list = shopping_list
-        self.shopping_predictor = ShoppingPredictor(shopping_history, get_current_datetime_utc)
+        self.shopping_predictor = ShoppingPredictor(shopping_history, current_timestamp_provider)
         self.repeating_items = repeating_items
         self.days = days
 
@@ -61,7 +62,7 @@ class ShoppingManager(object):
         # TODO: This needs to be improved.
         quantity_removed = 0
         extra_removed_items = []
-        for day in [self.days((get_current_datetime_utc().weekday() + i) % len(self.days))
+        for day in [self.days((self.current_timestamp_provider().weekday() + i) % len(self.days))
                     for i in range(len(self.days))]:
             if not self.meal_plan.is_meal_purchased(day):
                 todays_meal = self.meal_plan.get_meal_for_day(day)  # type: list
@@ -88,12 +89,12 @@ class ShoppingManager(object):
     def todays_items(self) -> list:
         predicted_repeating_items = [x for x in self.repeating_items.get_repeating_items()
                                      if self.shopping_predictor.should_buy_today(x)]
-        todays_day = self.days(get_current_datetime_utc().weekday() % len(self.days))
+        todays_day = self.days(self.current_timestamp_provider().weekday() % len(self.days))
         if not self.meal_plan.is_meal_purchased(todays_day):
             todays_meal = self.meal_plan.get_meal_for_day(todays_day)
         else:
             todays_meal = []
-        tomorrows_day = self.days((get_current_datetime_utc().weekday() + 1) % len(self.days))
+        tomorrows_day = self.days((self.current_timestamp_provider().weekday() + 1) % len(self.days))
         if not self.meal_plan.is_meal_purchased(tomorrows_day):
             tomorrows_meal = self.meal_plan.get_meal_for_day(tomorrows_day)
         else:
