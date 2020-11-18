@@ -20,9 +20,7 @@ jobs:
       - sam/build:
           template: template.yaml
           s3-bucket: life-efficiency
-      - sam/deploy:
-          stack-name: life-efficiency-dev
-          template: .aws-sam/build/template.yaml
+      - run: sam deploy --stack-name life-efficiency-dev
 
 workflows:
   main:
