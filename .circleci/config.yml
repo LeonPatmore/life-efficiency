@@ -21,6 +21,7 @@ jobs:
           template: template.yaml
       - sam/deploy:
           stack-name: life-efficiency-dev
+          template: .aws-sam/build/template.yaml
 
 workflows:
   main:
