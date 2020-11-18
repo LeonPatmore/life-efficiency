@@ -17,7 +17,8 @@ jobs:
     steps:
       - checkout
       - sam/install
-      - sam/build
+      - sam/build:
+          template: template.yaml
       - sam/deploy:
           stack-name: life-efficiency-dev
 
