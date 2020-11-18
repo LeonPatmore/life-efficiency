@@ -18,7 +18,7 @@ jobs:
       - checkout
       - sam/install
       - sam/build
-      - sam/deploy
+      - sam/deploy:
           stack-name: life-efficiency-dev
 
 workflows:
