@@ -20,7 +20,7 @@ jobs:
       - sam/build:
           template: template.yaml
           s3-bucket: life-efficiency
-      - run: sam deploy --stack-name life-efficiency-dev
+      - run: sam deploy --stack-name life-efficiency-dev --no-confirm-changeset
 
 workflows:
   main:
