@@ -20,10 +20,16 @@ jobs:
       - sam/build:
           template: template.yaml
           s3-bucket: life-efficiency
-      - run: sam deploy --stack-name life-efficiency-dev --no-confirm-changeset
-
+      - run: sam deploy --stack-name life-efficiency-dev --no-confirm-changeset --no-fail-on-empty-changeset
+  functional_tests:
+    executor: python/default
+    steps:
+      - checkout
+      - run: pipenv install -d
+      - run: pipenv run python -m pytest functional
 workflows:
   main:
     jobs:
       - test_and_lint
       - deploy_staging
+      - functional_tests

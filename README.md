@@ -59,6 +59,12 @@ We are using flake8 as our super cool Python linter.
 
 `sam deploy --stack-name life-efficiency-prod --parameter-overrides ParameterKey=Environment,ParameterValue=Prod`
 
+## Functional Tests
+
+Note: You must have valid AWS environment setup.
+
+`pipenv run python -m pytest functional`
+
 ## TODO
 https://github.com/todotxt/todo.txt
 
