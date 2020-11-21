@@ -27,9 +27,23 @@ jobs:
       - checkout
       - run: pipenv install -d
       - run: pipenv run python -m pytest functional
+  deploy_prod:
+    executor: sam/default
+    steps:
+      - checkout
+      - sam/install
+      - sam/build:
+          template: template.yaml
+          s3-bucket: life-efficiency
+      - run: sam deploy --stack-name life-efficiency-prod --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides ParameterKey=Environment,ParameterValue=Prod
 workflows:
   main:
     jobs:
       - test_and_lint
       - deploy_staging
       - functional_tests
+          requires:
+            - deploy_staging
+      - deploy_prod
+          requires:
+            - functional_tests
