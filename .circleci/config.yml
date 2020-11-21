@@ -41,9 +41,9 @@ workflows:
     jobs:
       - test_and_lint
       - deploy_staging
-      - functional_tests
+      - functional_tests:
           requires:
             - deploy_staging
-      - deploy_prod
+      - deploy_prod:
           requires:
             - functional_tests
