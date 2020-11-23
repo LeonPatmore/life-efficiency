@@ -6,3 +6,4 @@ x 06/11/2020 08/10/2020 Add validation to insert purchase endpoint
 x 19/11/2020 01/11/2020 Add functional tests
 x 15/11/2020 12/11/2020 Add endpoint to get list and add to list of repeating items
 x 13/11/2020 12/11/2020 Add validation so that empty items do not get processed
+23/11/2020 Don't deploy prod on branches
