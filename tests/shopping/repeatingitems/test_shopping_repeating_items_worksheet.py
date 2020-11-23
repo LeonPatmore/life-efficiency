@@ -2,7 +2,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from shopping.repeatingitems.shopping_repeating_items_worksheet import RepeatingItemsWorksheet
+from shopping.repeatingitems.shopping_repeating_items_worksheet import RepeatingItemsWorksheet, \
+    RepeatingItemsAlreadyPresent
 
 ALL_VALUES = ["item-1", "item-2", "item-3"]
 
@@ -28,3 +29,11 @@ def test_add_repeating_item(_generate_repeating_items_worksheet):
     worksheet_mock, repeating_items_worksheet = _generate_repeating_items_worksheet
     repeating_items_worksheet.add_repeating_item("item-4")
     worksheet_mock.insert_row.assert_called_once_with(["item-4"], 0)
+
+
+def test_add_repeating_item_already_present_raises_exception(_generate_repeating_items_worksheet):
+    worksheet_mock, repeating_items_worksheet = _generate_repeating_items_worksheet
+
+    with pytest.raises(RepeatingItemsAlreadyPresent):
+        repeating_items_worksheet.add_repeating_item("item-3")
+    worksheet_mock.insert_row.assert_not_called()

@@ -26,3 +26,12 @@ def test_shopping_repeating_items(_load_spreadsheet):
     response = requests.get("{}/shopping/repeating".format(SHOPPING_ROOT))
     assert codes['ok'] == response.status_code
     assert ["item-2", "item-1"] == response.json()['items']
+
+
+def test_shopping_repeating_items_already_present_returns_bad(_load_spreadsheet):
+    spreadsheet_helper = _load_spreadsheet
+
+    spreadsheet_helper.set_repeating_items(["item-1", "item-2"])
+
+    response = requests.post("{}/shopping/repeating".format(SHOPPING_ROOT))
+    assert codes['bad'] == response.status_code
