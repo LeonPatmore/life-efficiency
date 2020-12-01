@@ -9,7 +9,7 @@ class ShoppingItemPurchase(object):
     """
 
     def __init__(self, item: str, quantity: int, purchase_datetime: datetime = get_current_datetime_utc()):
-        self.item = item.upper()
+        self.item = item
         self.quantity = quantity
         self.purchase_datetime = purchase_datetime
 

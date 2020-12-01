@@ -11,7 +11,7 @@ VALID_ROW = ['some-item', '2', '01/01/2001, 01:01:01']
 
 
 def _validate_valid_row_shopping_item_purchase(the_purchase: ShoppingItemPurchase):
-    assert the_purchase.item == "SOME-ITEM"
+    assert the_purchase.item == "some-item"
     assert the_purchase.quantity == 2
     assert the_purchase.purchase_datetime == datetime(2001, 1, 1, 1, 1, 1, 0)
 
@@ -78,4 +78,12 @@ def test_add_purchase(_setup_shopping_history_worksheet_with_insert_mock):
 
     shopping_history_worksheet.add_purchase(ShoppingItemPurchase('some-item', 1, datetime(2001, 1, 1, 1, 1, 1, 0)))
 
-    worksheet_mock.insert_row.assert_called_once_with(['SOME-ITEM', 1, '01/01/2001, 01:01:01'], 1)
+    worksheet_mock.insert_row.assert_called_once_with(['some-item', 1, '01/01/2001, 01:01:01'], 1)
+
+
+def test_add_purchase_converts_to_lower(_setup_shopping_history_worksheet_with_insert_mock):
+    worksheet_mock, shopping_history_worksheet = _setup_shopping_history_worksheet_with_insert_mock
+
+    shopping_history_worksheet.add_purchase(ShoppingItemPurchase('SOME-item', 1, datetime(2001, 1, 1, 1, 1, 1, 0)))
+
+    worksheet_mock.insert_row.assert_called_once_with(['some-item', 1, '01/01/2001, 01:01:01'], 1)
