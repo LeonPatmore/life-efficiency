@@ -6,9 +6,10 @@ from enum import Enum
 
 class MealPlan(object):
 
-    def __init__(self, time_provider: types.FunctionType, days: Enum):
+    def __init__(self, time_provider: types.FunctionType, days: Enum, weeks: int):
         self.time_provider = time_provider  # A function that returns a datetime of the current time.
         self.days = days
+        self.weeks = weeks
         self.mean_plan = dict()
         self._load_meal_plans()
 
@@ -49,3 +50,6 @@ class MealPlan(object):
         if current_week != today_week:
             logging.info("Resetting purchase time!")
             self._reset_purchase_time(self.time_provider())
+
+    def _get_week_index(self):
+        raise NotImplementedError()
