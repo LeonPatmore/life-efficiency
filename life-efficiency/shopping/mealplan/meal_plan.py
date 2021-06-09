@@ -13,9 +13,9 @@ class MealPlan(object):
         self.mean_plan = dict()
         self._load_meal_plans()
 
-    def get_meal_for_day(self, day) -> list:
-        list_of_items = self.mean_plan.get(day, [])
-        return [x for x in list_of_items if x.rstrip() != ""]
+    def get_meal_for_day_and_week(self, day: Enum, week: int) -> list:
+        week_plan = self.mean_plan.get(week)
+        return week_plan.get(day, [])
 
     def _load_meal_plans(self):
         raise NotImplementedError()
@@ -26,15 +26,17 @@ class MealPlan(object):
     def _reset_purchase_time(self, new_time: datetime):
         raise NotImplementedError()
 
-    def _is_meal_purchased_implementation(self, day) -> bool:
+    def _is_meal_purchased_implementation(self, day: Enum, week: int) -> bool:
         raise NotImplementedError()
 
-    def _purchase_meal_implementation(self, day):
+    def _purchase_meal_implementation(self, day: Enum, week: int):
         raise NotImplementedError()
 
-    def is_meal_purchased(self, day):
+    def is_meal_purchased(self, day: Enum, week: int):
+        if week < 0 or week >= self.weeks:
+            raise ValueError()
         self._check_purchase_time()
-        return self._is_meal_purchased_implementation(day)
+        return self._is_meal_purchased_implementation(day, week)
 
     def purchase_meal(self, day):
         self._check_purchase_time()
@@ -42,6 +44,7 @@ class MealPlan(object):
 
     def _check_purchase_time(self):
         current_purchase_time = self._get_purchase_time()
+        # Support multi weeks
         current_week = current_purchase_time.isocalendar()[1]
         today_week = self.time_provider().isocalendar()[1]
 
@@ -51,5 +54,5 @@ class MealPlan(object):
             logging.info("Resetting purchase time!")
             self._reset_purchase_time(self.time_provider())
 
-    def _get_week_index(self):
+    def get_current_week(self) -> int:
         raise NotImplementedError()

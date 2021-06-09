@@ -15,10 +15,11 @@ class MealPlanWorksheet(MealPlan):
                  time_provider: types.FunctionType,
                  days: Enum,
                  meal_plan_worksheet: gspread.Worksheet,
-                 meal_purchase_worksheet: gspread.Worksheet):
+                 meal_purchase_worksheet: gspread.Worksheet,
+                 weeks: int):
         self.meal_plan_worksheet = meal_plan_worksheet
         self.meal_purchase_worksheet = meal_purchase_worksheet
-        super().__init__(time_provider, days)
+        super().__init__(time_provider, days, weeks)
         self._init_worksheet()
 
     def _init_worksheet(self):
@@ -36,7 +37,7 @@ class MealPlanWorksheet(MealPlan):
                 worksheet_row = []
             else:
                 worksheet_row = worksheet_values[index]
-            self.mean_plan[day] = worksheet_row
+            self.mean_plan[day] = [x for x in worksheet_row if x.rstrip() != ""]
 
     def _get_purchase_time(self) -> datetime:
         return string_to_datetime(self.meal_purchase_worksheet.get_all_values()[0][0])
