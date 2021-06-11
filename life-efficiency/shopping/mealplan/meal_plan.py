@@ -38,19 +38,20 @@ class MealPlan(object):
         self._check_purchase_time()
         return self._is_meal_purchased_implementation(day, week)
 
-    def purchase_meal(self, day):
+    def purchase_meal(self, day: Enum, week: int):
+        if week < 0 or week >= self.weeks:
+            raise ValueError()
         self._check_purchase_time()
-        return self._purchase_meal_implementation(day)
+        return self._purchase_meal_implementation(day, week)
 
     def _check_purchase_time(self):
         current_purchase_time = self._get_purchase_time()
-        # Support multi weeks
         current_week = current_purchase_time.isocalendar()[1]
         today_week = self.time_provider().isocalendar()[1]
 
         logging.info("Current purchase week [ {}  ], today week [ {} ]", current_week, today_week)
 
-        if current_week != today_week:
+        if today_week > current_week + self.weeks:
             logging.info("Resetting purchase time!")
             self._reset_purchase_time(self.time_provider())
 

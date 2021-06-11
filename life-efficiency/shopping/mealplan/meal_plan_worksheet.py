@@ -32,12 +32,14 @@ class MealPlanWorksheet(MealPlan):
 
     def _load_meal_plans(self):
         worksheet_values = self.meal_plan_worksheet.get_all_values()
-        for index, day in enumerate(self.days):
-            if index >= len(worksheet_values):
-                worksheet_row = []
-            else:
-                worksheet_row = worksheet_values[index]
-            self.mean_plan[day] = [x for x in worksheet_row if x.rstrip() != ""]
+        for week in range(self.weeks):
+            for day_index, day in enumerate(self.days):
+                index = len(self.days) * week + day_index
+                if index >= len(worksheet_values):
+                    worksheet_row = []
+                else:
+                    worksheet_row = worksheet_values[index]
+                self.mean_plan[day] = [x for x in worksheet_row if x.rstrip() != ""]
 
     def _get_purchase_time(self) -> datetime:
         return string_to_datetime(self.meal_purchase_worksheet.get_all_values()[0][0])
