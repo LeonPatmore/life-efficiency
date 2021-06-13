@@ -12,6 +12,10 @@ class MealPlan(object):
         self.weeks = weeks
         self.mean_plan = dict()
         self._load_meal_plans()
+        for i in range(weeks):
+            self.mean_plan.setdefault(i, {})
+            for _, day in enumerate(days):
+                self.mean_plan[i].setdefault(day, [])
 
     def get_meal_for_day_and_week(self, day: Enum, week: int) -> list:
         week_plan = self.mean_plan.get(week)
