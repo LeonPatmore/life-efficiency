@@ -30,9 +30,6 @@ class TestMealPlan(MealPlan):
     def _purchase_meal_implementation(self, day, week):
         pass
 
-    def get_current_week(self) -> int:
-        pass
-
     def get_purchase_time(self):
         return self._get_purchase_time()
 
@@ -102,3 +99,24 @@ def test_check_purchase_time_when_exceeded_reset_purchase_time(_setup_meal_plan)
     meal_plan.is_meal_purchased(TestDays.DAY_1, 1)
 
     assert PURCHASE_TIME + timedelta(weeks=3) == meal_plan.get_purchase_time()
+
+
+@pytest.mark.parametrize("_setup_meal_plan", [{"current_time": PURCHASE_TIME + timedelta(days=2)}], indirect=True)
+def test_get_current_week_first_week(_setup_meal_plan):
+    meal_plan = _setup_meal_plan
+
+    assert 0 == meal_plan.get_current_week()
+
+
+@pytest.mark.parametrize("_setup_meal_plan", [{"current_time": PURCHASE_TIME}], indirect=True)
+def test_get_current_week_same_time_as_purchase(_setup_meal_plan):
+    meal_plan = _setup_meal_plan
+
+    assert 0 == meal_plan.get_current_week()
+
+
+@pytest.mark.parametrize("_setup_meal_plan", [{"current_time": PURCHASE_TIME + timedelta(days=3)}], indirect=True)
+def test_get_current_week_second_week(_setup_meal_plan):
+    meal_plan = _setup_meal_plan
+
+    assert 1 == meal_plan.get_current_week()

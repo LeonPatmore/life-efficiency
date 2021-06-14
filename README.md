@@ -31,7 +31,7 @@ All commands should be ran from the root of the repo.
 
 We are using pytest to test this project, and a pytest plugin to monitor the test coverage.
 
-`pipenv run python -m pytest --cov=life-efficiency`
+`pipenv run python -m pytest --cov=life-efficiency ./tests`
 
 ### Running the Linter
 

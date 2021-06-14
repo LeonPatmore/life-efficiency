@@ -49,9 +49,11 @@ class MealPlanWorksheet(MealPlan):
         for day in self.days:
             self.meal_purchase_worksheet.update_cell(day.value + 2, 1, "False")
 
-    def _is_meal_purchased_implementation(self, day) -> bool:
-        purchased_string = self.meal_purchase_worksheet.get_all_values()[day.value + 1][0]  # type: str
+    def _is_meal_purchased_implementation(self, day, week) -> bool:
+        index = 1 + (day.value * (week + 1))
+        purchased_string = self.meal_purchase_worksheet.get_all_values()[index][0]  # type: str
         return strtobool(purchased_string)
 
-    def _purchase_meal_implementation(self, day):
-        self.meal_purchase_worksheet.update_cell(day.value + 2, 1, "True")
+    def _purchase_meal_implementation(self, day, week):
+        index = 2 + (day.value * (week + 1))
+        self.meal_purchase_worksheet.update_cell(index, 1, "True")

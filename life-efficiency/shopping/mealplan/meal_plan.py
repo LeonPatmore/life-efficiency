@@ -1,6 +1,7 @@
 import logging
+import math
 import types
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 
 
@@ -49,15 +50,16 @@ class MealPlan(object):
         return self._purchase_meal_implementation(day, week)
 
     def _check_purchase_time(self):
-        current_purchase_time = self._get_purchase_time()
-        current_week = current_purchase_time.isocalendar()[1]
-        today_week = self.time_provider().isocalendar()[1]
+        time_diff = self.time_provider() - self._get_purchase_time()  # type: timedelta
 
-        logging.info("Current purchase week [ {}  ], today week [ {} ]", current_week, today_week)
+        logging.info("Current time diff is [ {} ] days!".format(time_diff.days))
 
-        if today_week > current_week + self.weeks:
+        if time_diff.days > self.weeks * len(self.days):
             logging.info("Resetting purchase time!")
             self._reset_purchase_time(self.time_provider())
 
     def get_current_week(self) -> int:
-        raise NotImplementedError()
+        time_diff = self.time_provider() - self._get_purchase_time()  # type: timedelta
+        if time_diff.days <= 0:
+            return 0
+        return math.ceil(time_diff.days / len(self.days)) - 1
