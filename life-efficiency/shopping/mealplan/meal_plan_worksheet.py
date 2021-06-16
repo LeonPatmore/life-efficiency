@@ -39,21 +39,23 @@ class MealPlanWorksheet(MealPlan):
                     worksheet_row = []
                 else:
                     worksheet_row = worksheet_values[index]
-                self.mean_plan[day] = [x for x in worksheet_row if x.rstrip() != ""]
+                self.mean_plan[week][day] = [x for x in worksheet_row if x.rstrip() != ""]
 
     def _get_purchase_time(self) -> datetime:
         return string_to_datetime(self.meal_purchase_worksheet.get_all_values()[0][0])
 
     def _reset_purchase_time(self, new_time: datetime):
         self.meal_purchase_worksheet.update_cell(1, 1, datetime_to_string(new_time))
-        for day in self.days:
-            self.meal_purchase_worksheet.update_cell(day.value + 2, 1, "False")
+        for week in range(self.weeks):
+            for day in self.days:
+                index = 2 + (len(self.days) * week) + day.value
+                self.meal_purchase_worksheet.update_cell(index, 1, "False")
 
     def _is_meal_purchased_implementation(self, day, week) -> bool:
-        index = 1 + (day.value * (week + 1))
+        index = week * len(self.days) + day.value + 1
         purchased_string = self.meal_purchase_worksheet.get_all_values()[index][0]  # type: str
         return strtobool(purchased_string)
 
     def _purchase_meal_implementation(self, day, week):
-        index = 2 + (day.value * (week + 1))
+        index = week * len(self.days) + day.value + 2
         self.meal_purchase_worksheet.update_cell(index, 1, "True")

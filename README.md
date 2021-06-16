@@ -15,6 +15,10 @@ All commands should be ran from the root of the repo.
 
     `set PYTHONPATH=%PYTHONPATH%;.\life-efficiency`
 
+    **Linux**
+
+    `export PYTHONPATH=./life-efficiency`
+
 2. Make sure your AWS credentials are setup:
 
     **Windows**:

@@ -12,6 +12,10 @@ class MealPlan(object):
         self.days = days
         self.weeks = weeks
         self.mean_plan = dict()
+        for i in range(weeks):
+            self.mean_plan[i] = {}
+            for _, day in enumerate(days):
+                self.mean_plan[i][day] = []
         self._load_meal_plans()
         for i in range(weeks):
             self.mean_plan.setdefault(i, {})
