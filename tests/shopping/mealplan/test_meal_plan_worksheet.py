@@ -102,7 +102,11 @@ def test_when_not_enough_meals(_setup_meal_plan_worksheet):
                          indirect=True)
 def test_init_with_empty_meal_purchase_worksheet(_setup_meal_plan_worksheet):
     meal_plan, meal_purchase_worksheet = _setup_meal_plan_worksheet
-    meal_purchase_worksheet.update_cell.assert_called_with(3, 1, "False")
+    calls = list()
+    calls.append(call(1, 1, '01/01/2001, 01:01:01'))
+    for x in range(2, 6):
+        calls.append(call(x, 1, "False"))
+    meal_purchase_worksheet.update_cell.assert_has_calls(calls)
 
 
 def test_purchase_meal(_setup_meal_plan_worksheet):
