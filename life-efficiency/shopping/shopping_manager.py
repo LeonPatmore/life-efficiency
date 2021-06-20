@@ -62,19 +62,22 @@ class ShoppingManager(object):
         # TODO: This needs to be improved.
         quantity_removed = 0
         extra_removed_items = []
-        for day in [self.days((self.current_timestamp_provider().weekday() + i) % len(self.days))
-                    for i in range(len(self.days))]:
-            if not self.meal_plan.is_meal_purchased(day):
-                todays_meal = self.meal_plan.get_meal_for_day(day)  # type: list
+        for week in range(self.meal_plan.get_current_week(), self.meal_plan.weeks):
+            days_to_loop_in = self.meal_plan.days
+            if week == self.meal_plan.get_current_week():
+                days_to_loop_in = list(self.meal_plan.days)[self.current_timestamp_provider().weekday():]
+            for day in days_to_loop_in:
+                if not self.meal_plan.is_meal_purchased(day, week):
+                    todays_meal = self.meal_plan.get_meal_for_day_and_week(day, week)  # type: list
 
-                quantity_in_meal, extra_items_to_remove = \
-                    self._check_if_item_can_be_removed_from_purchased_meal(item, quantity, todays_meal)
+                    quantity_in_meal, extra_items_to_remove = \
+                        self._check_if_item_can_be_removed_from_purchased_meal(item, quantity, todays_meal)
 
-                if quantity_in_meal > 0:
-                    self.meal_plan.purchase_meal(day)
-                    extra_removed_items.extend(extra_items_to_remove)
-                    quantity = quantity - quantity_in_meal
-                    quantity_removed = quantity_removed + quantity_in_meal
+                    if quantity_in_meal > 0:
+                        self.meal_plan.purchase_meal(day, week)
+                        extra_removed_items.extend(extra_items_to_remove)
+                        quantity = quantity - quantity_in_meal
+                        quantity_removed = quantity_removed + quantity_in_meal
 
         return RemovedItems(quantity_removed, self._condense_extra_removed_items(extra_removed_items))
 
@@ -86,21 +89,33 @@ class ShoppingManager(object):
     def _get_quantity_reduction_items(self) -> list:
         return [self._check_shopping_list, self._check_meal_plan]
 
+    def _meal_plan_items(self):
+
+        todays_day = self.days(self.current_timestamp_provider().weekday() % len(self.days))
+        this_week = self.meal_plan.get_current_week()
+
+        if not self.meal_plan.is_meal_purchased(todays_day, this_week):
+            todays_meal = self.meal_plan.get_meal_for_day_and_week(todays_day, this_week)
+        else:
+            todays_meal = []
+
+        tomorrows_day = self.days((self.current_timestamp_provider().weekday() + 1) % len(self.days))
+        tomorrow_week = this_week
+        if tomorrows_day.value <= todays_day.value:
+            tomorrow_week = this_week + 1
+        if not self.meal_plan.is_meal_purchased(tomorrows_day, tomorrow_week):
+            tomorrows_meal = self.meal_plan.get_meal_for_day_and_week(tomorrows_day, tomorrow_week)
+        else:
+            tomorrows_meal = []
+
+        return todays_meal + tomorrows_meal
+
     def todays_items(self) -> list:
         predicted_repeating_items = [x for x in self.repeating_items.get_repeating_items()
                                      if self.shopping_predictor.should_buy_today(x)]
-        todays_day = self.days(self.current_timestamp_provider().weekday() % len(self.days))
-        if not self.meal_plan.is_meal_purchased(todays_day):
-            todays_meal = self.meal_plan.get_meal_for_day(todays_day)
-        else:
-            todays_meal = []
-        tomorrows_day = self.days((self.current_timestamp_provider().weekday() + 1) % len(self.days))
-        if not self.meal_plan.is_meal_purchased(tomorrows_day):
-            tomorrows_meal = self.meal_plan.get_meal_for_day(tomorrows_day)
-        else:
-            tomorrows_meal = []
+        meal_plan_meals = self._meal_plan_items()
         shopping_list = self.shopping_list.get_items()
-        return predicted_repeating_items + todays_meal + tomorrows_meal + shopping_list
+        return predicted_repeating_items + meal_plan_meals + shopping_list
 
     def complete_item(self, item: str, quantity: int) -> list:
         extra_removed_items = []

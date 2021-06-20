@@ -11,3 +11,4 @@ if dotenv:
     dotenv.load_dotenv()
 
 spreadsheet = SpreadsheetLoaderAWS(boto3.client("s3"), boto3.client("secretsmanager")).spreadsheet
+meal_plan_weeks = 2

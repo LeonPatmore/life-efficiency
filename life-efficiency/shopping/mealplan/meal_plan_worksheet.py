@@ -15,10 +15,11 @@ class MealPlanWorksheet(MealPlan):
                  time_provider: types.FunctionType,
                  days: Enum,
                  meal_plan_worksheet: gspread.Worksheet,
-                 meal_purchase_worksheet: gspread.Worksheet):
+                 meal_purchase_worksheet: gspread.Worksheet,
+                 weeks: int):
         self.meal_plan_worksheet = meal_plan_worksheet
         self.meal_purchase_worksheet = meal_purchase_worksheet
-        super().__init__(time_provider, days)
+        super().__init__(time_provider, days, weeks)
         self._init_worksheet()
 
     def _init_worksheet(self):
@@ -31,24 +32,30 @@ class MealPlanWorksheet(MealPlan):
 
     def _load_meal_plans(self):
         worksheet_values = self.meal_plan_worksheet.get_all_values()
-        for index, day in enumerate(self.days):
-            if index >= len(worksheet_values):
-                worksheet_row = []
-            else:
-                worksheet_row = worksheet_values[index]
-            self.mean_plan[day] = worksheet_row
+        for week in range(self.weeks):
+            for day_index, day in enumerate(self.days):
+                index = len(self.days) * week + day_index
+                if index >= len(worksheet_values):
+                    worksheet_row = []
+                else:
+                    worksheet_row = worksheet_values[index]
+                self.mean_plan[week][day] = [x for x in worksheet_row if x.rstrip() != ""]
 
     def _get_purchase_time(self) -> datetime:
         return string_to_datetime(self.meal_purchase_worksheet.get_all_values()[0][0])
 
     def _reset_purchase_time(self, new_time: datetime):
         self.meal_purchase_worksheet.update_cell(1, 1, datetime_to_string(new_time))
-        for day in self.days:
-            self.meal_purchase_worksheet.update_cell(day.value + 2, 1, "False")
+        for week in range(self.weeks):
+            for day in self.days:
+                index = 2 + (len(self.days) * week) + day.value
+                self.meal_purchase_worksheet.update_cell(index, 1, "False")
 
-    def _is_meal_purchased_implementation(self, day) -> bool:
-        purchased_string = self.meal_purchase_worksheet.get_all_values()[day.value + 1][0]  # type: str
+    def _is_meal_purchased_implementation(self, day, week) -> bool:
+        index = week * len(self.days) + day.value + 1
+        purchased_string = self.meal_purchase_worksheet.get_all_values()[index][0]  # type: str
         return strtobool(purchased_string)
 
-    def _purchase_meal_implementation(self, day):
-        self.meal_purchase_worksheet.update_cell(day.value + 2, 1, "True")
+    def _purchase_meal_implementation(self, day, week):
+        index = week * len(self.days) + day.value + 2
+        self.meal_purchase_worksheet.update_cell(index, 1, "True")

@@ -12,6 +12,7 @@ from shopping.repeatingitems.shopping_repeating_items import RepeatingItems
 from shopping.shopping_manager import ShoppingManager, UnexpectedBuyException
 from tests.shopping.mealplan.test_days import TestDays
 
+MEAL_PLAN_WEEKS = 2
 CURRENT_TIME = datetime(2001, 1, 1, 1, 1, 1, 1)
 TEST_ITEM = "test-item"
 TEST_ITEM_2 = "test-item-2"
@@ -20,10 +21,10 @@ TEST_ITEM_3 = "test-item-3"
 
 class TestMealPlan(MealPlan):
 
-    def __init__(self, meal_plan, time_provider: types.FunctionType, days: Enum):
+    def __init__(self, meal_plan, time_provider: types.FunctionType, days: Enum, weeks: int):
         self._meal_plan = meal_plan
-        super().__init__(time_provider, days)
-        self.meal_purchased = len(meal_plan) * [False]
+        super().__init__(time_provider, days, weeks)
+        self.meal_purchased = (len(meal_plan) * weeks) * [False]
 
     def _load_meal_plans(self):
         self.mean_plan = self._meal_plan
@@ -34,11 +35,13 @@ class TestMealPlan(MealPlan):
     def _reset_purchase_time(self, new_time: datetime):
         pass
 
-    def _is_meal_purchased_implementation(self, day) -> bool:
-        return self.meal_purchased[day.value]
+    def _is_meal_purchased_implementation(self, day, week) -> bool:
+        index = day.value + (week * len(self.days))
+        return self.meal_purchased[index]
 
-    def _purchase_meal_implementation(self, day):
-        self.meal_purchased[day.value] = True
+    def _purchase_meal_implementation(self, day, week):
+        index = day.value + (week * len(self.days))
+        self.meal_purchased[index] = True
 
 
 class TestShoppingHistory(ShoppingHistory):
@@ -101,7 +104,7 @@ def setup_shopping_manager(request):
     if shopping_list is None:
         shopping_list = []
 
-    meal_plan = TestMealPlan(meal_plan, lambda: CURRENT_TIME, TestDays)
+    meal_plan = TestMealPlan(meal_plan, lambda: CURRENT_TIME, TestDays, MEAL_PLAN_WEEKS)
     shopping_history = TestShoppingHistory(purchases)
     shopping_list = TestShoppingList(shopping_list)
     repeating_items = TestRepeatingItems(repeating_items)
@@ -146,7 +149,8 @@ def test_todays_items_with_repeating_items(_setup_shopping_manager):
                          [([ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=4)),
                             ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=3))],
                            [TEST_ITEM],
-                           {TestDays.DAY_1: [TEST_ITEM_2], TestDays.DAY_2: [TEST_ITEM_2]},
+                           {0: {TestDays.DAY_1: [TEST_ITEM_2], TestDays.DAY_2: [TEST_ITEM_2]},
+                            1: {TestDays.DAY_1: [TEST_ITEM_2]}},
                            [TEST_ITEM_3])],
                          indirect=True)
 def test_todays_items_multiple_items(_setup_shopping_manager):
@@ -161,7 +165,8 @@ def test_todays_items_multiple_items(_setup_shopping_manager):
                          [([ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=4)),
                             ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=3))],
                            [TEST_ITEM],
-                           {TestDays.DAY_1: [TEST_ITEM], TestDays.DAY_2: [TEST_ITEM]},
+                           {0: {TestDays.DAY_1: [TEST_ITEM_2], TestDays.DAY_2: [TEST_ITEM]},
+                            1: {TestDays.DAY_1: [TEST_ITEM]}},
                            [TEST_ITEM])],
                          indirect=True)
 def test_complete_item_shopping_list_is_most_important(_setup_shopping_manager):
@@ -171,15 +176,18 @@ def test_complete_item_shopping_list_is_most_important(_setup_shopping_manager):
 
     assert shopping_manager.todays_items() == [TEST_ITEM, TEST_ITEM]
     assert TEST_ITEM not in shopping_list.get_items()
-    assert not meal_plan.is_meal_purchased(TestDays.DAY_1)
-    assert not meal_plan.is_meal_purchased(TestDays.DAY_2)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_1, 0)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_1, 1)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_2, 0)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_2, 1)
 
 
 @pytest.mark.parametrize("_setup_shopping_manager",
                          [([ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=4)),
                             ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=3))],
                            [TEST_ITEM],
-                           {TestDays.DAY_1: [TEST_ITEM], TestDays.DAY_2: [TEST_ITEM]},
+                           {0: {TestDays.DAY_1: [TEST_ITEM_2], TestDays.DAY_2: [TEST_ITEM]},
+                            1: {TestDays.DAY_1: [TEST_ITEM]}},
                            [TEST_ITEM])],
                          indirect=True)
 def test_complete_item_extra_items_are_used(_setup_shopping_manager):
@@ -189,15 +197,18 @@ def test_complete_item_extra_items_are_used(_setup_shopping_manager):
 
     assert shopping_manager.todays_items() == [TEST_ITEM]
     assert TEST_ITEM not in shopping_list.get_items()
-    assert not meal_plan.is_meal_purchased(TestDays.DAY_1)
-    assert meal_plan.is_meal_purchased(TestDays.DAY_2)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_1, 0)
+    assert meal_plan.is_meal_purchased(TestDays.DAY_2, 0)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_1, 1)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_2, 1)
 
 
 @pytest.mark.parametrize("_setup_shopping_manager",
                          [([ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=4)),
                             ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=3))],
                            [TEST_ITEM],
-                           {TestDays.DAY_1: [TEST_ITEM], TestDays.DAY_2: [TEST_ITEM]},
+                           {0: {TestDays.DAY_1: [TEST_ITEM_2], TestDays.DAY_2: [TEST_ITEM]},
+                            1: {TestDays.DAY_1: [TEST_ITEM]}},
                            [TEST_ITEM])],
                          indirect=True)
 def test_complete_item_two_meals_are_purchased(_setup_shopping_manager):
@@ -207,15 +218,18 @@ def test_complete_item_two_meals_are_purchased(_setup_shopping_manager):
 
     assert shopping_manager.todays_items() == []
     assert TEST_ITEM not in shopping_list.get_items()
-    assert meal_plan.is_meal_purchased(TestDays.DAY_1)
-    assert meal_plan.is_meal_purchased(TestDays.DAY_2)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_1, 0)
+    assert meal_plan.is_meal_purchased(TestDays.DAY_2, 0)
+    assert meal_plan.is_meal_purchased(TestDays.DAY_1, 1)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_2, 1)
 
 
 @pytest.mark.parametrize("_setup_shopping_manager",
                          [([ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=4)),
                             ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=3))],
                            [TEST_ITEM],
-                           {TestDays.DAY_1: [TEST_ITEM], TestDays.DAY_2: [TEST_ITEM]},
+                           {0: {TestDays.DAY_1: [TEST_ITEM_2], TestDays.DAY_2: [TEST_ITEM]},
+                            1: {TestDays.DAY_1: [TEST_ITEM]}},
                            [TEST_ITEM])],
                          indirect=True)
 def test_complete_item_too_many_purchased_but_is_repeating_item(_setup_shopping_manager):
@@ -225,15 +239,18 @@ def test_complete_item_too_many_purchased_but_is_repeating_item(_setup_shopping_
 
     assert shopping_manager.todays_items() == []
     assert TEST_ITEM not in shopping_list.get_items()
-    assert meal_plan.is_meal_purchased(TestDays.DAY_1)
-    assert meal_plan.is_meal_purchased(TestDays.DAY_2)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_1, 0)
+    assert meal_plan.is_meal_purchased(TestDays.DAY_2, 0)
+    assert meal_plan.is_meal_purchased(TestDays.DAY_1, 1)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_2, 1)
 
 
 @pytest.mark.parametrize("_setup_shopping_manager",
                          [([ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=4)),
                             ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=3))],
                            [],
-                           {TestDays.DAY_1: [TEST_ITEM], TestDays.DAY_2: [TEST_ITEM]},
+                           {0: {TestDays.DAY_1: [TEST_ITEM_2], TestDays.DAY_2: [TEST_ITEM]},
+                            1: {TestDays.DAY_1: [TEST_ITEM]}},
                            [TEST_ITEM])],
                          indirect=True)
 def test_complete_item_too_many_purchased_but_is_not_repeating_item(_setup_shopping_manager):
@@ -247,7 +264,8 @@ def test_complete_item_too_many_purchased_but_is_not_repeating_item(_setup_shopp
                          [([ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=4)),
                             ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=3))],
                            [],
-                           {TestDays.DAY_1: [], TestDays.DAY_2: [TEST_ITEM, TEST_ITEM_2, TEST_ITEM_3, TEST_ITEM_3]},
+                           {0: {TestDays.DAY_1: [],
+                                TestDays.DAY_2: [TEST_ITEM, TEST_ITEM_2, TEST_ITEM_3, TEST_ITEM_3]}},
                            [])],
                          indirect=True)
 def test_complete_item_completing_meal_removes_all_items(_setup_shopping_manager):
@@ -257,15 +275,16 @@ def test_complete_item_completing_meal_removes_all_items(_setup_shopping_manager
 
     assert extra_removed_items == [[TEST_ITEM_2, 1], [TEST_ITEM_3, 2]]
     assert shopping_manager.todays_items() == []
-    assert meal_plan.is_meal_purchased(TestDays.DAY_2)
-    assert not meal_plan.is_meal_purchased(TestDays.DAY_1)
+    assert meal_plan.is_meal_purchased(TestDays.DAY_2, 0)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_1, 0)
 
 
 @pytest.mark.parametrize("_setup_shopping_manager",
                          [([ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=4)),
                             ShoppingItemPurchase(TEST_ITEM, 1, CURRENT_TIME - timedelta(days=3))],
                            [],
-                           {TestDays.DAY_1: [], TestDays.DAY_2: [TEST_ITEM, TEST_ITEM_2, TEST_ITEM_3, TEST_ITEM_3]},
+                           {0: {TestDays.DAY_1: [],
+                                TestDays.DAY_2: [TEST_ITEM, TEST_ITEM_2, TEST_ITEM_3, TEST_ITEM_3]}},
                            [])],
                          indirect=True)
 def test_complete_today(_setup_shopping_manager):
@@ -274,8 +293,8 @@ def test_complete_today(_setup_shopping_manager):
     shopping_manager.complete_today()
 
     assert shopping_manager.todays_items() == []
-    assert meal_plan.is_meal_purchased(TestDays.DAY_2)
-    assert not meal_plan.is_meal_purchased(TestDays.DAY_1)
+    assert meal_plan.is_meal_purchased(TestDays.DAY_2, 0)
+    assert not meal_plan.is_meal_purchased(TestDays.DAY_1, 0)
 
 
 @pytest.mark.parametrize("_setup_shopping_manager",

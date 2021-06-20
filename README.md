@@ -15,6 +15,10 @@ All commands should be ran from the root of the repo.
 
     `set PYTHONPATH=%PYTHONPATH%;.\life-efficiency`
 
+    **Linux**
+
+    `export PYTHONPATH=./life-efficiency`
+
 2. Make sure your AWS credentials are setup:
 
     **Windows**:
@@ -31,7 +35,7 @@ All commands should be ran from the root of the repo.
 
 We are using pytest to test this project, and a pytest plugin to monitor the test coverage.
 
-`pipenv run python -m pytest --cov=life-efficiency`
+`pipenv run python -m pytest --cov=life-efficiency ./tests`
 
 ### Running the Linter
 
