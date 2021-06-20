@@ -1,0 +1,2 @@
+build:
+	sam build -u
