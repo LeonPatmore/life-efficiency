@@ -93,6 +93,7 @@ class ShoppingManager(object):
 
         todays_day = self.days(self.current_timestamp_provider().weekday() % len(self.days))
         this_week = self.meal_plan.get_current_week()
+        logging.info("Today's day is [ {} ], week [ {} ]".format(todays_day, this_week))
 
         if not self.meal_plan.is_meal_purchased(todays_day, this_week):
             todays_meal = self.meal_plan.get_meal_for_day_and_week(todays_day, this_week)
@@ -100,11 +101,13 @@ class ShoppingManager(object):
             todays_meal = []
 
         tomorrows_day = self.days((self.current_timestamp_provider().weekday() + 1) % len(self.days))
-        tomorrow_week = this_week
+        tomorrows_week = this_week
         if tomorrows_day.value <= todays_day.value:
-            tomorrow_week = this_week + 1
-        if not self.meal_plan.is_meal_purchased(tomorrows_day, tomorrow_week):
-            tomorrows_meal = self.meal_plan.get_meal_for_day_and_week(tomorrows_day, tomorrow_week)
+            tomorrows_week = this_week + 1
+        logging.info("Tomorrows's day is [ {} ], week [ {} ]".format(tomorrows_day, tomorrows_week))
+
+        if not self.meal_plan.is_meal_purchased(tomorrows_day, tomorrows_week):
+            tomorrows_meal = self.meal_plan.get_meal_for_day_and_week(tomorrows_day, tomorrows_week)
         else:
             tomorrows_meal = []
 

@@ -1,3 +1,4 @@
+import logging
 import types
 from datetime import datetime
 from distutils.util import strtobool
@@ -24,10 +25,11 @@ class MealPlanWorksheet(MealPlan):
 
     def _init_worksheet(self):
         worksheet_values = self.meal_purchase_worksheet.get_all_values()
+        logging.info("Initing worksheet with initial values [ {} ]".format(worksheet_values))
         if not worksheet_values \
                 or len(worksheet_values) == 0 \
                 or len(worksheet_values[0]) == 0 \
-                or self.meal_purchase_worksheet.get_all_values()[0][0] == "":
+                or worksheet_values[0][0] == "":
             self._reset_purchase_time(self.time_provider())
 
     def _load_meal_plans(self):
@@ -45,6 +47,7 @@ class MealPlanWorksheet(MealPlan):
         return string_to_datetime(self.meal_purchase_worksheet.get_all_values()[0][0])
 
     def _reset_purchase_time(self, new_time: datetime):
+        logging.info("Resetting purchase time for worksheet!")
         self.meal_purchase_worksheet.update_cell(1, 1, datetime_to_string(new_time))
         for week in range(self.weeks):
             for day in self.days:
