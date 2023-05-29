@@ -42,13 +42,13 @@ def get_list():
 
 
 def add_to_list(json):
-    validate_json_fields(json, ['item', 'quantity'])
-    item = json['item']
+    validate_json_fields(json, ['name', 'quantity'])
+    item_name = json['name']
     try:
         quantity = int(json['quantity'])
     except ValueError:
         raise HTTPAwareException(400, 'quantity must be an integer')
-    shopping_manager.shopping_list.add_item(item, quantity, get_current_datetime_utc())
+    shopping_manager.shopping_list.increase_quantity(item_name, quantity)
 
 
 def get_today():
