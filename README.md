@@ -47,11 +47,11 @@ We are using flake8 as our super cool Python linter.
 
 1. Update the requirements file: `pipenv lock -r > life-efficiency/requirements.txt`.
 
-2. Build `sam build -u`
+2. Build `make build`
 
 ## Running Lambda Locally
 
-`sam local start-api`
+`make run`
 
 ## Deploying
 

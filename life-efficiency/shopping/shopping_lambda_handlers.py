@@ -36,7 +36,7 @@ def get_list():
     return {
         'statusCode': 200,
         'body': json.dumps({
-            'items': shopping_manager.shopping_list.get_items()
+            'items': [vars(x) for x in shopping_manager.shopping_list.get_items()]
         }, default=str)
     }
 
