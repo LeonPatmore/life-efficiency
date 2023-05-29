@@ -1,6 +1,5 @@
 import json
 
-from helpers.datetime import get_current_datetime_utc
 from helpers.lambda_splitter import LambdaSplitter, HTTPAwareException
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_configuration import shopping_manager
