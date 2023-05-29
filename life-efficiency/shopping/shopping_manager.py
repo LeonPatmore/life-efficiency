@@ -83,7 +83,7 @@ class ShoppingManager(object):
 
     def _check_shopping_list(self, item: str, quantity: int) -> RemovedItems:
         num = min(self.shopping_list.get_item_count(item), quantity)
-        self.shopping_list.remove_item(item, num)
+        self.shopping_list.reduce_quantity(item, num)
         return RemovedItems(num)
 
     def _get_quantity_reduction_items(self) -> list:
@@ -117,7 +117,10 @@ class ShoppingManager(object):
         predicted_repeating_items = [x for x in self.repeating_items.get_repeating_items()
                                      if self.shopping_predictor.should_buy_today(x)]
         meal_plan_meals = self._meal_plan_items()
-        shopping_list = self.shopping_list.get_items()
+        shopping_list = []
+        for list_item in self.shopping_list.get_items():
+            for _ in range(list_item.quantity):
+                shopping_list.append(list_item.name)
         return predicted_repeating_items + meal_plan_meals + shopping_list
 
     def complete_item(self, item: str, quantity: int) -> list:

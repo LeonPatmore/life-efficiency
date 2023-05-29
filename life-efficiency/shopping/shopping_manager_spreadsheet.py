@@ -13,7 +13,10 @@ class ShoppingManagerSpreadsheet(ShoppingManager):
 
     def __init__(self, spreadsheet: Spreadsheet, meal_plan, repeating_items, days: Enum):
         shopping_history_worksheet = ShoppingHistoryWorksheet(init_worksheet(spreadsheet, "History"))
-        shopping_list_worksheet = ShoppingListWorksheet(init_worksheet(spreadsheet, "List"))
+        shopping_list_worksheet = ShoppingListWorksheet(
+            worksheet=init_worksheet(spreadsheet, "List"),
+            current_datetime_generator=get_current_datetime_utc,
+        )
         super(ShoppingManagerSpreadsheet, self).__init__(meal_plan,
                                                          shopping_history_worksheet,
                                                          shopping_list_worksheet,

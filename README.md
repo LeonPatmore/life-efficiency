@@ -7,7 +7,7 @@ A project to improve the efficiency of my life!
 
 ## Running Locally
 
-All commands should be ran from the root of the repo.
+All commands should be run from the root of the repo.
 
 1. Make sure that you set your python path to the source root (this is different from the repo root):
 
@@ -70,6 +70,7 @@ Note: You must have valid AWS environment setup.
 `pipenv run python -m pytest functional`
 
 ## TODO
+
 https://github.com/todotxt/todo.txt
 
 ## Shopping

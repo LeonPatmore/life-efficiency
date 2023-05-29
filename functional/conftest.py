@@ -6,7 +6,7 @@ from functional.spreadsheet_helper import SpreadsheetHelper
 
 
 @pytest.fixture(scope="session")
-def load_spreadsheet():
+def load_spreadsheet() -> SpreadsheetHelper:
     file_name = "credentials.json"
     s3_client = boto3.client("s3")
     s3_client.download_file("life-efficiency", "credentials.json", file_name)
