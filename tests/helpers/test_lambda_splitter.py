@@ -2,7 +2,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from helpers.lambda_splitter import LambdaSplitter, HTTPAwareException
+from lambda_splitter.errors import HTTPAwareException
+from lambda_splitter.lambda_splitter import LambdaSplitter
 
 PATH_PARAMETER_KEY = 'path_parameter'
 

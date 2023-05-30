@@ -1,14 +1,10 @@
 import json
 
-from helpers.lambda_splitter import LambdaSplitter, HTTPAwareException
+from lambda_splitter.errors import HTTPAwareException
+from lambda_splitter.lambda_splitter import LambdaSplitter, LambdaTarget
+from lambda_splitter.validators import JsonBodyValidator, QueryParamValidator
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_configuration import shopping_manager
-
-
-def validate_json_fields(json, required_fields=list()):
-    for required_field in required_fields:
-        if required_field not in json:
-            raise HTTPAwareException(400, 'field `{}` is required'.format(required_field))
 
 
 def get_history():
@@ -21,7 +17,6 @@ def get_history():
 
 
 def insert_purchase(json):
-    validate_json_fields(json, ['item', 'quantity'])
     item = json['item']
     try:
         quantity = int(json['quantity'])
@@ -41,13 +36,18 @@ def get_list():
 
 
 def add_to_list(json):
-    validate_json_fields(json, ['name', 'quantity'])
     item_name = json['name']
     try:
         quantity = int(json['quantity'])
     except ValueError:
         raise HTTPAwareException(400, 'quantity must be an integer')
     shopping_manager.shopping_list.increase_quantity(item_name, quantity)
+
+
+def delete_item(params):
+    item_name = params['name']
+    item_quantity = int(params['quantity'])
+    shopping_manager.shopping_list.reduce_quantity(item_name, item_quantity)
 
 
 def get_today():
@@ -60,7 +60,6 @@ def get_today():
 
 
 def complete_items(json):
-    validate_json_fields(json, ['items'])
     shopping_manager.complete_items(json['items'])
 
 
@@ -78,17 +77,27 @@ def get_repeating_items():
 
 
 def add_to_repeating_items(json):
-    validate_json_fields(json, ['item'])
     shopping_manager.repeating_items.add_repeating_item(json['item'])
 
 
 shopping_handler = LambdaSplitter('subcommand')
-shopping_handler.add_sub_handler('history', get_history)
-shopping_handler.add_sub_handler('history', insert_purchase, 'POST')
-shopping_handler.add_sub_handler('list', get_list)
-shopping_handler.add_sub_handler('list', add_to_list, 'POST')
-shopping_handler.add_sub_handler('items', complete_items, 'POST')
-shopping_handler.add_sub_handler('today', get_today)
-shopping_handler.add_sub_handler('today', complete_today, 'POST')
-shopping_handler.add_sub_handler('repeating', get_repeating_items)
-shopping_handler.add_sub_handler('repeating', add_to_repeating_items, 'POST')
+shopping_handler.add_sub_handler('history', LambdaTarget(get_history))
+shopping_handler.add_sub_handler('history',
+                                 LambdaTarget(insert_purchase, [JsonBodyValidator(["name", "quantity"])]),
+                                 'POST')
+shopping_handler.add_sub_handler('list', LambdaTarget(get_list))
+shopping_handler.add_sub_handler('list',
+                                 LambdaTarget(add_to_list, [JsonBodyValidator(["name", "quantity"])]),
+                                 'POST')
+shopping_handler.add_sub_handler('list',
+                                 LambdaTarget(delete_item, [QueryParamValidator(["name", "quantity"])]),
+                                 'DELETE')
+shopping_handler.add_sub_handler('items',
+                                 LambdaTarget(complete_items, [JsonBodyValidator(["items"])]),
+                                 'POST')
+shopping_handler.add_sub_handler('today', LambdaTarget(get_today))
+shopping_handler.add_sub_handler('today', LambdaTarget(complete_today), 'POST')
+shopping_handler.add_sub_handler('repeating', LambdaTarget(get_repeating_items))
+shopping_handler.add_sub_handler('repeating',
+                                 LambdaTarget(add_to_repeating_items, [JsonBodyValidator(["item"])]),
+                                 'POST')

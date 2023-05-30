@@ -1,6 +1,6 @@
 import logging
 
-from helpers.lambda_splitter import HTTPAwareException
+from lambda_splitter.errors import HTTPAwareException
 from shopping.history.shopping_history import ShoppingHistory
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.predictor.shopping_predictor import ShoppingPredictor

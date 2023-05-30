@@ -1,6 +1,6 @@
 import gspread
 
-from helpers.lambda_splitter import HTTPAwareException
+from lambda_splitter.errors import HTTPAwareException
 from shopping.repeatingitems.shopping_repeating_items import RepeatingItems
 
 

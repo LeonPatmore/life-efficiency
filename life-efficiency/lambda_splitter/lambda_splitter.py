@@ -3,25 +3,19 @@ import types
 from inspect import signature
 from json import JSONDecodeError
 
+from lambda_splitter.errors import HTTPAwareException
+from lambda_splitter.validators import Validator
 
-class HTTPAwareException(Exception):
+
+class LambdaTarget:
 
     def __init__(self,
-                 status_code: int = 500,
-                 error_message: str = None,
-                 root_cause: Exception = None):
-        self.root_cause = root_cause
-        self.status_code = status_code
-        self.error_message = error_message
-
-    def get_body(self):
-        if self.error_message:
-            return {'error': self.error_message}
-        elif self.root_cause:
-            return {'error': 'exception during request processing',
-                    'exception': self.root_cause}
-        else:
-            return {}
+                 handler: object,
+                 validators: list[Validator] or None = None):
+        if validators is None:
+            validators = []
+        self.handler = handler
+        self.validators = validators
 
 
 class LambdaSplitter(object):
@@ -30,19 +24,12 @@ class LambdaSplitter(object):
         self.path_parameter_key = path_parameter_key
         self.sub_handlers = dict()
 
-    def add_sub_handler(self, sub_path: str, handler: object, method: str = "GET"):
-        """
-        Add a sub handler to this splitter.
-        :param str sub_path: Sub path to match.
-        :param types.FunctionType or LambdaSplitter handler: A handler. If it is a function, will call the function with
-            no args. If it is a lambda splitter, will call the lambda splitter.
-        :param str method: The method to match.
-        """
+    def add_sub_handler(self, sub_path: str, target: LambdaTarget, method: str = "GET"):
         sanitised_sub_path = self.sanitise_path(sub_path)
         if sanitised_sub_path not in self.sub_handlers:
             self.sub_handlers[sanitised_sub_path] = dict()
         sanitised_method = self.sanitise_method(method)
-        self.sub_handlers[sanitised_sub_path][sanitised_method] = handler
+        self.sub_handlers[sanitised_sub_path][sanitised_method] = target
 
     @staticmethod
     def sanitise_method(method: str) -> str:
@@ -78,7 +65,10 @@ class LambdaSplitter(object):
         kwargs = {}
         # JSON
         try:
-            if 'json' in list(signature(handler).parameters.keys()):
+            handler_params = list(signature(handler).parameters.keys())
+            if 'params' in handler_params:
+                kwargs['params'] = event['queryStringParameters']
+            if 'json' in handler_params:
                 kwargs['json'] = json.loads(event['body'])
         except Exception as e:
             return self._handle_json_exception(e)
@@ -96,8 +86,11 @@ class LambdaSplitter(object):
         if sub_path in self.sub_handlers:
             method = self.sanitise_method(event['httpMethod'])
             if method in self.sub_handlers[sub_path]:
-                handler = self.sub_handlers[sub_path][method]
+                target = self.sub_handlers[sub_path][method]
                 try:
+                    for validator in target.validators:
+                        validator.validate(event)
+                    handler = target.handler
                     if isinstance(handler, types.FunctionType):
                         return self._handle_function(event, handler)
                     elif isinstance(handler, LambdaSplitter):
