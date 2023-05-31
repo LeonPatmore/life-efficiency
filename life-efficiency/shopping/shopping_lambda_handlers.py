@@ -67,6 +67,12 @@ def complete_today():
     shopping_manager.complete_today()
 
 
+def complete_item(params):
+    item_name = params['name']
+    item_quantity = int(params['quantity'])
+    shopping_manager.complete_item(item_name, item_quantity)
+
+
 def get_repeating_items():
     return {
         'statusCode': 200,
@@ -97,6 +103,9 @@ shopping_handler.add_sub_handler('items',
                                  'POST')
 shopping_handler.add_sub_handler('today', LambdaTarget(get_today))
 shopping_handler.add_sub_handler('today', LambdaTarget(complete_today), 'POST')
+shopping_handler.add_sub_handler('today',
+                                 LambdaTarget(complete_item, [QueryParamValidator(["name", "quantity"])]),
+                                 'DELETE')
 shopping_handler.add_sub_handler('repeating', LambdaTarget(get_repeating_items))
 shopping_handler.add_sub_handler('repeating',
                                  LambdaTarget(add_to_repeating_items, [JsonBodyValidator(["item"])]),

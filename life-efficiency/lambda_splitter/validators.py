@@ -27,7 +27,7 @@ class QueryParamValidator(Validator):
         self.required_params = required_params
 
     def validate(self, event: dict):
-        params = event['queryStringParameters']
+        params = event['queryStringParameters'] or []
         for required_param in self.required_params:
             if required_param not in params:
                 raise HTTPAwareException(400, f"param `{required_param}` is required")

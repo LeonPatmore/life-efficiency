@@ -16,7 +16,9 @@ class UnexpectedBuyException(HTTPAwareException):
 
 class RemovedItems(object):
 
-    def __init__(self, quantity: int, extra_removed_items: list = list()):
+    def __init__(self, quantity: int, extra_removed_items: list = None):
+        if extra_removed_items is None:
+            extra_removed_items = list()
         self.quantity = quantity
         self.extra_removed_items = extra_removed_items
 
@@ -37,6 +39,8 @@ class ShoppingManager(object):
         self.shopping_predictor = ShoppingPredictor(shopping_history, current_timestamp_provider)
         self.repeating_items = repeating_items
         self.days = days
+
+        self.reduction_functions = [self._check_shopping_list, self._check_meal_plan]
 
     @staticmethod
     def _check_if_item_can_be_removed_from_purchased_meal(item: str, quantity: int, meal: list):
@@ -86,9 +90,6 @@ class ShoppingManager(object):
         self.shopping_list.reduce_quantity(item, num)
         return RemovedItems(num)
 
-    def _get_quantity_reduction_items(self) -> list:
-        return [self._check_shopping_list, self._check_meal_plan]
-
     def _meal_plan_items(self):
 
         todays_day = self.days(self.current_timestamp_provider().weekday() % len(self.days))
@@ -129,7 +130,8 @@ class ShoppingManager(object):
             logging.info("Skipping item since it is empty!")
             return extra_removed_items
         self.shopping_history.add_purchase(ShoppingItemPurchase(item, quantity))
-        for quantity_reduction_function in self._get_quantity_reduction_items():
+        for quantity_reduction_function in self.reduction_functions:
+            # noinspection PyArgumentList
             removed_items = quantity_reduction_function(item, quantity)  # type: RemovedItems
             quantity = quantity - removed_items.quantity
             extra_removed_items.extend(removed_items.extra_removed_items)
