@@ -17,12 +17,12 @@ def get_history():
 
 
 def insert_purchase(json):
-    item = json['item']
+    name = json['name']
     try:
         quantity = int(json['quantity'])
     except ValueError:
         raise HTTPAwareException(400, 'quantity must be an integer')
-    purchase = ShoppingItemPurchase(item, quantity)
+    purchase = ShoppingItemPurchase(name, quantity)
     shopping_manager.shopping_history.add_purchase(purchase)
 
 

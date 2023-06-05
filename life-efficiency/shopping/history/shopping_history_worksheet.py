@@ -28,7 +28,7 @@ class ShoppingHistoryWorksheet(ShoppingHistory):
         return purchases
 
     def add_purchase(self, purchase: ShoppingItemPurchase):
-        self.worksheet.insert_row([purchase.item,
+        self.worksheet.insert_row([purchase.name,
                                    purchase.quantity,
                                    datetime_to_string(purchase.purchase_datetime)], 1)
         self.purchases.append(purchase)
