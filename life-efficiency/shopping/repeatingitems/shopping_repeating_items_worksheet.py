@@ -23,4 +23,4 @@ class RepeatingItemsWorksheet(RepeatingItems):
         repeating_items = self.get_repeating_items()
         if item in repeating_items:
             raise RepeatingItemsAlreadyPresent(item)
-        self.worksheet.insert_row([item], 0)
+        self.worksheet.insert_row([item], 1)
