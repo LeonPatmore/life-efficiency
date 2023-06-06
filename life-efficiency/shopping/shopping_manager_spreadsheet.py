@@ -1,5 +1,3 @@
-from enum import Enum
-
 from gspread import Spreadsheet
 
 from helpers.datetime import get_current_datetime_utc
@@ -11,7 +9,7 @@ from shopping.shopping_manager import ShoppingManager
 
 class ShoppingManagerSpreadsheet(ShoppingManager):
 
-    def __init__(self, spreadsheet: Spreadsheet, meal_plan, repeating_items, days: Enum):
+    def __init__(self, spreadsheet: Spreadsheet, meal_plan, repeating_items):
         shopping_history_worksheet = ShoppingHistoryWorksheet(init_worksheet(spreadsheet, "History"))
         shopping_list_worksheet = ShoppingListWorksheet(
             worksheet=init_worksheet(spreadsheet, "List"),
@@ -21,5 +19,4 @@ class ShoppingManagerSpreadsheet(ShoppingManager):
                                                          shopping_history_worksheet,
                                                          shopping_list_worksheet,
                                                          repeating_items,
-                                                         days,
                                                          get_current_datetime_utc)

@@ -19,7 +19,7 @@ class RepeatingItemsWorksheet(RepeatingItems):
     def get_repeating_items(self) -> list:
         return list(map(lambda x: x[0], self.worksheet.get_all_values()))
 
-    def add_repeating_item(self, item: str) -> bool:
+    def add_repeating_item(self, item: str):
         repeating_items = self.get_repeating_items()
         if item in repeating_items:
             raise RepeatingItemsAlreadyPresent(item)

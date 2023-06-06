@@ -1,10 +1,13 @@
 import json
+import logging
 
 from lambda_splitter.errors import HTTPAwareException
 from lambda_splitter.lambda_splitter import LambdaSplitter, LambdaTarget
 from lambda_splitter.validators import JsonBodyValidator, QueryParamValidator
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_configuration import shopping_manager
+
+logging.getLogger().setLevel(logging.INFO)
 
 
 def get_history():
@@ -54,7 +57,7 @@ def get_today():
     return {
         'statusCode': 200,
         'body': json.dumps({
-            'items': shopping_manager.todays_items()
+            'items': shopping_manager.today_items()
         }, default=str)
     }
 
