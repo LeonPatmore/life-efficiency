@@ -1,5 +1,4 @@
 import logging
-import types
 from datetime import datetime
 
 
@@ -11,7 +10,7 @@ class MealPlan:
 
 class MealPlanService:
 
-    def __init__(self, time_provider: types.FunctionType):
+    def __init__(self, time_provider: callable):
         self.time_provider = time_provider
         self.meal_plans = self._load_meal_plans()
         logging.info(f"Meal plan has a cycle time of [ {len(self.meal_plans)} ]")

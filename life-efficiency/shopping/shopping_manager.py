@@ -83,20 +83,21 @@ class ShoppingManager(object):
 
     def _meal_plan_items(self) -> list[str]:
         if not self.meal_plan_service.is_meal_plan_of_current_day_plus_offset_purchased():
-            today_meal = self.meal_plan_service.get_meal_plan_of_current_day_plus_offset()
+            return self.meal_plan_service.get_meal_plan_of_current_day_plus_offset().items
         else:
-            today_meal = []
-        return today_meal.items
+            return []
 
     def today_items(self) -> list[str]:
         predicted_repeating_items = [x for x in self.repeating_items.get_repeating_items()
                                      if self.shopping_predictor.should_buy_today(x)]
-        meal_plan_meals = self._meal_plan_items()
+        meal_plan_items = self._meal_plan_items()
         shopping_list = []
         for list_item in self.shopping_list.get_items():
             for _ in range(list_item.quantity):
                 shopping_list.append(list_item.name)
-        return predicted_repeating_items + meal_plan_meals + shopping_list
+        logging.info(f"Todays items are made from predicted [ {predicted_repeating_items} ], "
+                     f"list [ {shopping_list} ] and meal plans [ {meal_plan_items} ]")
+        return predicted_repeating_items + meal_plan_items + shopping_list
 
     def complete_item(self, item: str, quantity: int) -> list:
         extra_removed_items = []

@@ -3,120 +3,74 @@ from enum import Enum
 
 import pytest
 
-from shopping.mealplan.meal_plan import MealPlan
-from tests.shopping.mealplan.test_days import TestDays
+from shopping.mealplan.meal_plan import MealPlanService, MealPlan
 
 
-class TestMealPlan(MealPlan):
+class TestMealPlan(MealPlanService):
 
-    def __init__(self, meal_plan: dict, time_provider, days: Enum, weeks: int, purchase_time: datetime):
+    def __init__(self, meal_plan: list[MealPlan],
+                 time_provider: callable,
+                 current_cycle_start_time: datetime):
         self._mean_plan = meal_plan
-        self.purchase_time = purchase_time
-        self.purchase_time_reset = False
-        super().__init__(time_provider, days, weeks)
+        self.current_cycle_start_time = current_cycle_start_time
+        self.meal_purchased = len(meal_plan) * [False]
+        super().__init__(time_provider)
 
-    def _load_meal_plans(self):
-        self.mean_plan = self._mean_plan
+    def _load_meal_plans(self) -> list[MealPlan]:
+        return self._mean_plan
 
-    def _get_purchase_time(self) -> datetime:
-        return self.purchase_time
+    def _set_current_cycle_start_time(self, current_cycle_start_time: datetime):
+        self.current_cycle_start_time = current_cycle_start_time
 
-    def _reset_purchase_time(self, new_time: datetime):
-        self.purchase_time = new_time
+    def _get_current_cycle_start_time(self) -> datetime:
+        return self.current_cycle_start_time
 
-    def _is_meal_purchased_implementation(self, day, week) -> bool:
-        pass
+    def _is_meal_purchased(self, index: int) -> bool:
+        return self.meal_purchased[index]
 
-    def _purchase_meal_implementation(self, day, week):
-        pass
-
-    def get_purchase_time(self):
-        return self._get_purchase_time()
+    def _set_meal_purchased(self, index: int, purchased: bool):
+        self.meal_purchased[index] = purchased
 
 
 CURRENT_TIME = datetime(5, 5, 5, 5, 5, 5)
 PURCHASE_TIME = CURRENT_TIME - timedelta(days=1)
+ITEM_1 = "item-1"
+ITEM_2 = "item-2"
 
 
 @pytest.fixture
-def setup_meal_plan(request):
-    params = request.param if "param" in dir(request) else {"meal_plan": {}, "current_time": CURRENT_TIME}
-    current_time = params["current_time"] if "current_time" in params.keys() else CURRENT_TIME
-    meal_plan_dict = params["meal_plan"] if "meal_plan" in params.keys() else {}
-    meal_plan = TestMealPlan(meal_plan_dict, lambda: current_time, TestDays, 2, PURCHASE_TIME)
-    return meal_plan
+def setup_meal_plan(request) -> TestMealPlan:
+    params = request.param if "param" in dir(request) else {"meal_plan": list(), "current_time": CURRENT_TIME}
+    cycle_start_time = params["cycle_start_time"] if "cycle_start_time" in params.keys() else CURRENT_TIME
+    meal_plan = params["meal_plan"] if "meal_plan" in params.keys() else list()
+    meal_plan_service = TestMealPlan(meal_plan, lambda: CURRENT_TIME, cycle_start_time)
+    return meal_plan_service
 
 
-_setup_meal_plan = setup_meal_plan
+@pytest.mark.parametrize("setup_meal_plan", [{"meal_plan": [MealPlan([ITEM_1])]}], indirect=True)
+def test_get_meal_plan_of_current_day_plus_offset(setup_meal_plan):
+    meal_plan = setup_meal_plan.get_meal_plan_of_current_day_plus_offset(0)
+
+    assert meal_plan.items == [ITEM_1]
 
 
-@pytest.mark.parametrize("_setup_meal_plan", [{"meal_plan": {0: {TestDays.DAY_1: ["item-1"]}}}], indirect=True)
-def test_get_meal_for_day_removes_empty_items(_setup_meal_plan):
-    meal_plan = _setup_meal_plan
+@pytest.mark.parametrize("setup_meal_plan", [{"meal_plan": [MealPlan([]), MealPlan([ITEM_2])]}], indirect=True)
+def test_get_meal_plan_of_current_day_plus_offset_with_offset(setup_meal_plan):
+    meal_plan = setup_meal_plan.get_meal_plan_of_current_day_plus_offset(1)
 
-    meals = meal_plan.get_meal_for_day_and_week(TestDays.DAY_1, 0)
-
-    assert meals == ["item-1"]
+    assert meal_plan.items == [ITEM_2]
 
 
-@pytest.mark.parametrize("_setup_meal_plan", [{"meal_plan": {0: {TestDays.DAY_1: ["item-1"]}}}], indirect=True)
-def test_get_meal_for_day_and_week_same_day_wrong_week(_setup_meal_plan):
-    meal_plan = _setup_meal_plan
-
-    meals = meal_plan.get_meal_for_day_and_week(TestDays.DAY_1, 1)
-
-    assert meals == []
-
-
-def test_purchase_meal_when_wrong_week(_setup_meal_plan):
-    meal_plan = _setup_meal_plan
-
+@pytest.mark.parametrize("setup_meal_plan", [{"meal_plan": [MealPlan([ITEM_1]), MealPlan([ITEM_2])]}], indirect=True)
+def test_get_meal_plan_of_current_day_plus_offset_with_offset_greater_than_length_throws_error(setup_meal_plan):
     with pytest.raises(ValueError):
-        meal_plan.purchase_meal(TestDays.DAY_1, 3)
+        setup_meal_plan.get_meal_plan_of_current_day_plus_offset(3)
 
 
-def test_is_meal_purchased_when_wrong_week(_setup_meal_plan):
-    meal_plan = _setup_meal_plan
+@pytest.mark.parametrize("setup_meal_plan", [{"meal_plan": [MealPlan([ITEM_1]), MealPlan([ITEM_2])],
+                                              "cycle_start_time": CURRENT_TIME - timedelta(days=3)}], indirect=True)
+def test_get_meal_plan_of_current_day_plus_offset_when_older_than_length(setup_meal_plan):
+    meal_plan = setup_meal_plan.get_meal_plan_of_current_day_plus_offset(1)
 
-    with pytest.raises(ValueError):
-        meal_plan.is_meal_purchased(TestDays.DAY_1, 3)
-
-
-@pytest.mark.parametrize("_setup_meal_plan", [{"meal_plan": {0: {TestDays.DAY_1: ["item-1"]}}}], indirect=True)
-def test_check_purchase_time_when_not_exceeded_do_nothing(_setup_meal_plan):
-    meal_plan = _setup_meal_plan
-
-    meal_plan.is_meal_purchased(TestDays.DAY_1, 1)
-
-    assert PURCHASE_TIME == meal_plan.get_purchase_time()
-
-
-@pytest.mark.parametrize("_setup_meal_plan", [{"meal_plan": {0: {TestDays.DAY_1: ["item-1"]}},
-                                               "current_time": PURCHASE_TIME + timedelta(weeks=3)}], indirect=True)
-def test_check_purchase_time_when_exceeded_reset_purchase_time(_setup_meal_plan):
-    meal_plan = _setup_meal_plan
-
-    meal_plan.is_meal_purchased(TestDays.DAY_1, 1)
-
-    assert PURCHASE_TIME + timedelta(weeks=3) == meal_plan.get_purchase_time()
-
-
-@pytest.mark.parametrize("_setup_meal_plan", [{"current_time": PURCHASE_TIME + timedelta(days=2)}], indirect=True)
-def test_get_current_week_first_week(_setup_meal_plan):
-    meal_plan = _setup_meal_plan
-
-    assert 0 == meal_plan.get_current_week()
-
-
-@pytest.mark.parametrize("_setup_meal_plan", [{"current_time": PURCHASE_TIME}], indirect=True)
-def test_get_current_week_same_time_as_purchase(_setup_meal_plan):
-    meal_plan = _setup_meal_plan
-
-    assert 0 == meal_plan.get_current_week()
-
-
-@pytest.mark.parametrize("_setup_meal_plan", [{"current_time": PURCHASE_TIME + timedelta(days=3)}], indirect=True)
-def test_get_current_week_second_week(_setup_meal_plan):
-    meal_plan = _setup_meal_plan
-
-    assert 1 == meal_plan.get_current_week()
+    assert meal_plan.items == [ITEM_2]
+    assert CURRENT_TIME == setup_meal_plan.current_cycle_start_time

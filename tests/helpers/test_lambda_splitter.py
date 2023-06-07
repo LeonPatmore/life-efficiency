@@ -3,12 +3,16 @@ from unittest.mock import Mock
 import pytest
 
 from lambda_splitter.errors import HTTPAwareException
-from lambda_splitter.lambda_splitter import LambdaSplitter
+from lambda_splitter.lambda_splitter import LambdaSplitter, LambdaTarget
+from lambda_splitter.validators import Validator
 
 PATH_PARAMETER_KEY = 'path_parameter'
 
 RESPONSE_STATUS_CODE_FIELD = 'statusCode'
 RESPONSE_BODY_FIELD = 'body'
+
+DEFAULT_SUB_PATH = "sub_path"
+SUCCESS_MOCK = Mock(return_value={RESPONSE_STATUS_CODE_FIELD: 200})
 
 
 def _generate_event(path_parameter: str, sub_path: str, body: str = None, method='GET') -> dict:
@@ -21,6 +25,12 @@ def _generate_event(path_parameter: str, sub_path: str, body: str = None, method
     }
 
 
+def setup_lambda_splitter(lambda_target: LambdaTarget) -> LambdaSplitter:
+    lambda_splitter = LambdaSplitter(PATH_PARAMETER_KEY)
+    lambda_splitter.add_sub_handler(DEFAULT_SUB_PATH, lambda_target)
+    return lambda_splitter
+
+
 @pytest.fixture
 def setup_lambda_splitter_with_method_handler():
     return_value = {RESPONSE_STATUS_CODE_FIELD: 200}
@@ -29,38 +39,30 @@ def setup_lambda_splitter_with_method_handler():
     def handler_method(*args, **kwargs): return mock_method(*args, **kwargs)
     lambda_splitter = LambdaSplitter(PATH_PARAMETER_KEY)
     sub_path = 'sub_path'
-    lambda_splitter.add_sub_handler(sub_path, handler_method)
+    lambda_splitter.add_sub_handler(sub_path, LambdaTarget(handler_method))
     return lambda_splitter, mock_method, return_value, sub_path
 
 
-_setup_lambda_splitter_with_method_handler = setup_lambda_splitter_with_method_handler
-
-
 @pytest.fixture
-def setup_embedded_lambda_splitter(_setup_lambda_splitter_with_method_handler):
-    lambda_splitter, mock_method, return_value, sub_path = _setup_lambda_splitter_with_method_handler
+def setup_embedded_lambda_splitter(setup_lambda_splitter_with_method_handler):
+    lambda_splitter, mock_method, return_value, sub_path = setup_lambda_splitter_with_method_handler
 
     top_path_parameter_key = 'path_parameter_2'
     lambda_splitter_top = LambdaSplitter(top_path_parameter_key)
     top_sub_path = 'sub_path_2'
-    lambda_splitter_top.add_sub_handler(top_sub_path, lambda_splitter)
+    lambda_splitter_top.add_sub_handler(top_sub_path, LambdaTarget(lambda_splitter))
 
     return lambda_splitter_top, top_sub_path, sub_path, top_path_parameter_key, return_value, mock_method
-
-
-_setup_embedded_lambda_splitter = setup_embedded_lambda_splitter
 
 
 @pytest.fixture
 def setup_lambda_splitter_with_unsupported_handler():
     lambda_splitter = LambdaSplitter(PATH_PARAMETER_KEY)
     sub_path = 'sub_path'
+    # noinspection PyTypeChecker
     lambda_splitter.add_sub_handler(sub_path, "unsupported-handler")
 
     return lambda_splitter, sub_path
-
-
-_setup_lambda_splitter_with_unsupported_handler = setup_lambda_splitter_with_unsupported_handler
 
 
 @pytest.fixture
@@ -71,11 +73,8 @@ def setup_lambda_splitter_with_json_handler():
     def handler_method(json): return mock_method(json=json)
     lambda_splitter = LambdaSplitter(PATH_PARAMETER_KEY)
     sub_path = 'sub_path'
-    lambda_splitter.add_sub_handler(sub_path, handler_method)
+    lambda_splitter.add_sub_handler(sub_path, LambdaTarget(handler_method))
     return lambda_splitter, mock_method, return_value, sub_path
-
-
-_setup_lambda_splitter_with_json_handler = setup_lambda_splitter_with_json_handler
 
 
 @pytest.fixture
@@ -85,12 +84,8 @@ def setup_lambda_splitter_with_method_handler_throws_http_aware_exception(reques
     def handler_method(): return mock_method()
     lambda_splitter = LambdaSplitter(PATH_PARAMETER_KEY)
     sub_path = 'sub_path'
-    lambda_splitter.add_sub_handler(sub_path, handler_method)
+    lambda_splitter.add_sub_handler(sub_path, LambdaTarget(handler_method))
     return lambda_splitter, mock_method, sub_path
-
-
-_setup_lambda_splitter_with_method_handler_throws_http_aware_exception = \
-    setup_lambda_splitter_with_method_handler_throws_http_aware_exception
 
 
 def test_sanitise_path_leading_slash():
@@ -117,8 +112,8 @@ def test_sanitise_method():
     assert sanitised_method == 'GET'
 
 
-def test_call_when_handler_is_a_method(_setup_lambda_splitter_with_method_handler):
-    lambda_splitter, mock_method, return_value, sub_path = _setup_lambda_splitter_with_method_handler
+def test_call_when_handler_is_a_method(setup_lambda_splitter_with_method_handler):
+    lambda_splitter, mock_method, return_value, sub_path = setup_lambda_splitter_with_method_handler
 
     result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path), {})
 
@@ -126,8 +121,8 @@ def test_call_when_handler_is_a_method(_setup_lambda_splitter_with_method_handle
     assert result == return_value
 
 
-def test_call_when_method_not_supported(_setup_lambda_splitter_with_method_handler):
-    lambda_splitter, mock_method, return_value, sub_path = _setup_lambda_splitter_with_method_handler
+def test_call_when_method_not_supported(setup_lambda_splitter_with_method_handler):
+    lambda_splitter, mock_method, return_value, sub_path = setup_lambda_splitter_with_method_handler
 
     result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path, method='POST'), {})
 
@@ -137,8 +132,8 @@ def test_call_when_method_not_supported(_setup_lambda_splitter_with_method_handl
     assert result[RESPONSE_STATUS_CODE_FIELD] == 405
 
 
-def test_call_when_no_subpath_match(_setup_lambda_splitter_with_method_handler):
-    lambda_splitter, mock_method, return_value, sub_path = _setup_lambda_splitter_with_method_handler
+def test_call_when_no_subpath_match(setup_lambda_splitter_with_method_handler):
+    lambda_splitter, mock_method, return_value, sub_path = setup_lambda_splitter_with_method_handler
 
     result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, 'unknown_path'), {})
 
@@ -151,9 +146,9 @@ def test_call_when_no_subpath_match(_setup_lambda_splitter_with_method_handler):
                                           "possible paths are [ {} ]\"}}".format(sub_path)
 
 
-def test_call_embedded_splitter(_setup_embedded_lambda_splitter):
+def test_call_embedded_splitter(setup_embedded_lambda_splitter):
     lambda_splitter_top, top_sub_path, sub_path, top_path_parameter_key, return_value, mock_method = \
-        _setup_embedded_lambda_splitter
+        setup_embedded_lambda_splitter
 
     event = {
         'httpMethod': 'GET',
@@ -170,14 +165,14 @@ def test_call_embedded_splitter(_setup_embedded_lambda_splitter):
     assert result == return_value
 
 
-def test_runtime_error_when_handler_is_not_supported(_setup_lambda_splitter_with_unsupported_handler):
-    lambda_splitter, sub_path = _setup_lambda_splitter_with_unsupported_handler
+def test_runtime_error_when_target_is_not_supported(setup_lambda_splitter_with_unsupported_handler):
+    lambda_splitter, sub_path = setup_lambda_splitter_with_unsupported_handler
     with pytest.raises(RuntimeError):
         lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path), {})
 
 
-def test_json_body(_setup_lambda_splitter_with_json_handler):
-    lambda_splitter, mock_method, _, sub_path = _setup_lambda_splitter_with_json_handler
+def test_json_body(setup_lambda_splitter_with_json_handler):
+    lambda_splitter, mock_method, _, sub_path = setup_lambda_splitter_with_json_handler
 
     result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path, '{"some-field": "some-value"}'), {})
 
@@ -187,8 +182,8 @@ def test_json_body(_setup_lambda_splitter_with_json_handler):
     assert result[RESPONSE_STATUS_CODE_FIELD] == 200
 
 
-def test_json_body_when_not_valid_json(_setup_lambda_splitter_with_json_handler):
-    lambda_splitter, mock_method, _, sub_path = _setup_lambda_splitter_with_json_handler
+def test_json_body_when_not_valid_json(setup_lambda_splitter_with_json_handler):
+    lambda_splitter, mock_method, _, sub_path = setup_lambda_splitter_with_json_handler
 
     result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path, ''), {})
 
@@ -200,8 +195,8 @@ def test_json_body_when_not_valid_json(_setup_lambda_splitter_with_json_handler)
     assert result[RESPONSE_BODY_FIELD] == '{"error": "body must be a valid JSON"}'
 
 
-def test_json_body_when_unexpected_exception(_setup_lambda_splitter_with_json_handler):
-    lambda_splitter, mock_method, _, sub_path = _setup_lambda_splitter_with_json_handler
+def test_json_body_when_unexpected_exception(setup_lambda_splitter_with_json_handler):
+    lambda_splitter, mock_method, _, sub_path = setup_lambda_splitter_with_json_handler
 
     result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path, None), {})
 
@@ -214,12 +209,12 @@ def test_json_body_when_unexpected_exception(_setup_lambda_splitter_with_json_ha
                                           'object must be str, bytes or bytearray, not NoneType"}'
 
 
-@pytest.mark.parametrize('_setup_lambda_splitter_with_method_handler_throws_http_aware_exception',
+@pytest.mark.parametrize('setup_lambda_splitter_with_method_handler_throws_http_aware_exception',
                          [HTTPAwareException(status_code=400, error_message='some error!')],
                          ids=['400'],
                          indirect=True)
-def test_http_aware_exception(_setup_lambda_splitter_with_method_handler_throws_http_aware_exception):
-    lambda_splitter, mock_method, sub_path = _setup_lambda_splitter_with_method_handler_throws_http_aware_exception
+def test_http_aware_exception(setup_lambda_splitter_with_method_handler_throws_http_aware_exception):
+    lambda_splitter, mock_method, sub_path = setup_lambda_splitter_with_method_handler_throws_http_aware_exception
 
     result = lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, sub_path, None), {})
 
@@ -229,3 +224,18 @@ def test_http_aware_exception(_setup_lambda_splitter_with_method_handler_throws_
     assert result[RESPONSE_STATUS_CODE_FIELD] == 400
     assert RESPONSE_BODY_FIELD in result
     assert result[RESPONSE_BODY_FIELD] == '{"error": "some error!"}'
+
+
+@pytest.fixture
+def lambda_splitter_with_failing_validation():
+    validator_mock = Mock()
+    validator_mock.validate.side_effect = RuntimeError("some validation error")
+    lambda_target = LambdaTarget(SUCCESS_MOCK, validators=[validator_mock])
+    return setup_lambda_splitter(lambda_target)
+
+
+def test_lambda_splitter_with_failing_validation(lambda_splitter_with_failing_validation):
+    lambda_splitter = lambda_splitter_with_failing_validation
+
+    with pytest.raises(RuntimeError):
+        lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, DEFAULT_SUB_PATH, None), {})

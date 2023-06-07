@@ -88,6 +88,8 @@ class LambdaSplitter(object):
             if method in self.sub_handlers[sub_path]:
                 target = self.sub_handlers[sub_path][method]
                 try:
+                    if not isinstance(target, LambdaTarget):
+                        raise RuntimeError("Target must be of type LambdaTarget")
                     for validator in target.validators:
                         validator.validate(event)
                     handler = target.handler
@@ -96,7 +98,7 @@ class LambdaSplitter(object):
                     elif isinstance(handler, LambdaSplitter):
                         return self._handle_lambda_splitter(event, context, handler)
                     else:
-                        raise RuntimeError('Handler not of expected type!')
+                        raise RuntimeError('Target handler not of expected type!')
                 except HTTPAwareException as e:
                     return {
                         'statusCode': e.status_code,
