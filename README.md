@@ -67,7 +67,7 @@ We are using flake8 as our super cool Python linter.
 
 Note: You must have valid AWS environment setup.
 
-`pipenv run python -m pytest functional`
+`make test-functional`
 
 ## TODO
 

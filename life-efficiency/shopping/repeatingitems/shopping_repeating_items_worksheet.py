@@ -8,7 +8,7 @@ class RepeatingItemsAlreadyPresent(HTTPAwareException):
 
     def __init__(self, item: str):
         super(RepeatingItemsAlreadyPresent, self)\
-            .__init__(status_code=404, error_message="repeating item `{}` already present".format(item))
+            .__init__(status_code=400, error_message="repeating item `{}` already present".format(item))
 
 
 class RepeatingItemsWorksheet(RepeatingItems):

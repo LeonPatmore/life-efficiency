@@ -17,3 +17,6 @@ deploy-prod:
 
 test:
 	pipenv run python -m pytest --cov=life-efficiency ./tests
+
+test-functional:
+	pipenv run python -m pytest functional
