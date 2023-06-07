@@ -1,5 +1,8 @@
 export PYTHONPATH=./life-efficiency
 
+lint:
+	pipenv run python -m flake8
+
 build:
 	sam build -u
 

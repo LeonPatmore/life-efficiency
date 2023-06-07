@@ -27,9 +27,9 @@ All commands should be run from the root of the repo.
 
     `set AWS_SHARED_CREDENTIALS_FILE=D:\Tools\cygwin\home\Leon\.aws\credentials`
 
-2. `pipenv install -d`
+3. `pipenv install -d`
 
-3. `pipenv run python life-efficiency/main.py`
+4. `pipenv run python life-efficiency/main.py`
 
 ### Running Tests
 
@@ -41,7 +41,7 @@ We are using pytest to test this project, and a pytest plugin to monitor the tes
 
 We are using flake8 as our super cool Python linter.
 
-`pipenv run python -m flake8`
+`make lint`
 
 ## Building
 
