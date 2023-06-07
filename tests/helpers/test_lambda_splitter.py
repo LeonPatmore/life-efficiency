@@ -4,7 +4,6 @@ import pytest
 
 from lambda_splitter.errors import HTTPAwareException
 from lambda_splitter.lambda_splitter import LambdaSplitter, LambdaTarget
-from lambda_splitter.validators import Validator
 
 PATH_PARAMETER_KEY = 'path_parameter'
 

@@ -57,11 +57,11 @@ We are using flake8 as our super cool Python linter.
 
 ### Dev
 
-`sam deploy --region eu-west-1 --stack-name life-efficiency-dev`
+`make deploy-dev`
 
 ### Prod
 
-`sam deploy --region eu-west-1 --stack-name life-efficiency-prod --parameter-overrides ParameterKey=Environment,ParameterValue=Prod`
+`make deploy-prod`
 
 ## Functional Tests
 

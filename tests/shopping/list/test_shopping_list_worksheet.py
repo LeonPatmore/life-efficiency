@@ -3,8 +3,7 @@ from unittest.mock import Mock, call
 
 import pytest
 
-from shopping.list.shopping_list import ShoppingListItem
-from shopping.list.shopping_list_worksheet import ShoppingListWorksheet, NotEnoughItemsInList
+from shopping.list.shopping_list_worksheet import ShoppingListWorksheet
 
 
 @pytest.fixture

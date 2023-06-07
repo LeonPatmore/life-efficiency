@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from enum import Enum
 
 import pytest
 
