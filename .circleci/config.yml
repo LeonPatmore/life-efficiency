@@ -30,7 +30,7 @@ jobs:
     steps:
       - checkout
       - run: pipenv install -d
-      - run: pipenv run python -m pytest functional
+      - run: export PYTHONPATH=./life-efficiency && pipenv run python -m pytest functional
   deploy_prod:
     executor: sam/default
     steps:
