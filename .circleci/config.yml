@@ -1,12 +1,16 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@0.2.1
   sam: circleci/aws-sam-serverless@2.0.0
+
+executors:
+  python:
+    docker:
+      - image: cimg/python:3.9.17
 
 jobs:
   test_and_lint:
-    executor: python/default
+    executor: python
     steps:
       - checkout
       - run: pipenv install -d
@@ -22,11 +26,11 @@ jobs:
           s3-bucket: life-efficiency
       - run: sam deploy --stack-name life-efficiency-dev --no-confirm-changeset --no-fail-on-empty-changeset
   functional_tests:
-    executor: python/default
+    executor: python
     steps:
       - checkout
       - run: pipenv install -d
-      - run: pipenv run python -m pytest functional
+      - run: export PYTHONPATH=./life-efficiency && pipenv run python -m pytest functional
   deploy_prod:
     executor: sam/default
     steps:
