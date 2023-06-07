@@ -1,12 +1,14 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@0.2.1
+  python: circleci/python@1.0.0
   sam: circleci/aws-sam-serverless@2.0.0
 
 jobs:
   test_and_lint:
-    executor: python/default
+    executor:
+      name: python/default
+      tag: "3.9"
     steps:
       - checkout
       - run: pipenv install -d
