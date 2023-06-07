@@ -7,7 +7,7 @@ orbs:
 jobs:
   test_and_lint:
     executor:
-      name: python/default
+      name: python
       tag: "3.9"
     steps:
       - checkout
