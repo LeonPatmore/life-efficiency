@@ -1,12 +1,10 @@
 import json
-import logging
 from inspect import signature
 from json import JSONDecodeError
 
 from lambda_splitter.errors import HTTPAwareException
 from lambda_splitter.response_handler import ResponseHandler
 from lambda_splitter.validators import Validator
-
 
 ANY_METHOD = "ANY"
 
