@@ -1,9 +1,10 @@
 import json
-import types
+import logging
 from inspect import signature
 from json import JSONDecodeError
 
 from lambda_splitter.errors import HTTPAwareException
+from lambda_splitter.response_handler import ResponseHandler
 from lambda_splitter.validators import Validator
 
 
@@ -11,11 +12,13 @@ class LambdaTarget:
 
     def __init__(self,
                  handler: object,
-                 validators: list[Validator] or None = None):
+                 validators: list[Validator] or None = None,
+                 response_handler: ResponseHandler or None = None):
         if validators is None:
             validators = []
         self.handler = handler
         self.validators = validators
+        self.response_handler = response_handler
 
 
 class LambdaSplitter(object):
@@ -61,7 +64,7 @@ class LambdaSplitter(object):
                 })
             }
 
-    def _handle_function(self, event, handler: types.FunctionType) -> dict:
+    def _handle_function(self, event, handler: callable) -> dict:
         kwargs = {}
         # JSON
         try:
@@ -87,18 +90,23 @@ class LambdaSplitter(object):
             method = self.sanitise_method(event['httpMethod'])
             if method in self.sub_handlers[sub_path]:
                 target = self.sub_handlers[sub_path][method]
+                logging.info(f"Handling path [ {sub_path} ] and method [ {method} ]")
                 try:
                     if not isinstance(target, LambdaTarget):
                         raise RuntimeError("Target must be of type LambdaTarget")
                     for validator in target.validators:
                         validator.validate(event)
                     handler = target.handler
-                    if isinstance(handler, types.FunctionType):
-                        return self._handle_function(event, handler)
-                    elif isinstance(handler, LambdaSplitter):
-                        return self._handle_lambda_splitter(event, context, handler)
+                    if issubclass(type(handler), LambdaSplitter):
+                        response_obj = self._handle_lambda_splitter(event, context, handler)
+                    elif callable(handler):
+                        response_obj = self._handle_function(event, handler)
                     else:
-                        raise RuntimeError('Target handler not of expected type!')
+                        raise RuntimeError(f'Target handler [ {type(handler)} ] not of type '
+                                           'LambdaSplitter or Callable!')
+                    if target.response_handler:
+                        return target.response_handler.handle(response_obj)
+                    return response_obj
                 except HTTPAwareException as e:
                     return {
                         'statusCode': e.status_code,

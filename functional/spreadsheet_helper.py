@@ -10,6 +10,7 @@ class SpreadsheetHelper(object):
     def __init__(self, spreadsheet: gspread.Spreadsheet):
         self.spreadsheet = spreadsheet
         self.list_worksheet = self.spreadsheet.worksheet("List")
+        self.todo_worksheet = self.spreadsheet.worksheet("todo")
 
     def clear_list(self):
         self.list_worksheet.clear()
@@ -23,3 +24,9 @@ class SpreadsheetHelper(object):
         repeating_worksheet.clear()
         for item in items:
             repeating_worksheet.insert_row([item])
+
+    def clear_todo(self):
+        self.todo_worksheet.clear()
+
+    def add_todo_item(self, desc: str, status: str):
+        self.todo_worksheet.insert_row([desc, status, "07/06/2023, 00:57:32"], index=2)

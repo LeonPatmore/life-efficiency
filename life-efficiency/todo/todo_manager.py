@@ -1,4 +1,7 @@
+from datetime import datetime
 from enum import Enum
+
+from helpers.datetime import datetime_to_string
 
 
 class TodoStatus(Enum):
@@ -7,15 +10,20 @@ class TodoStatus(Enum):
     done = 2
     cancelled = 3
 
-if __name__ == '__main__':
-    print(dir(TodoStatus))
-
 
 class TodoItem:
 
-    def __init__(self, desc: str, status: TodoStatus):
+    def __init__(self, desc: str, status: TodoStatus, date_added: datetime):
         self.desc = desc
         self.status = status
+        self.date_added = date_added
+
+    def to_json(self):
+        return {
+            "desc": self.desc,
+            "status": self.status.name,
+            "date_added": datetime_to_string(self.date_added)
+        }
 
 
 class TodoManager:
