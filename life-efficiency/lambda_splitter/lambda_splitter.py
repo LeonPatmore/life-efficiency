@@ -117,7 +117,7 @@ class LambdaSplitter(object):
                 return self.sub_handlers[sub_path][method]
             if ANY_METHOD in self.sub_handlers[sub_path]:
                 return self.sub_handlers[sub_path][ANY_METHOD]
+            raise HTTPAwareException(405)
         else:
             raise HTTPAwareException(404, f"could not find path for this command, "
                                           f"possible paths are [ {', '.join(self.sub_handlers.keys())} ]")
-        raise HTTPAwareException(405)
