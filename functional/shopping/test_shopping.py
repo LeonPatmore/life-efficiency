@@ -46,3 +46,34 @@ def test_add_to_shopping_list(load_spreadsheet):
                              json={"name": "Drink", "quantity": 3})
 
     assert response.status_code == 200
+
+
+def test_getting_todo_list(load_spreadsheet):
+    spreadsheet_helper = load_spreadsheet
+    spreadsheet_helper.clear_todo()
+    spreadsheet_helper.add_todo_item("some todo item", "not_started")
+
+    response = requests.get(f"{SHOPPING_ROOT}/todo/list")
+
+    assert response.status_code == 200
+    response_items = response.json()
+    assert len(response_items) == 1
+    assert response_items[0]["desc"] == "some todo item"
+    assert response_items[0]["status"] == "not_started"
+    assert response_items[0]["date_added"] == "07/06/2023, 00:57:32"
+
+
+def test_getting_todo_non_completed(load_spreadsheet):
+    spreadsheet_helper = load_spreadsheet
+    spreadsheet_helper.clear_todo()
+    spreadsheet_helper.add_todo_item("some todo item", "not_started")
+    spreadsheet_helper.add_todo_item("some todo item", "done")
+
+    response = requests.get(f"{SHOPPING_ROOT}/todo/non_completed")
+
+    assert response.status_code == 200
+    response_items = response.json()
+    assert len(response_items) == 1
+    assert response_items[0]["desc"] == "some todo item"
+    assert response_items[0]["status"] == "not_started"
+    assert response_items[0]["date_added"] == "07/06/2023, 00:57:32"

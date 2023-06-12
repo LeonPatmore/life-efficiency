@@ -1,21 +1,25 @@
 import json
-import types
 from inspect import signature
 from json import JSONDecodeError
 
 from lambda_splitter.errors import HTTPAwareException
+from lambda_splitter.response_handler import ResponseHandler
 from lambda_splitter.validators import Validator
+
+ANY_METHOD = "ANY"
 
 
 class LambdaTarget:
 
     def __init__(self,
                  handler: object,
-                 validators: list[Validator] or None = None):
+                 validators: list[Validator] or None = None,
+                 response_handler: ResponseHandler or None = None):
         if validators is None:
             validators = []
         self.handler = handler
         self.validators = validators
+        self.response_handler = response_handler
 
 
 class LambdaSplitter(object):
@@ -61,7 +65,7 @@ class LambdaSplitter(object):
                 })
             }
 
-    def _handle_function(self, event, handler: types.FunctionType) -> dict:
+    def _handle_function(self, event, handler: callable) -> dict:
         kwargs = {}
         # JSON
         try:
@@ -82,35 +86,38 @@ class LambdaSplitter(object):
         return handler(event, context)
 
     def __call__(self, event, context, **kwargs) -> dict:
+        try:
+            target = self._determine_method(event)
+            if not isinstance(target, LambdaTarget):
+                raise RuntimeError("Target must be of type LambdaTarget")
+            for validator in target.validators:
+                validator.validate(event)
+            handler = target.handler
+            if issubclass(type(handler), LambdaSplitter):
+                response_obj = self._handle_lambda_splitter(event, context, handler)
+            elif callable(handler):
+                response_obj = self._handle_function(event, handler)
+            else:
+                raise RuntimeError(f'Target handler [ {type(handler)} ] not of type '
+                                   'LambdaSplitter or Callable!')
+            if target.response_handler:
+                return target.response_handler.handle(response_obj)
+            return response_obj
+        except HTTPAwareException as e:
+            return {
+                'statusCode': e.status_code,
+                'body': json.dumps(e.get_body())
+            }
+
+    def _determine_method(self, event):
         sub_path = self.sanitise_path(event['pathParameters'][self.path_parameter_key])
         if sub_path in self.sub_handlers:
             method = self.sanitise_method(event['httpMethod'])
             if method in self.sub_handlers[sub_path]:
-                target = self.sub_handlers[sub_path][method]
-                try:
-                    if not isinstance(target, LambdaTarget):
-                        raise RuntimeError("Target must be of type LambdaTarget")
-                    for validator in target.validators:
-                        validator.validate(event)
-                    handler = target.handler
-                    if isinstance(handler, types.FunctionType):
-                        return self._handle_function(event, handler)
-                    elif isinstance(handler, LambdaSplitter):
-                        return self._handle_lambda_splitter(event, context, handler)
-                    else:
-                        raise RuntimeError('Target handler not of expected type!')
-                except HTTPAwareException as e:
-                    return {
-                        'statusCode': e.status_code,
-                        'body': json.dumps(e.get_body())
-                    }
-            else:
-                return {'statusCode': 405}
+                return self.sub_handlers[sub_path][method]
+            if ANY_METHOD in self.sub_handlers[sub_path]:
+                return self.sub_handlers[sub_path][ANY_METHOD]
         else:
-            return {
-                'statusCode': 404,
-                'body': json.dumps({
-                    'error': 'could not find path for this command, possible paths are [ {} ]'
-                    .format(', '.join(self.sub_handlers.keys()))
-                })
-            }
+            raise HTTPAwareException(404, f"could not find path for this command, "
+                                          f"possible paths are [ {', '.join(self.sub_handlers.keys())} ]")
+        raise HTTPAwareException(405)
