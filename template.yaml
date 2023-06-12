@@ -1,15 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: "Life efficiency endpoints!"
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
     Function:
         Timeout: 30
         Runtime: python3.9
-        Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+        Tracing: Active
         Environment:
             Variables:
-                # Powertools env vars: https://awslabs.github.io/aws-lambda-powertools-python/#environment-variables
                 LOG_LEVEL: INFO
                 POWERTOOLS_LOGGER_SAMPLE_RATE: 0.1
                 POWERTOOLS_LOGGER_LOG_EVENT: true
@@ -31,9 +29,9 @@ Resources:
         Properties:
             Name: !Sub "life-efficiency/${Environment}/spreadsheet-key"
     ShoppingFunction:
-        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Type: AWS::Serverless::Function
         Properties:
-            Handler: shopping.shopping_lambda_handlers.shopping_handler
+            Handler: configuration.handler
             CodeUri: life-efficiency
             Description: Hello World function
             Policies:
@@ -45,12 +43,9 @@ Resources:
                 CatchAll:
                     Type: Api
                     Properties:
-                        Path: /shopping/{subcommand+}
+                        Path: /{command}/{subcommand+}
                         Method: any
                         RestApiId: !Ref Api
-            Tags:
-                PARENT_COMMAND: SHOPPING
-                COMMAND: HISTORY
     Api:
         Type: AWS::Serverless::Api
         Properties:
