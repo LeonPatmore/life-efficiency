@@ -22,7 +22,6 @@ jobs:
       - checkout
       - sam/install
       - sam/build:
-          use-container: true
           template: template.yaml
           s3-bucket: life-efficiency
       - run: sam deploy --stack-name life-efficiency-dev --no-confirm-changeset --no-fail-on-empty-changeset
