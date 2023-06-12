@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  sam: circleci/aws-sam-serverless@4.0.0
+  sam: circleci/aws-sam-serverless@2.0.0
 
 executors:
   python:
@@ -21,10 +21,10 @@ jobs:
     steps:
       - checkout
       - sam/install:
-          python_version: "3.9"
+          python_version: "3.9.0"
       - sam/build:
-          validate: false
           template: template.yaml
+          s3-bucket: life-efficiency
       - run: sam deploy --stack-name life-efficiency-dev --no-confirm-changeset --no-fail-on-empty-changeset
   functional_tests:
     executor: python
@@ -39,6 +39,7 @@ jobs:
       - sam/install
       - sam/build:
           template: template.yaml
+          s3-bucket: life-efficiency
       - run: sam deploy --stack-name life-efficiency-prod --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides ParameterKey=Environment,ParameterValue=Prod
 workflows:
   main:
