@@ -88,43 +88,38 @@ class LambdaSplitter(object):
         return handler(event, context)
 
     def __call__(self, event, context, **kwargs) -> dict:
+        try:
+            target = self._determine_method(event)
+            if not isinstance(target, LambdaTarget):
+                raise RuntimeError("Target must be of type LambdaTarget")
+            for validator in target.validators:
+                validator.validate(event)
+            handler = target.handler
+            if issubclass(type(handler), LambdaSplitter):
+                response_obj = self._handle_lambda_splitter(event, context, handler)
+            elif callable(handler):
+                response_obj = self._handle_function(event, handler)
+            else:
+                raise RuntimeError(f'Target handler [ {type(handler)} ] not of type '
+                                   'LambdaSplitter or Callable!')
+            if target.response_handler:
+                return target.response_handler.handle(response_obj)
+            return response_obj
+        except HTTPAwareException as e:
+            return {
+                'statusCode': e.status_code,
+                'body': json.dumps(e.get_body())
+            }
+
+    def _determine_method(self, event):
         sub_path = self.sanitise_path(event['pathParameters'][self.path_parameter_key])
         if sub_path in self.sub_handlers:
             method = self.sanitise_method(event['httpMethod'])
-            target = None
             if method in self.sub_handlers[sub_path]:
-                target = self.sub_handlers[sub_path][method]
+                return self.sub_handlers[sub_path][method]
             if ANY_METHOD in self.sub_handlers[sub_path]:
-                target = self.sub_handlers[sub_path][ANY_METHOD]
-            if target is None:
-                return {'statusCode': 405}
-            logging.info(f"Handling path [ {sub_path} ] and method [ {method} ]")
-            try:
-                if not isinstance(target, LambdaTarget):
-                    raise RuntimeError("Target must be of type LambdaTarget")
-                for validator in target.validators:
-                    validator.validate(event)
-                handler = target.handler
-                if issubclass(type(handler), LambdaSplitter):
-                    response_obj = self._handle_lambda_splitter(event, context, handler)
-                elif callable(handler):
-                    response_obj = self._handle_function(event, handler)
-                else:
-                    raise RuntimeError(f'Target handler [ {type(handler)} ] not of type '
-                                       'LambdaSplitter or Callable!')
-                if target.response_handler:
-                    return target.response_handler.handle(response_obj)
-                return response_obj
-            except HTTPAwareException as e:
-                return {
-                    'statusCode': e.status_code,
-                    'body': json.dumps(e.get_body())
-                }
+                return self.sub_handlers[sub_path][ANY_METHOD]
         else:
-            return {
-                'statusCode': 404,
-                'body': json.dumps({
-                    'error': 'could not find path for this command, possible paths are [ {} ]'
-                    .format(', '.join(self.sub_handlers.keys()))
-                })
-            }
+            raise HTTPAwareException(404, f"could not find path for this command, "
+                                          f"possible paths are [ {', '.join(self.sub_handlers.keys())} ]")
+        raise HTTPAwareException(405)
