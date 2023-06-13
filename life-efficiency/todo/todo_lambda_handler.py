@@ -14,6 +14,9 @@ class TodoHandler(LambdaSplitter):
         self.add_sub_handler("non_completed",
                              LambdaTarget(self._get_non_completed_items, response_handler=JsonResponseHandler()))
         self.add_sub_handler('list', LambdaTarget(self._add_item, [JsonBodyValidator(["desc"])]), 'POST')
+        self.add_sub_handler('list', LambdaTarget(self._update_item,
+                                                  validators = [JsonBodyValidator(["id", "status"])],
+                                                  response_handler=JsonResponseHandler()), 'PATCH')
 
     def _get_items(self):
         return [x.to_json() for x in self.todo_manager.get_items()]
@@ -25,3 +28,7 @@ class TodoHandler(LambdaSplitter):
 
     def _add_item(self, json):
         self.todo_manager.add_item(TodoItem(json["desc"], TodoStatus.not_started, get_current_datetime_utc()))
+
+    def _update_item(self, json):
+        self.todo_manager.update_item(json["id"], getattr(TodoStatus, json["status"]))
+        return self.todo_manager.get_item(json["id"]).to_json()
