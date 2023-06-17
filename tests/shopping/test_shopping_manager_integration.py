@@ -17,7 +17,7 @@ TEST_ITEM_2 = "test-item-2"
 TEST_ITEM_3 = "test-item-3"
 
 
-class TestMealPlan(MealPlanService):
+class MealPlanTestImplementation(MealPlanService):
 
     def __init__(self, meal_plan: list[MealPlan], time_provider: callable):
         self._meal_plan = meal_plan
@@ -40,7 +40,7 @@ class TestMealPlan(MealPlanService):
         self.meal_purchased[index] = purchased
 
 
-class TestShoppingHistory(ShoppingHistory):
+class ShoppingHistoryTestImplementation(ShoppingHistory):
 
     def __init__(self, purchases: list):
         self.purchases = purchases
@@ -53,7 +53,7 @@ class TestShoppingHistory(ShoppingHistory):
         self.purchases.append(purchase)
 
 
-class TestShoppingList(ShoppingList):
+class ShoppingListTestImplementation(ShoppingList):
 
     def __init__(self):
         super().__init__(get_current_datetime_utc)
@@ -72,7 +72,7 @@ class TestShoppingList(ShoppingList):
         self.shopping_list[item_name].quantity = quantity
 
 
-class TestRepeatingItems(RepeatingItems):
+class RepeatingItemsTestImplementation(RepeatingItems):
 
     def __init__(self, repeating_items: list):
         self.repeating_items = repeating_items
@@ -103,12 +103,12 @@ def setup_shopping_manager(request):
     if shopping_list is None:
         shopping_list = []
 
-    meal_plan_service = TestMealPlan(meal_plan, lambda: CURRENT_TIME)
-    shopping_history = TestShoppingHistory(purchases)
-    test_shopping_list = TestShoppingList()
+    meal_plan_service = MealPlanTestImplementation(meal_plan, lambda: CURRENT_TIME)
+    shopping_history = ShoppingHistoryTestImplementation(purchases)
+    test_shopping_list = ShoppingListTestImplementation()
     for item in shopping_list:
         test_shopping_list.increase_quantity(item, 1)
-    repeating_items = TestRepeatingItems(repeating_items)
+    repeating_items = RepeatingItemsTestImplementation(repeating_items)
 
     shopping_manager = ShoppingManager(meal_plan_service,
                                        shopping_history,

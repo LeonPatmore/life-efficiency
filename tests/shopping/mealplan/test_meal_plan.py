@@ -5,7 +5,7 @@ import pytest
 from shopping.mealplan.meal_plan import MealPlanService, MealPlan
 
 
-class TestMealPlan(MealPlanService):
+class MealPlanTestImplementation(MealPlanService):
 
     def __init__(self, meal_plan: list[MealPlan],
                  time_provider: callable,
@@ -38,11 +38,11 @@ ITEM_2 = "item-2"
 
 
 @pytest.fixture
-def setup_meal_plan(request) -> TestMealPlan:
+def setup_meal_plan(request) -> MealPlanTestImplementation:
     params = request.param if "param" in dir(request) else {"meal_plan": list(), "current_time": CURRENT_TIME}
     cycle_start_time = params["cycle_start_time"] if "cycle_start_time" in params.keys() else CURRENT_TIME
     meal_plan = params["meal_plan"] if "meal_plan" in params.keys() else list()
-    meal_plan_service = TestMealPlan(meal_plan, lambda: CURRENT_TIME, cycle_start_time)
+    meal_plan_service = MealPlanTestImplementation(meal_plan, lambda: CURRENT_TIME, cycle_start_time)
     return meal_plan_service
 
 

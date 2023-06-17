@@ -18,8 +18,13 @@ class TodoHandler(LambdaSplitter):
                                                   validators=[JsonBodyValidator(["id", "status"])],
                                                   response_handler=JsonResponseHandler()), 'PATCH')
 
-    def _get_items(self):
-        return [x.to_json() for x in self.todo_manager.get_items()]
+    def _get_items(self, params):
+        items = self.todo_manager.get_items()
+        if params is not None and "status" in params:
+            items = list(filter(lambda x: x.status.name == params["status"], items))
+        if params is not None and "sort" in params and params["sort"]:
+            items.sort(key=lambda x: x.date_added.timestamp(), reverse=True)
+        return [x.to_json() for x in items]
 
     def _get_non_completed_items(self):
         return [x.to_json() for x in filter(lambda item: item.status in [TodoStatus.not_started,

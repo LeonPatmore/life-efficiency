@@ -4,7 +4,7 @@ from helpers.datetime import get_current_datetime_utc
 from shopping.list.shopping_list import ShoppingList, ShoppingListItem
 
 
-class TestShoppingList(ShoppingList):
+class ShoppingListTestImplementation(ShoppingList):
 
     def get_items(self):
         return [ShoppingListItem("item-1", 2, get_current_datetime_utc()),
@@ -13,8 +13,8 @@ class TestShoppingList(ShoppingList):
 
 
 @pytest.fixture(scope="session")
-def setup_test_shopping_list() -> TestShoppingList:
-    return TestShoppingList(get_current_datetime_utc)
+def setup_test_shopping_list() -> ShoppingListTestImplementation:
+    return ShoppingListTestImplementation(get_current_datetime_utc)
 
 
 _setup_test_shopping_list = setup_test_shopping_list

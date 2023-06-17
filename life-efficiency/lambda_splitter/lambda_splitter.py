@@ -77,7 +77,7 @@ class LambdaSplitter(object):
         except Exception as e:
             return self._handle_json_exception(e)
         response = handler(**kwargs)
-        if not response:
+        if response is None:
             return {'statusCode': 200}
         return response
 
