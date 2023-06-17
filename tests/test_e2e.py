@@ -87,8 +87,8 @@ def test_todo_list_with_filter(setup_configuration_mock):
     }, {})
 
     assert 200 == res["statusCode"]
-    assert """[{"id": 1, "desc": "some-todo-item", "status": "done", "date_added": "07/06/2023, 00:57:32"}]""" \
-           == res["body"]
+    assert """[{"id": 1, "desc": "some-todo-item", "status": "done", "date_added": "07/06/2023, 00:57:32", """ \
+           + """"date_done": null}]""" == res["body"]
 
 
 @mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
