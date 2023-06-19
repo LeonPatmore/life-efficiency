@@ -11,7 +11,6 @@ class ShoppingHistoryWorksheet(ShoppingHistory):
 
     def __init__(self, worksheet: gspread.Worksheet):
         self.worksheet = worksheet
-        super().__init__()
 
     def _load_all_purchases(self) -> list:
         worksheet_values = self.worksheet.get_all_values()
@@ -31,4 +30,3 @@ class ShoppingHistoryWorksheet(ShoppingHistory):
         self.worksheet.insert_row([purchase.name,
                                    purchase.quantity,
                                    datetime_to_string(purchase.purchase_datetime)], 1)
-        self.purchases.append(purchase)

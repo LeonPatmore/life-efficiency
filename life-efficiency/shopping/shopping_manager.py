@@ -109,6 +109,8 @@ class ShoppingManager(object):
             # noinspection PyArgumentList
             removed_items = quantity_reduction_function(item, quantity)  # type: RemovedItems
             quantity = quantity - removed_items.quantity
+            logging.info(f"Completing [ {item} ] of quantity [ {quantity} ] "
+                         f"has also removed items [ {removed_items.extra_removed_items} ]")
             extra_removed_items.extend(removed_items.extra_removed_items)
             if quantity <= 0:
                 return extra_removed_items
@@ -128,6 +130,8 @@ class ShoppingManager(object):
             # Remove item and mark as removed.
             extra_removed_items = self.complete_item(item[0], 1)
             item[1] = True
+
+            logging.info(f"Extra removed items are [ {extra_removed_items} ]")
 
             # Try to remove all extra items from list.
             for extra_removed_item in extra_removed_items:

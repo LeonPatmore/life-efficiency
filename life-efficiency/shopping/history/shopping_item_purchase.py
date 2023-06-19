@@ -6,7 +6,7 @@ from helpers.datetime import get_current_datetime_utc
 class ShoppingItemPurchase(object):
 
     def __init__(self, name: str, quantity: int, purchase_datetime: datetime = get_current_datetime_utc()):
-        self.name = name.upper()
+        self.name = name.lower()
         self.quantity = quantity
         self.purchase_datetime = purchase_datetime
 
