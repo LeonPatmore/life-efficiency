@@ -3,10 +3,10 @@ import logging
 from gspread import Worksheet
 
 from helpers.datetime import string_to_datetime, datetime_to_string
-from todo.todo_manager import TodoManager, TodoItem, TodoStatus
+from todo.list.todo_list_manager import TodoListManager, TodoItem, TodoStatus
 
 
-class TodoManagerWorksheet(TodoManager):
+class TodoListManagerWorksheet(TodoListManager):
 
     def __init__(self, worksheet: Worksheet, current_time_provider: callable):
         self.worksheet = worksheet

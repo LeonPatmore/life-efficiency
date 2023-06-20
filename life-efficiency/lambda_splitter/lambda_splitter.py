@@ -71,7 +71,8 @@ class LambdaSplitter(object):
         try:
             handler_params = list(signature(handler).parameters.keys())
             if 'params' in handler_params:
-                kwargs['params'] = event['queryStringParameters']
+                kwargs['params'] = event['queryStringParameters'] \
+                    if "queryStringParameters" in event and event["queryStringParameters"] is not None else {}
             if 'json' in handler_params:
                 kwargs['json'] = json.loads(event['body'])
         except Exception as e:

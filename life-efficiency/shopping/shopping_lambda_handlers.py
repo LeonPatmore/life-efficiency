@@ -7,8 +7,6 @@ from lambda_splitter.validators import JsonBodyValidator, QueryParamValidator
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.shopping_manager import ShoppingManager
 
-logging.getLogger().setLevel(logging.INFO)
-
 
 class ShoppingHandler(LambdaSplitter):
 

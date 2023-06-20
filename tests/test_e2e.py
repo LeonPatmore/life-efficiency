@@ -12,17 +12,20 @@ from tests.google_spreadsheet_test_helpers import generate_worksheet_mock
 
 @pytest.fixture
 def setup_configuration_mock():
-    get_mock = Mock()
-    get_mock.first.return_value = "06/06/2023, 21:37:42"
-
     def mock_spreadsheets(title, *_, **__):
         if title == "todo":
             return generate_worksheet_mock([[],
                                             ["1", "some-todo-item", "done", "07/06/2023, 00:57:32"],
                                             ["2", "some-todo-item", "in_progress", "07/06/2032, 00:57:32"],
                                             ["3", "some-todo-item", "not_started", "07/06/2010, 00:57:32"]])
+        elif title == "todo-weekly":
+            return generate_worksheet_mock([["01/01/2001, 01:01:01"],
+                                            [1, 2, 'some todo task', "done", "", "done"],
+                                            [2, 5, 'some todo task', "done", "", "done"],
+                                            [3, 5, 'some todo task', "done", "", "done"]],
+                                           get_first="01/01/2001, 01:01:01")
         else:
-            return generate_worksheet_mock([[""], [""], [""], [""], [""], [""], [""], [""]], get_mock)
+            return generate_worksheet_mock([[""], [""], [""], [""], [""], [""], [""], [""]], "06/06/2023, 21:37:42")
 
     spreadsheet_mock = Mock()
     spreadsheet_mock.worksheets.return_value = []
@@ -111,3 +114,46 @@ def test_todo_list_with_sorting(setup_configuration_mock):
     assert res_body[0]["id"] == 2
     assert res_body[1]["id"] == 1
     assert res_body[2]["id"] == 3
+
+
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+def test_todo_weekly_get_day(setup_configuration_mock):
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "todo",
+            "subcommand": "weekly"
+        },
+        "queryStringParameters": {
+            "day": 5
+        }
+    }, {})
+
+    assert 200 == res["statusCode"]
+    res_body = json.loads(res["body"])
+    assert len(res_body) == 2
+    assert res_body[0]["desc"] == "some todo task"
+    assert res_body[0]["day"] == 5
+    assert res_body[0]["id"] == 2
+    assert res_body[1]["desc"] == "some todo task"
+    assert res_body[1]["day"] == 5
+    assert res_body[1]["id"] == 3
+
+
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+def test_todo_weekly_get_all(setup_configuration_mock):
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "todo",
+            "subcommand": "weekly"
+        }
+    }, {})
+
+    assert 200 == res["statusCode"]
+    res_body = json.loads(res["body"])
+    assert len(res_body) == 3

@@ -3,8 +3,8 @@ from unittest.mock import Mock, call
 
 import pytest
 
-from todo.todo_manager import TodoStatus, TodoItem
-from todo.todo_manager_spreadsheet import TodoManagerWorksheet
+from todo.list.todo_list_manager import TodoStatus, TodoItem
+from todo.list.todo_list_manager_spreadsheet import TodoListManagerWorksheet
 
 
 CANCELLED_ROW = [1, 'some todo task', 'cancelled', '07/06/2023, 00:57:32']
@@ -16,7 +16,7 @@ DATETIME = datetime(1, 1, 1, 1, 1, 1)
 def setup_todo_manager_worksheet_with_values(request):
     worksheet_mock = Mock()
     worksheet_mock.get_all_values.return_value = request.param
-    return TodoManagerWorksheet(worksheet_mock, lambda: DATETIME), worksheet_mock
+    return TodoListManagerWorksheet(worksheet_mock, lambda: DATETIME), worksheet_mock
 
 
 @pytest.mark.parametrize('setup_todo_manager_worksheet_with_values', [[[]]], indirect=True)

@@ -13,7 +13,8 @@ class TodoStatus(Enum):
 
 class TodoItem:
 
-    def __init__(self, desc: str,
+    def __init__(self,
+                 desc: str,
                  status: TodoStatus,
                  date_added: datetime,
                  item_number: int = None,
@@ -34,7 +35,7 @@ class TodoItem:
         }
 
 
-class TodoManager:
+class TodoListManager:
 
     def get_items(self) -> list[TodoItem]:
         raise NotImplementedError
