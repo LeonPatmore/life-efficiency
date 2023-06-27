@@ -114,11 +114,11 @@ class ShoppingManager(object):
             extra_removed_items.extend(removed_items.extra_removed_items)
             if quantity <= 0:
                 return extra_removed_items
-
         else:
             # If quantity is still left over, it must be a repeating item.
             if item not in self.repeating_items.get_repeating_items():
                 raise UnexpectedBuyException(item, quantity)
+            return extra_removed_items
 
     def complete_items(self, items: list):
         items_with_removed = [[x, False] for x in items]
