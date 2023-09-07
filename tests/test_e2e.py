@@ -24,6 +24,8 @@ def setup_configuration_mock():
                                             [2, 5, 'some todo task', "done", "", "done"],
                                             [3, 5, 'some todo task', "done", "", "done"]],
                                            get_first="01/01/2001, 01:01:01")
+        elif title == "goals-manager":
+            return generate_worksheet_mock([["year", "2023"], ["quarter", "q1"], ["some-goal", "in_progress"]])
         else:
             return generate_worksheet_mock([[""], [""], [""], [""], [""], [""], [""], [""]], "06/06/2023, 21:37:42")
 
@@ -157,3 +159,30 @@ def test_todo_weekly_get_all(setup_configuration_mock):
     assert 200 == res["statusCode"]
     res_body = json.loads(res["body"])
     assert len(res_body) == 3
+
+
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+def test_get_goals(setup_configuration_mock):
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "goals",
+            "subcommand": "list"
+        }
+    }, {})
+
+    assert 200 == res["statusCode"]
+    res_body = json.loads(res["body"])
+    assert res_body == {
+        "2023": {
+            "q1": [{
+                "name": "some-goal",
+                "progress": "in_progress"
+            }],
+            "q2": [],
+            "q3": [],
+            "q4": []
+        }
+    }

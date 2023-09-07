@@ -2,6 +2,8 @@ import logging
 
 import boto3
 
+from goals.goals_lambda_handler import GoalsHandler
+from goals.goals_manager_worksheet import GoalsManagerWorksheet
 from helpers.datetime import get_current_datetime_utc
 from helpers.worksheets import init_worksheet
 from lambda_handler import LifeEfficiencyLambdaHandler
@@ -36,4 +38,9 @@ todo_list_manager = TodoListManagerWorksheet(init_worksheet(spreadsheet, "todo")
 todo_weekly_manager = TodoWeeklyManagerWorksheet(init_worksheet(spreadsheet, "todo-weekly"), get_current_datetime_utc)
 todo_handler = TodoHandler(todo_list_manager, todo_weekly_manager)
 
-handler = LifeEfficiencyLambdaHandler(shopping_handler=shopping_handler, todo_handler=todo_handler)
+goals_manager = GoalsManagerWorksheet(init_worksheet(spreadsheet, "goals-manager"))
+goals_handler = GoalsHandler(goals_manager)
+
+handler = LifeEfficiencyLambdaHandler(shopping_handler=shopping_handler,
+                                      todo_handler=todo_handler,
+                                      goals_handler=goals_handler)
