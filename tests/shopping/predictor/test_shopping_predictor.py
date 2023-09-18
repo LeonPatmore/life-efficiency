@@ -1,5 +1,4 @@
 from datetime import datetime
-from unittest.mock import Mock
 
 import pytest
 
@@ -16,9 +15,7 @@ def _datetime_from_day(day: int) -> datetime:
 
 @pytest.fixture
 def setup_shopping_predictor(request):
-    history_mock = Mock()
-    shopping_predictor = ShoppingPredictor(history_mock, lambda: _datetime_from_day(CURRENT_DAY))
-    history_mock.get_purchases_for_item.return_value = request.param
+    shopping_predictor = ShoppingPredictor(request.param, _datetime_from_day(CURRENT_DAY))
     return shopping_predictor
 
 

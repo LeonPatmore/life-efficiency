@@ -36,7 +36,6 @@ class ShoppingManager(object):
         self.meal_plan_service = meal_plan_service
         self.shopping_history = shopping_history
         self.shopping_list = shopping_list
-        self.shopping_predictor = ShoppingPredictor(shopping_history, current_timestamp_provider)
         self.repeating_items = repeating_items
 
         self.reduction_functions = [self._check_shopping_list, self._check_meal_plan]
@@ -88,8 +87,10 @@ class ShoppingManager(object):
             return []
 
     def today_items(self) -> list[str]:
+        shopping_predictor = ShoppingPredictor(self.shopping_history.get_all_purchases(),
+                                               self.current_timestamp_provider())
         predicted_repeating_items = [x for x in self.repeating_items.get_repeating_items()
-                                     if self.shopping_predictor.should_buy_today(x)]
+                                     if shopping_predictor.should_buy_today(x)]
         meal_plan_items = self._meal_plan_items()
         shopping_list = []
         for list_item in self.shopping_list.get_items():
@@ -98,6 +99,24 @@ class ShoppingManager(object):
         logging.info(f"Todays items are made from predicted [ {predicted_repeating_items} ], "
                      f"list [ {shopping_list} ] and meal plans [ {meal_plan_items} ]")
         return predicted_repeating_items + meal_plan_items + shopping_list
+
+    def repeating_item_predictor(self) -> dict:
+        shopping_predictor = ShoppingPredictor(self.shopping_history.get_all_purchases(),
+                                               self.current_timestamp_provider())
+        repeating_items = self.repeating_items.get_repeating_items()
+
+        def get_delta_days_for_item(item: str) -> int or None:
+            delta = shopping_predictor.get_average_buy_difference_timestamp(item)
+            return round(delta / 86400.0) if delta else None
+
+        def get_time_since_last_bought_days(item: str) -> int or None:
+            delta = shopping_predictor.time_since_last_bought(item)
+            return delta.days if delta else None
+        return {
+            x: {"avg_gap_days": get_delta_days_for_item(x),
+                "today": shopping_predictor.should_buy_today(x),
+                "time_since_last_bought": get_time_since_last_bought_days(x)}
+            for x in repeating_items}
 
     def complete_item(self, item: str, quantity: int) -> list:
         extra_removed_items = []

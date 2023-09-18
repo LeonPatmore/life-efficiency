@@ -1,10 +1,10 @@
-from datetime import datetime
+import datetime
 
 DEFAULT_DATETIME_FORMAT = "%d/%m/%Y, %H:%M:%S"
 
 
 def get_current_datetime_utc() -> datetime:
-    return datetime.now()
+    return datetime.datetime.now()
 
 
 def datetime_to_string(a_datetime: datetime, string_format: str = DEFAULT_DATETIME_FORMAT) -> str:
@@ -12,4 +12,4 @@ def datetime_to_string(a_datetime: datetime, string_format: str = DEFAULT_DATETI
 
 
 def string_to_datetime(datetime_string: str, string_format: str = DEFAULT_DATETIME_FORMAT) -> datetime:
-    return datetime.strptime(datetime_string, string_format)
+    return datetime.datetime.strptime(datetime_string, string_format)

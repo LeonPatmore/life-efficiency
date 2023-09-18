@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from datetime import datetime
 from unittest import mock
 from unittest.mock import Mock
 
@@ -24,6 +25,15 @@ def setup_configuration_mock():
                                             [2, 5, 'some todo task', "done", "", "done"],
                                             [3, 5, 'some todo task', "done", "", "done"]],
                                            get_first="01/01/2001, 01:01:01")
+        elif title == "RepeatingItems":
+            return generate_worksheet_mock([["item-1"], ["item-2"], ["item-3"]])
+        elif title == "History":
+            return generate_worksheet_mock([['item-1', '1', '01/01/2001, 01:01:01'],
+                                            ['item-1', '1', '02/01/2001, 01:01:01'],
+                                            ['item-1', '1', '03/01/2001, 01:01:01'],
+                                            ['item-2', '1', '01/01/2001, 01:01:01'],
+                                            ['item-2', '1', '05/01/2001, 01:01:01'],
+                                            ['item-2', '1', '01/02/2001, 01:01:01']])
         elif title == "goals-manager":
             return generate_worksheet_mock([["year", "2023"], ["quarter", "q1"], ["some-goal", "in_progress"]])
         else:
@@ -184,5 +194,41 @@ def test_get_goals(setup_configuration_mock):
             "q2": [],
             "q3": [],
             "q4": []
+        }
+    }
+
+
+@mock.patch('helpers.datetime.datetime')
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+def test_get_repeating_details(datetime_mock, setup_configuration_mock):
+    datetime_mock.datetime.now = Mock(return_value=datetime.strptime('Feb 10 2001', '%b %d %Y'))
+    datetime_mock.datetime.strptime = lambda x, y: datetime.strptime(x, y)
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "repeating-details"
+        }
+    }, {})
+
+    assert 200 == res["statusCode"]
+    res_body = json.loads(res["body"])
+    assert res_body == {
+        "item-1": {
+            "avg_gap_days": 1,
+            "time_since_last_bought": 37,
+            "today": True
+        },
+        "item-2": {
+            "avg_gap_days": 16,
+            "time_since_last_bought": 8,
+            "today": False
+        },
+        "item-3": {
+            "avg_gap_days": None,
+            "time_since_last_bought": None,
+            "today": False
         }
     }

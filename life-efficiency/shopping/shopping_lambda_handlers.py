@@ -1,5 +1,4 @@
 import json
-import logging
 
 from lambda_splitter.errors import HTTPAwareException
 from lambda_splitter.lambda_splitter import LambdaSplitter, LambdaTarget
@@ -37,6 +36,7 @@ class ShoppingHandler(LambdaSplitter):
         self.add_sub_handler('repeating',
                              LambdaTarget(self.add_to_repeating_items, [JsonBodyValidator(["item"])]),
                              'POST')
+        self.add_sub_handler('repeating-details', LambdaTarget(self.get_repeating_details))
 
     def get_history(self):
         return {
@@ -101,6 +101,12 @@ class ShoppingHandler(LambdaSplitter):
             'body': json.dumps({
                 'items': self.shopping_manager.repeating_items.get_repeating_items()
             }, default=str)
+        }
+
+    def get_repeating_details(self):
+        return {
+            'statusCode': 200,
+            'body': json.dumps(self.shopping_manager.repeating_item_predictor(), default=str)
         }
 
     def add_to_repeating_items(self, json):
