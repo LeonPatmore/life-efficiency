@@ -7,7 +7,8 @@ build:
 	sam build -u
 
 run:
-	sam local start-api --warm-containers EAGER
+	docker-compose -f compose.yaml up -d
+	sam local start-api --skip-pull-image --warm-containers EAGER --docker-network life-efficiency
 
 deploy-dev:
 	sam deploy --no-confirm-changeset --region eu-west-1 --stack-name life-efficiency-dev

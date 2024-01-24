@@ -24,6 +24,10 @@ Parameters:
             - Prod
 
 Resources:
+    DynamoTable:
+        Type: AWS::Serverless::SimpleTable
+        Properties:
+            TableName: !Sub "LifeEfficiency/${Environment}/ShoppingList"
     SpreadsheetKeySecret:
         Type: AWS::SecretsManager::Secret
         Properties:
