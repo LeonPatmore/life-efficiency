@@ -3,6 +3,7 @@ import os
 
 import boto3
 
+from dynamo.dynamo_helpers import get_table_full_name
 from goals.goals_lambda_handler import GoalsHandler
 from goals.goals_manager import GoalsManager
 from goals.goals_manager_worksheet import GoalsManagerWorksheet
@@ -13,6 +14,7 @@ from shopping.history.shopping_history_worksheet import ShoppingHistoryWorksheet
 from shopping.list.shopping_list_dynamo import ShoppingListDynamo
 from shopping.list.shopping_list_worksheet import ShoppingListWorksheet
 from shopping.mealplan.meal_plan_worksheet import MealPlanWorksheet
+from shopping.repeatingitems.shopping_repeating_items_dynamo import RepeatingItemsDynamo
 from shopping.repeatingitems.shopping_repeating_items_worksheet import RepeatingItemsWorksheet
 from shopping.shopping_lambda_handlers import ShoppingHandler
 from shopping.shopping_manager import ShoppingManager
@@ -60,9 +62,8 @@ if backend == "worksheets":
     goals_manager = GoalsManagerWorksheet(init_worksheet(spreadsheet, "goals-manager"))
 else:
     dynamodb = boto3.resource('dynamodb', **AWS_CLIENT_KWARGS)
-    table = dynamodb.Table(f"life-efficiency_{os.environ.get('env', 'local')}_spreadsheet-key")
-    shopping_list = ShoppingListDynamo(table, get_current_datetime_utc)
-    repeating_items = None
+    shopping_list = ShoppingListDynamo(dynamodb.Table(get_table_full_name("shopping-list")), get_current_datetime_utc)
+    repeating_items = RepeatingItemsDynamo(dynamodb.Table(get_table_full_name("repeating-items")))
     mean_plan = None
     shopping_history = None
     todo_list_manager = None

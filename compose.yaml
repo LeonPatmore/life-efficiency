@@ -8,6 +8,7 @@ services:
       - backend
     ports:
       - '8000:8000'
+    command: "-jar DynamoDBLocal.jar -sharedDb"
   app-node:
     depends_on:
       - dynamo
@@ -20,8 +21,12 @@ services:
       - "8080:8080"
     networks:
       - backend
+    entrypoint:
+      - /bin/sh
     command:
-      dynamodb create-table --endpoint-url http://dynamodb:8000 --region eu-west-1 --table-name life-efficiency_local_spreadsheet-key --key-schema AttributeName=Id,KeyType=HASH --attribute-definitions AttributeName=Id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD
+      - -c
+      - aws dynamodb create-table --endpoint-url http://dynamodb:8000 --region eu-west-1 --table-name life-efficiency_local_shopping-list --key-schema AttributeName=Id,KeyType=HASH --attribute-definitions AttributeName=Id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD; aws dynamodb create-table --endpoint-url http://dynamodb:8000 --region eu-west-1 --table-name life-efficiency_local_repeating-items --key-schema AttributeName=Id,KeyType=HASH --attribute-definitions AttributeName=Id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD
+
 
 networks:
   backend:
