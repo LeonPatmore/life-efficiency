@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 import uuid
 from unittest import mock
 
