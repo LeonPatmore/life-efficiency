@@ -3,7 +3,6 @@ import logging
 from lambda_splitter.errors import HTTPAwareException
 from shopping.history.shopping_history import ShoppingHistory
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
-from shopping.mealplan.meal_plan import MealPlanService, MealPlan
 from shopping.predictor.shopping_predictor import ShoppingPredictor
 
 
@@ -27,30 +26,16 @@ class RemovedItems(object):
 class ShoppingManager(object):
 
     def __init__(self,
-                 meal_plan_service: MealPlanService,
                  shopping_history: ShoppingHistory,
                  shopping_list,
                  repeating_items,
                  current_timestamp_provider):
         self.current_timestamp_provider = current_timestamp_provider
-        self.meal_plan_service = meal_plan_service
         self.shopping_history = shopping_history
         self.shopping_list = shopping_list
         self.repeating_items = repeating_items
 
-        self.reduction_functions = [self._check_shopping_list, self._check_meal_plan]
-
-    @staticmethod
-    def _check_if_item_can_be_removed_from_purchased_meal(item: str, quantity: int, meal_plan: MealPlan):
-        quantity_in_meal = meal_plan.items.count(item)
-        if item in meal_plan.items and quantity_in_meal <= quantity:
-            extra_items_to_remove = []
-            for an_item in meal_plan.items:
-                if item == an_item:
-                    continue
-                extra_items_to_remove.append(an_item)
-            return quantity_in_meal, extra_items_to_remove
-        return 0, []
+        self.reduction_functions = [self._check_shopping_list]
 
     @staticmethod
     def _condense_extra_removed_items(extra_removed_items: list) -> list:
@@ -60,45 +45,23 @@ class ShoppingManager(object):
                 condensed_items.append([item, extra_removed_items.count(item)])
         return condensed_items
 
-    def _check_meal_plan(self, item: str, quantity: int) -> RemovedItems:
-        quantity_removed = 0
-        extra_removed_items = []
-
-        today_meal = self.meal_plan_service.get_meal_plan_of_current_day_plus_offset()
-        quantity_in_meal, extra_items_to_remove = \
-            self._check_if_item_can_be_removed_from_purchased_meal(item, quantity, today_meal)
-
-        if quantity_in_meal > 0:
-            self.meal_plan_service.purchase_meal_plan_of_current_day_plus_offset()
-            extra_removed_items.extend(extra_items_to_remove)
-            quantity_removed = quantity_removed + quantity_in_meal
-
-        return RemovedItems(quantity_removed, self._condense_extra_removed_items(extra_removed_items))
-
     def _check_shopping_list(self, item: str, quantity: int) -> RemovedItems:
         num = min(self.shopping_list.get_item_count(item), quantity)
         self.shopping_list.reduce_quantity(item, num)
         return RemovedItems(num)
-
-    def _meal_plan_items(self) -> list[str]:
-        if not self.meal_plan_service.is_meal_plan_of_current_day_plus_offset_purchased():
-            return self.meal_plan_service.get_meal_plan_of_current_day_plus_offset().items
-        else:
-            return []
 
     def today_items(self) -> list[str]:
         shopping_predictor = ShoppingPredictor(self.shopping_history.get_all_purchases(),
                                                self.current_timestamp_provider())
         predicted_repeating_items = [x for x in self.repeating_items.get_repeating_items()
                                      if shopping_predictor.should_buy_today(x)]
-        meal_plan_items = self._meal_plan_items()
         shopping_list = []
         for list_item in self.shopping_list.get_items():
             for _ in range(list_item.quantity):
                 shopping_list.append(list_item.name)
-        logging.info(f"Todays items are made from predicted [ {predicted_repeating_items} ], "
-                     f"list [ {shopping_list} ] and meal plans [ {meal_plan_items} ]")
-        return predicted_repeating_items + meal_plan_items + shopping_list
+        logging.info(f"Todays items are made from predicted [ {predicted_repeating_items} ] and "
+                     f"list [ {shopping_list} ]")
+        return predicted_repeating_items + shopping_list
 
     def repeating_item_predictor(self) -> dict:
         shopping_predictor = ShoppingPredictor(self.shopping_history.get_all_purchases(),

@@ -5,20 +5,21 @@ import boto3
 
 from dynamo.dynamo_helpers import get_table_full_name
 from goals.goals_lambda_handler import GoalsHandler
-from goals.goals_manager import GoalsManager
+from goals.goals_manager_dynamo import GoalsManagerDynamo
 from goals.goals_manager_worksheet import GoalsManagerWorksheet
 from helpers.datetime import get_current_datetime_utc
 from helpers.worksheets import init_worksheet
 from lambda_handler import LifeEfficiencyLambdaHandler
+from shopping.history.shopping_history_dynamo import ShoppingHistoryDynamo
 from shopping.history.shopping_history_worksheet import ShoppingHistoryWorksheet
 from shopping.list.shopping_list_dynamo import ShoppingListDynamo
 from shopping.list.shopping_list_worksheet import ShoppingListWorksheet
-from shopping.mealplan.meal_plan_worksheet import MealPlanWorksheet
 from shopping.repeatingitems.shopping_repeating_items_dynamo import RepeatingItemsDynamo
 from shopping.repeatingitems.shopping_repeating_items_worksheet import RepeatingItemsWorksheet
 from shopping.shopping_lambda_handlers import ShoppingHandler
 from shopping.shopping_manager import ShoppingManager
 from spreadsheet.spreadsheet_client_loader import SpreadsheetLoaderAWS
+from todo.list.todo_list_manager_dynamo import TodoListManagerDynamo
 from todo.list.todo_list_manager_spreadsheet import TodoListManagerWorksheet
 from todo.todo_lambda_handler import TodoHandler
 from todo.weekly.todo_weekly_manager_spreadsheet import TodoWeeklyManagerWorksheet
@@ -48,9 +49,6 @@ logging.info(f"Backend is {backend}")
 if backend == "worksheets":
     spreadsheet = SpreadsheetLoaderAWS(boto3.client("s3"), boto3.client("secretsmanager")).spreadsheet
     repeating_items = RepeatingItemsWorksheet(init_worksheet(spreadsheet, "RepeatingItems"))
-    mean_plan = MealPlanWorksheet(get_current_datetime_utc,
-                                  init_worksheet(spreadsheet, "MealPlan"),
-                                  init_worksheet(spreadsheet, "MealPurchase"))
     shopping_history = ShoppingHistoryWorksheet(init_worksheet(spreadsheet, "History"))
     shopping_list = ShoppingListWorksheet(
         worksheet=init_worksheet(spreadsheet, "List"),
@@ -64,14 +62,13 @@ else:
     dynamodb = boto3.resource('dynamodb', **AWS_CLIENT_KWARGS)
     shopping_list = ShoppingListDynamo(dynamodb.Table(get_table_full_name("shopping-list")), get_current_datetime_utc)
     repeating_items = RepeatingItemsDynamo(dynamodb.Table(get_table_full_name("repeating-items")))
-    mean_plan = None
-    shopping_history = None
-    todo_list_manager = None
+    shopping_history = ShoppingHistoryDynamo(dynamodb.Table(get_table_full_name("shopping-history")))
+    todo_list_manager = TodoListManagerDynamo(dynamodb.Table(get_table_full_name("todo-list")),
+                                              get_current_datetime_utc)
     todo_weekly_manager = None
-    goals_manager = GoalsManager()
+    goals_manager = GoalsManagerDynamo(dynamodb.Table(get_table_full_name("goals")))
 
-shopping_manager = ShoppingManager(mean_plan,
-                                   shopping_history,
+shopping_manager = ShoppingManager(shopping_history,
                                    shopping_list,
                                    repeating_items,
                                    get_current_datetime_utc)

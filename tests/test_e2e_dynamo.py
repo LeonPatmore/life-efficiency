@@ -58,7 +58,7 @@ def test_shopping_list_adding_items_together():
 @mock.patch.dict(os.environ, {"BACKEND": "dynamo",
                               "AWS_DEFAULT_REGION": "eu-west-1",
                               "AWS_ENDPOINT_URL": "http://localhost:8000"})
-def test_shopping_list_adding_items_together():
+def test_repeating_items():
     import configuration
 
     item_name = str(uuid.uuid4())
@@ -81,7 +81,4 @@ def test_shopping_list_adding_items_together():
     }, {})
 
     assert 200 == res["statusCode"]
-    body = json.loads(res["body"])
-    item_part = [x for x in body["items"] if x["name"] == item_name][0]
-    assert item_part["name"] == item_name
-    assert item_part["quantity"] == 6
+    assert item_name in json.loads(res["body"])["items"]
