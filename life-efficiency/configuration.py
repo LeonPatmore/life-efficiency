@@ -31,8 +31,11 @@ except ImportError:
 if dotenv:
     dotenv.load_dotenv()
 
+logging.info(os.environ)
+
 AWS_CLIENT_KWARGS = {}
 if os.environ.get("AWS_ENDPOINT_URL", None):
+    logging.info(f"Using AWS endpoint {os.environ['AWS_ENDPOINT_URL']}")
     AWS_CLIENT_KWARGS["endpoint_url"] = os.environ["AWS_ENDPOINT_URL"]
 
 
@@ -57,7 +60,7 @@ if backend == "worksheets":
     goals_manager = GoalsManagerWorksheet(init_worksheet(spreadsheet, "goals-manager"))
 else:
     dynamodb = boto3.resource('dynamodb', **AWS_CLIENT_KWARGS)
-    table = dynamodb.Table('life-efficiency_local_spreadsheet-key')
+    table = dynamodb.Table(f"life-efficiency_{os.environ.get('env', 'local')}_spreadsheet-key")
     shopping_list = ShoppingListDynamo(table, get_current_datetime_utc)
     repeating_items = None
     mean_plan = None

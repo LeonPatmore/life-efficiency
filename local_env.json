@@ -1,0 +1,3 @@
+{
+    "AWS_ENDPOINT_URL": "http://dynamo:8000"
+}

@@ -8,7 +8,7 @@ build:
 
 run:
 	docker-compose -f compose.yaml up -d
-	sam local start-api --skip-pull-image --warm-containers EAGER --docker-network life-efficiency
+	sam local start-api --docker-network life-efficiency --debug-port 1234 --skip-pull-image --warm-containers EAGER --docker-network life-efficiency --parameter-overrides ParameterKey=Environment,ParameterValue=Local --container-env-vars local_env.json
 
 deploy-dev:
 	sam deploy --no-confirm-changeset --region eu-west-1 --stack-name life-efficiency-dev
