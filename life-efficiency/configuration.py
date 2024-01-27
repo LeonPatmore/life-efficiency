@@ -36,7 +36,11 @@ if os.environ.get("AWS_ENDPOINT_URL", None):
     AWS_CLIENT_KWARGS["endpoint_url"] = os.environ["AWS_ENDPOINT_URL"]
 
 
-if os.environ.get("BACKEND", "worksheets") == "worksheets":
+backend = os.environ.get("BACKEND", "worksheets")
+logging.info(f"Backend is {backend}")
+
+
+if backend == "worksheets":
     spreadsheet = SpreadsheetLoaderAWS(boto3.client("s3"), boto3.client("secretsmanager")).spreadsheet
     repeating_items = RepeatingItemsWorksheet(init_worksheet(spreadsheet, "RepeatingItems"))
     mean_plan = MealPlanWorksheet(get_current_datetime_utc,
