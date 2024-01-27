@@ -58,7 +58,7 @@ def setup_configuration_mock():
     # sys.modules['boto3'] = boto3_mock
 
 
-@mock.patch.dict(os.environ, {"BACKEND": "dynamo"})
+@mock.patch.dict(os.environ, {"BACKEND": "dynamo", "AWS_DEFAULT_REGION": "eu-west-1"})
 def test_shopping_configuration(setup_configuration_mock):
     import configuration
 

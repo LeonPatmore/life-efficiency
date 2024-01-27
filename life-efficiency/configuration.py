@@ -50,12 +50,7 @@ else:
 
     dynamodb = boto3.resource('dynamodb', endpoint_url='http://localhost:8000')
     table = dynamodb.Table('life-efficiency_local_spreadsheet-key')
-    for table in dynamodb.tables.all():
-        print(table.name)
-    print(table.creation_date_time)
-
-    dynamo_client = boto3.client("dynamodb", endpoint_url='http://localhost:8000')
-    shopping_list = ShoppingListDynamo(dynamo_client)
+    shopping_list = ShoppingListDynamo(table)
     repeating_items = None
     mean_plan = None
     shopping_history = None
