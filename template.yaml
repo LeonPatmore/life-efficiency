@@ -13,7 +13,7 @@ Globals:
                 POWERTOOLS_LOGGER_LOG_EVENT: true
                 POWERTOOLS_METRICS_NAMESPACE: MyServerlessApplication
                 POWERTOOLS_SERVICE_NAME: hello
-                SPREADSHEET_KEY_SECRET_NAME: !Sub "life-efficiency/${Environment}/spreadsheet-key"
+                SPREADSHEET_KEY_SECRET_NAME: !Sub "life-efficiency_${Environment}_spreadsheet-key"
 
 Parameters:
     Environment:

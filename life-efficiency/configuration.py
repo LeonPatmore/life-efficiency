@@ -1,19 +1,24 @@
 import logging
+import os
 
 import boto3
 
 from goals.goals_lambda_handler import GoalsHandler
+from goals.goals_manager import GoalsManager
 from goals.goals_manager_worksheet import GoalsManagerWorksheet
 from helpers.datetime import get_current_datetime_utc
 from helpers.worksheets import init_worksheet
 from lambda_handler import LifeEfficiencyLambdaHandler
+from shopping.history.shopping_history_worksheet import ShoppingHistoryWorksheet
+from shopping.list.shopping_list_dynamo import ShoppingListDynamo
+from shopping.list.shopping_list_worksheet import ShoppingListWorksheet
 from shopping.mealplan.meal_plan_worksheet import MealPlanWorksheet
 from shopping.repeatingitems.shopping_repeating_items_worksheet import RepeatingItemsWorksheet
 from shopping.shopping_lambda_handlers import ShoppingHandler
-from shopping.shopping_manager_spreadsheet import ShoppingManagerSpreadsheet
+from shopping.shopping_manager import ShoppingManager
 from spreadsheet.spreadsheet_client_loader import SpreadsheetLoaderAWS
-from todo.todo_lambda_handler import TodoHandler
 from todo.list.todo_list_manager_spreadsheet import TodoListManagerWorksheet
+from todo.todo_lambda_handler import TodoHandler
 from todo.weekly.todo_weekly_manager_spreadsheet import TodoWeeklyManagerWorksheet
 
 logging.root.setLevel(logging.INFO)
@@ -26,19 +31,45 @@ except ImportError:
 if dotenv:
     dotenv.load_dotenv()
 
-spreadsheet = SpreadsheetLoaderAWS(boto3.client("s3"), boto3.client("secretsmanager")).spreadsheet
-mean_plan = MealPlanWorksheet(get_current_datetime_utc,
-                              init_worksheet(spreadsheet, "MealPlan"),
-                              init_worksheet(spreadsheet, "MealPurchase"))
-repeating_items = RepeatingItemsWorksheet(init_worksheet(spreadsheet, "RepeatingItems"))
-shopping_manager = ShoppingManagerSpreadsheet(spreadsheet, mean_plan, repeating_items)
+if os.environ.get("BACKEND", "worksheets") == "worksheets":
+    spreadsheet = SpreadsheetLoaderAWS(boto3.client("s3"), boto3.client("secretsmanager")).spreadsheet
+    repeating_items = RepeatingItemsWorksheet(init_worksheet(spreadsheet, "RepeatingItems"))
+    mean_plan = MealPlanWorksheet(get_current_datetime_utc,
+                                  init_worksheet(spreadsheet, "MealPlan"),
+                                  init_worksheet(spreadsheet, "MealPurchase"))
+    shopping_history = ShoppingHistoryWorksheet(init_worksheet(spreadsheet, "History"))
+    shopping_list = ShoppingListWorksheet(
+        worksheet=init_worksheet(spreadsheet, "List"),
+        current_datetime_generator=get_current_datetime_utc,
+    )
+    todo_list_manager = TodoListManagerWorksheet(init_worksheet(spreadsheet, "todo"), get_current_datetime_utc)
+    todo_weekly_manager = TodoWeeklyManagerWorksheet(init_worksheet(spreadsheet, "todo-weekly"),
+                                                     get_current_datetime_utc)
+    goals_manager = GoalsManagerWorksheet(init_worksheet(spreadsheet, "goals-manager"))
+else:
+
+    dynamodb = boto3.resource('dynamodb', endpoint_url='http://localhost:8000')
+    table = dynamodb.Table('life-efficiency_local_spreadsheet-key')
+    for table in dynamodb.tables.all():
+        print(table.name)
+    print(table.creation_date_time)
+
+    dynamo_client = boto3.client("dynamodb", endpoint_url='http://localhost:8000')
+    shopping_list = ShoppingListDynamo(dynamo_client)
+    repeating_items = None
+    mean_plan = None
+    shopping_history = None
+    todo_list_manager = None
+    todo_weekly_manager = None
+    goals_manager = GoalsManager()
+
+shopping_manager = ShoppingManager(mean_plan,
+                                   shopping_history,
+                                   shopping_list,
+                                   repeating_items,
+                                   get_current_datetime_utc)
 shopping_handler = ShoppingHandler(shopping_manager)
-
-todo_list_manager = TodoListManagerWorksheet(init_worksheet(spreadsheet, "todo"), get_current_datetime_utc)
-todo_weekly_manager = TodoWeeklyManagerWorksheet(init_worksheet(spreadsheet, "todo-weekly"), get_current_datetime_utc)
 todo_handler = TodoHandler(todo_list_manager, todo_weekly_manager)
-
-goals_manager = GoalsManagerWorksheet(init_worksheet(spreadsheet, "goals-manager"))
 goals_handler = GoalsHandler(goals_manager)
 
 handler = LifeEfficiencyLambdaHandler(shopping_handler=shopping_handler,
