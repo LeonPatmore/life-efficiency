@@ -1,3 +1,5 @@
+import logging
+
 from helpers.datetime import string_to_datetime, datetime_to_string
 from todo.list.todo_list_manager import TodoListManager, TodoItem, TodoStatus
 
@@ -10,11 +12,12 @@ class TodoListManagerDynamo(TodoListManager):
 
     @staticmethod
     def _convert_item_to_dto(x) -> TodoItem:
+        logging.info("a is " + x["TodoStatus"])
         return TodoItem(x["Desc"],
-                        getattr(TodoStatus, x["Status"]),
+                        TodoStatus[x["TodoStatus"]],
                         string_to_datetime(x["DateAdded"]),
                         item_number=int(x["Id"]),
-                        date_done=string_to_datetime(x["DateDone"] if "DateDone" in x else None))
+                        date_done=string_to_datetime(x["DateDone"]) if "DateDone" in x and x["DateDone"] else None)
 
     def get_items(self) -> list[TodoItem]:
         return [self._convert_item_to_dto(x) for x in self.table.scan()["Items"]]
@@ -24,18 +27,20 @@ class TodoListManagerDynamo(TodoListManager):
             item_number = item.item_number
         else:
             item_number = len(self.get_items()) + 1
+        logging.info(f"Creating item with id {item_number}")
         self.table.put_item(Item={"Id": int(item_number),
-                                  "Status": item.status.name,
+                                  "TodoStatus": item.status.name,
                                   "DateAdded": datetime_to_string(item.date_added),
                                   "DateDone": datetime_to_string(item.date_done) if item.date_done else "",
                                   "Desc": item.desc})
 
     def get_item(self, item_id: int) -> TodoItem:
-        return self._convert_item_to_dto(self.table.get_item(Key={'Id': item_id}))
+        return self._convert_item_to_dto(self.table.get_item(Key={'Id': item_id})["Item"])
 
     def update_item(self, item_id: int, status: TodoStatus):
+        logging.info(f"Updating item {item_id} with status {status.name}")
         self.table.update_item(Key={"Id": item_id},
-                               UpdateExpression="set Status=:s",
+                               UpdateExpression="set TodoStatus=:s",
                                ExpressionAttributeValues={":s": status.name})
         if status == TodoStatus.done:
             current_time = datetime_to_string(self.current_time_provider())

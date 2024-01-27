@@ -22,6 +22,7 @@ from spreadsheet.spreadsheet_client_loader import SpreadsheetLoaderAWS
 from todo.list.todo_list_manager_dynamo import TodoListManagerDynamo
 from todo.list.todo_list_manager_spreadsheet import TodoListManagerWorksheet
 from todo.todo_lambda_handler import TodoHandler
+from todo.weekly.todo_weekly_manager_dynamo import TodoWeeklyManagerDynamo
 from todo.weekly.todo_weekly_manager_spreadsheet import TodoWeeklyManagerWorksheet
 
 logging.root.setLevel(logging.INFO)
@@ -65,7 +66,8 @@ else:
     shopping_history = ShoppingHistoryDynamo(dynamodb.Table(get_table_full_name("shopping-history")))
     todo_list_manager = TodoListManagerDynamo(dynamodb.Table(get_table_full_name("todo-list")),
                                               get_current_datetime_utc)
-    todo_weekly_manager = None
+    todo_weekly_manager = TodoWeeklyManagerDynamo(dynamodb.Table(get_table_full_name("weekly-todos")),
+                                                  get_current_datetime_utc)
     goals_manager = GoalsManagerDynamo(dynamodb.Table(get_table_full_name("goals")))
 
 shopping_manager = ShoppingManager(shopping_history,

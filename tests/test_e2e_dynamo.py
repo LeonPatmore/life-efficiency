@@ -82,3 +82,23 @@ def test_repeating_items():
 
     assert 200 == res["statusCode"]
     assert item_name in json.loads(res["body"])["items"]
+
+
+@mock.patch.dict(os.environ, {"BACKEND": "dynamo",
+                              "AWS_DEFAULT_REGION": "eu-west-1",
+                              "AWS_ENDPOINT_URL": "http://localhost:8000"})
+def test_todo():
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "PATCH",
+        'pathParameters': {
+            "command": "todo",
+            "subcommand": "list"
+        },
+        'body': json.dumps({
+            "id": 1,
+            "status": "done"
+        })
+    }, {})
+    assert 200 == res["statusCode"]
