@@ -31,6 +31,11 @@ except ImportError:
 if dotenv:
     dotenv.load_dotenv()
 
+AWS_CLIENT_KWARGS = {}
+if os.environ.get("AWS_ENDPOINT_URL", None):
+    AWS_CLIENT_KWARGS["endpoint_url"] = os.environ["AWS_ENDPOINT_URL"]
+
+
 if os.environ.get("BACKEND", "worksheets") == "worksheets":
     spreadsheet = SpreadsheetLoaderAWS(boto3.client("s3"), boto3.client("secretsmanager")).spreadsheet
     repeating_items = RepeatingItemsWorksheet(init_worksheet(spreadsheet, "RepeatingItems"))
@@ -47,10 +52,9 @@ if os.environ.get("BACKEND", "worksheets") == "worksheets":
                                                      get_current_datetime_utc)
     goals_manager = GoalsManagerWorksheet(init_worksheet(spreadsheet, "goals-manager"))
 else:
-
-    dynamodb = boto3.resource('dynamodb', endpoint_url='http://localhost:8000')
+    dynamodb = boto3.resource('dynamodb', **AWS_CLIENT_KWARGS)
     table = dynamodb.Table('life-efficiency_local_spreadsheet-key')
-    shopping_list = ShoppingListDynamo(table)
+    shopping_list = ShoppingListDynamo(table, get_current_datetime_utc)
     repeating_items = None
     mean_plan = None
     shopping_history = None

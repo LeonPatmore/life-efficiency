@@ -1,4 +1,6 @@
+import json
 import os
+import re
 import sys
 from unittest import mock
 from unittest.mock import Mock
@@ -58,9 +60,20 @@ def setup_configuration_mock():
     # sys.modules['boto3'] = boto3_mock
 
 
-@mock.patch.dict(os.environ, {"BACKEND": "dynamo", "AWS_DEFAULT_REGION": "eu-west-1"})
+@mock.patch.dict(os.environ, {"BACKEND": "dynamo",
+                              "AWS_DEFAULT_REGION": "eu-west-1",
+                              "AWS_ENDPOINT_URL": "http://localhost:8000"})
 def test_shopping_configuration(setup_configuration_mock):
     import configuration
+
+    configuration.handler({
+        'httpMethod': "POST",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "list"
+        },
+        "body": """{"name": "myItem2","quantity": 3}"""
+    }, {})
 
     res = configuration.handler({
         'httpMethod': "GET",
@@ -71,4 +84,6 @@ def test_shopping_configuration(setup_configuration_mock):
     }, {})
 
     assert 200 == res["statusCode"]
-
+    body = json.loads(res["body"])
+    assert body["items"][0]["name"] == "myItem"
+    assert body["items"][0]["quantity"] == 3
