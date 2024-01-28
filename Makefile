@@ -13,7 +13,7 @@ run:
 deploy-dev:
 	sam deploy --no-confirm-changeset --region eu-west-1 --stack-name life-efficiency-dev --parameter-overrides ParameterKey=Environment,ParameterValue=Dev
 
-deploy-prod:
+deploy-prod: build
 	sam deploy --no-confirm-changeset --region eu-west-1 --stack-name life-efficiency-prod --parameter-overrides ParameterKey=Environment,ParameterValue=Prod
 
 test:
