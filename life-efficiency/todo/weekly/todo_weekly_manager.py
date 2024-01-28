@@ -20,8 +20,11 @@ class TodoWeeklyManager:
     def get_todos(self) -> list[WeeklyTodo]:
         raise NotImplementedError
 
+    def get_ordered_todos(self):
+        return sorted(self.get_todos(), key=lambda x: x.number)
+
     def get_todo_for_day(self, day: int) -> list[WeeklyTodo]:
-        return list(filter(lambda x: x.day == day, self.get_todos()))
+        return list(filter(lambda x: x.day == day, self.get_ordered_todos()))
 
     def complete_todo_for_item(self, number: int):
         raise NotImplementedError

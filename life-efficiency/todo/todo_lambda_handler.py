@@ -35,7 +35,7 @@ class TodoHandler(LambdaSplitter):
             return [x.to_json() for x in self.todo_weekly_manager.get_todo_for_day(int(params["day"]))]
         else:
             logging.info("Looking up all weekly items")
-            return [x.to_json() for x in self.todo_weekly_manager.get_todos()]
+            return [x.to_json() for x in self.todo_weekly_manager.get_ordered_todos()]
 
     def _complete_weekly_item(self, params):
         self.todo_weekly_manager.complete_todo_for_item(params["id"])

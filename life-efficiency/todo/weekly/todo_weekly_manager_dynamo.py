@@ -20,7 +20,7 @@ class TodoWeeklyManagerDynamo(TodoWeeklyManager):
         time_id = self._get_time_id()
         todos = list()
         for item in self.table.scan()["Items"]:
-            is_complete = int(getattr(item, f"Week_{time_id}", 0))
+            is_complete = int(item.get(f"Week_{time_id}", 0))
             todos.append(WeeklyTodo(number=int(item["id"]),
                                     day=int(item["Day"]),
                                     desc=item["Desc"],
