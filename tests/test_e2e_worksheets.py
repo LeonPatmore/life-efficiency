@@ -9,6 +9,14 @@ import pytest
 
 from shopping.shopping_manager import ShoppingManager
 from tests.google_spreadsheet_test_helpers import generate_worksheet_mock
+from tests.test_helpers import cleanup_modules
+
+
+@pytest.fixture(autouse=True)
+def reset_configuration():
+    cleanup_modules(["configuration", "spreadsheet.spreadsheet_client_loader"])
+    yield
+    cleanup_modules(["configuration", "spreadsheet.spreadsheet_client_loader"])
 
 
 @pytest.fixture
@@ -60,14 +68,16 @@ def setup_configuration_mock():
     sys.modules['boto3'] = boto3_mock
 
 
-@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd",
+                              "BACKEND": "worksheets"})
 def test_shopping_configuration(setup_configuration_mock):
     import configuration
 
     assert isinstance(configuration.shopping_manager, ShoppingManager)
 
 
-@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd",
+                              "BACKEND": "worksheets"})
 def test_todo_list_with_filter_that_returns_empty(setup_configuration_mock):
     import configuration
 
@@ -86,7 +96,8 @@ def test_todo_list_with_filter_that_returns_empty(setup_configuration_mock):
     assert "[]" == res["body"]
 
 
-@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd",
+                              "BACKEND": "worksheets"})
 def test_todo_list_with_filter(setup_configuration_mock):
     import configuration
 
@@ -106,7 +117,8 @@ def test_todo_list_with_filter(setup_configuration_mock):
            + """"date_done": null}]""" == res["body"]
 
 
-@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd",
+                              "BACKEND": "worksheets"})
 def test_todo_list_with_sorting(setup_configuration_mock):
     import configuration
 
@@ -128,7 +140,8 @@ def test_todo_list_with_sorting(setup_configuration_mock):
     assert res_body[2]["id"] == 3
 
 
-@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd",
+                              "BACKEND": "worksheets"})
 def test_todo_weekly_get_day(setup_configuration_mock):
     import configuration
 
@@ -154,7 +167,8 @@ def test_todo_weekly_get_day(setup_configuration_mock):
     assert res_body[1]["id"] == 3
 
 
-@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd",
+                              "BACKEND": "worksheets"})
 def test_todo_weekly_get_all(setup_configuration_mock):
     import configuration
 
@@ -171,7 +185,8 @@ def test_todo_weekly_get_all(setup_configuration_mock):
     assert len(res_body) == 3
 
 
-@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd",
+                              "BACKEND": "worksheets"})
 def test_get_goals(setup_configuration_mock):
     import configuration
 
@@ -199,7 +214,8 @@ def test_get_goals(setup_configuration_mock):
 
 
 @mock.patch('helpers.datetime.datetime')
-@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd"})
+@mock.patch.dict(os.environ, {"SPREADSHEET_KEY_SECRET_NAME": "asd",
+                              "BACKEND": "worksheets"})
 def test_get_repeating_details(datetime_mock, setup_configuration_mock):
     datetime_mock.datetime.now = Mock(return_value=datetime.strptime('Feb 10 2001', '%b %d %Y'))
     datetime_mock.datetime.strptime = lambda x, y: datetime.strptime(x, y)
