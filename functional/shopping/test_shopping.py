@@ -1,79 +1,32 @@
-from datetime import datetime
-
+import pytest
 import requests
 from requests import codes
 
 SHOPPING_ROOT = "https://67ylsh3ife.execute-api.eu-west-1.amazonaws.com/Dev"
-EXAMPLE_DATETIME = datetime(2023, 5, 29, 11, 9, 16)
 
 
-def test_shopping_list_get(load_spreadsheet):
-    spreadsheet_helper = load_spreadsheet
+@pytest.fixture
+def cleanup():
+    response = requests.get(f"{SHOPPING_ROOT}/shopping/list")
+    for item in response.json()["items"]:
+        delete_res = requests.delete(f"{SHOPPING_ROOT}/shopping/list", params={
+            "quantity": item["quantity"],
+            "name": item["name"]
+        })
+        assert delete_res.status_code == codes["ok"]
 
-    spreadsheet_helper.set_list("item", 2, EXAMPLE_DATETIME)
+
+def test_shopping_list(cleanup):
+    res = requests.post(f"{SHOPPING_ROOT}/shopping/list",
+                        json={
+                            "name": "Drink",
+                            "quantity": 6
+                        })
+    assert res.status_code == codes["ok"]
 
     response = requests.get(f"{SHOPPING_ROOT}/shopping/list")
     assert codes['ok'] == response.status_code
-    assert [{'date_added': '2023-05-29 11:09:16', 'name': 'item', 'quantity': 2}] == response.json()['items']
-
-
-def test_shopping_repeating_items(load_spreadsheet):
-    spreadsheet_helper = load_spreadsheet
-
-    spreadsheet_helper.set_repeating_items(["item-1", "item-2"])
-
-    response = requests.get(f"{SHOPPING_ROOT}/shopping/repeating")
-    assert codes['ok'] == response.status_code
-    assert ["item-2", "item-1"] == response.json()['items']
-
-
-def test_shopping_repeating_items_already_present_returns_bad(load_spreadsheet):
-    spreadsheet_helper = load_spreadsheet
-
-    spreadsheet_helper.set_repeating_items(["item-1", "item-2"])
-
-    response = requests.post(f"{SHOPPING_ROOT}/shopping/repeating",
-                             json={"item": "item-1"})
-    assert codes['bad'] == response.status_code
-    assert "repeating item `item-1` already present" == response.json()["error"]
-
-
-def test_add_to_shopping_list(load_spreadsheet):
-    spreadsheet_helper = load_spreadsheet
-    spreadsheet_helper.clear_list()
-
-    response = requests.post(f"{SHOPPING_ROOT}/shopping/list",
-                             json={"name": "Drink", "quantity": 3})
-
-    assert response.status_code == 200
-
-
-def test_getting_todo_list(load_spreadsheet):
-    spreadsheet_helper = load_spreadsheet
-    spreadsheet_helper.clear_todo()
-    spreadsheet_helper.add_todo_item("some todo item", "not_started")
-
-    response = requests.get(f"{SHOPPING_ROOT}/todo/list")
-
-    assert response.status_code == 200
-    response_items = response.json()
-    assert len(response_items) == 1
-    assert response_items[0]["desc"] == "some todo item"
-    assert response_items[0]["status"] == "not_started"
-    assert response_items[0]["date_added"] == "07/06/2023, 00:57:32"
-
-
-def test_getting_todo_non_completed(load_spreadsheet):
-    spreadsheet_helper = load_spreadsheet
-    spreadsheet_helper.clear_todo()
-    spreadsheet_helper.add_todo_item("some todo item", "not_started")
-    spreadsheet_helper.add_todo_item("some todo item", "done")
-
-    response = requests.get(f"{SHOPPING_ROOT}/todo/non_completed")
-
-    assert response.status_code == 200
-    response_items = response.json()
-    assert len(response_items) == 1
-    assert response_items[0]["desc"] == "some todo item"
-    assert response_items[0]["status"] == "not_started"
-    assert response_items[0]["date_added"] == "07/06/2023, 00:57:32"
+    response_items = response.json()['items']
+    assert 1 == len(response_items)
+    assert "Drink" == response_items[0]["name"]
+    assert 6 == response_items[0]["quantity"]

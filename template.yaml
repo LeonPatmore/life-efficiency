@@ -2,57 +2,91 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: "Life efficiency endpoints!"
 Globals:
-    Function:
-        Timeout: 30
-        Runtime: python3.9
-        Tracing: Active
-        Environment:
-            Variables:
-                LOG_LEVEL: INFO
-                POWERTOOLS_LOGGER_SAMPLE_RATE: 0.1
-                POWERTOOLS_LOGGER_LOG_EVENT: true
-                POWERTOOLS_METRICS_NAMESPACE: MyServerlessApplication
-                POWERTOOLS_SERVICE_NAME: hello
-                SPREADSHEET_KEY_SECRET_NAME: !Sub "life-efficiency_${Environment}_spreadsheet-key"
-                BACKEND: "dynamodb"
+  Function:
+    Timeout: 30
+    Runtime: python3.9
+    Tracing: Active
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+        POWERTOOLS_LOGGER_SAMPLE_RATE: 0.1
+        POWERTOOLS_LOGGER_LOG_EVENT: true
+        POWERTOOLS_METRICS_NAMESPACE: MyServerlessApplication
+        POWERTOOLS_SERVICE_NAME: hello
+        SPREADSHEET_KEY_SECRET_NAME: !Sub "life-efficiency/${Environment}/spreadsheet-key"
+        BACKEND: "dynamodb"
 
 Parameters:
-    Environment:
-        Type: String
-        Default: Dev
-        AllowedValues:
-            - Local
-            - Dev
-            - Prod
+  Environment:
+    Type: String
+    Default: Dev
+    AllowedValues:
+      - Dev
+      - Prod
 
 Resources:
-    DynamoTable:
-        Type: AWS::Serverless::SimpleTable
-        Properties:
-            TableName: !Sub "LifeEfficiency/${Environment}/ShoppingList"
-    SpreadsheetKeySecret:
-        Type: AWS::SecretsManager::Secret
-        Properties:
-            Name: !Sub "life-efficiency/${Environment}/spreadsheet-key"
-    ShoppingFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Handler: configuration.handler
-            CodeUri: life-efficiency
-            Description: Hello World function
-            Policies:
-              - S3ReadPolicy:
-                  BucketName: "life-efficiency"
-              - AWSSecretsManagerGetSecretValuePolicy:
-                  SecretArn: !Ref SpreadsheetKeySecret
-            Events:
-                CatchAll:
-                    Type: Api
-                    Properties:
-                        Path: /{command}/{subcommand+}
-                        Method: any
-                        RestApiId: !Ref Api
-    Api:
-        Type: AWS::Serverless::Api
-        Properties:
-            StageName: !Ref Environment
+  ShoppingListTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub "life-efficiency_${Environment}_shopping-list"
+  RepeatingItemsTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub "life-efficiency_${Environment}_repeating-items"
+  ShoppingHistoryTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub "life-efficiency_${Environment}_shopping-history"
+  GoalsTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub "life-efficiency_${Environment}_goals"
+  WeeklyTodosTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub "life-efficiency_${Environment}_weekly-todos"
+  TodoListTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub "life-efficiency_${Environment}_todo-list"
+  SpreadsheetKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "life-efficiency/${Environment}/spreadsheet-key"
+  ShoppingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: configuration.handler
+      CodeUri: life-efficiency
+      Description: Hello World function
+      Environment:
+        Variables:
+          ENV: !Sub "${Environment}"
+      Policies:
+        - S3ReadPolicy:
+            BucketName: "life-efficiency"
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref SpreadsheetKeySecret
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "life-efficiency_${Environment}_shopping-list"
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "life-efficiency_${Environment}_repeating-items"
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "life-efficiency_${Environment}_shopping-history"
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "life-efficiency_${Environment}_goals"
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "life-efficiency_${Environment}_weekly-todos"
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "life-efficiency_${Environment}_todo-list"
+      Events:
+        CatchAll:
+          Type: Api
+          Properties:
+            Path: /{command}/{subcommand+}
+            Method: any
+            RestApiId: !Ref Api
+  Api:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Environment

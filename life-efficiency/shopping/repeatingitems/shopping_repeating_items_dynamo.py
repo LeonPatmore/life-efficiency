@@ -7,7 +7,7 @@ class RepeatingItemsDynamo(RepeatingItems):
         self.table = table
 
     def get_repeating_items(self) -> list:
-        return [x["Id"] for x in self.table.scan()["Items"]]
+        return [x["id"] for x in self.table.scan()["Items"]]
 
     def add_repeating_item(self, item: str):
-        self.table.put_item(Item={"Id": item})
+        self.table.put_item(Item={"id": item})

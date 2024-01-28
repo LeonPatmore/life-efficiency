@@ -9,12 +9,12 @@ class ShoppingHistoryDynamo(ShoppingHistory):
         self.table = table
 
     def _load_all_purchases(self) -> list:
-        return [ShoppingItemPurchase(name=x["Id"],
+        return [ShoppingItemPurchase(name=x["id"],
                                      quantity=int(x["Quantity"]),
                                      purchase_datetime=string_to_datetime(x["Date"]))
                 for x in self.table.scan()["Items"]]
 
     def add_purchase(self, purchase: ShoppingItemPurchase):
-        self.table.put_item(Item={"Id": purchase.name,
+        self.table.put_item(Item={"id": purchase.name,
                                   "Quantity": purchase.quantity,
                                   "Date": datetime_to_string(purchase.purchase_datetime)})

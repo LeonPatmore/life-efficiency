@@ -8,6 +8,9 @@ import pytest
 from tests.test_helpers import cleanup_modules
 
 
+pytest.skip("TODO: Current this works only with local dynamo.", allow_module_level=True)
+
+
 @pytest.fixture(autouse=True)
 def reset_configuration():
     cleanup_modules(["configuration"])

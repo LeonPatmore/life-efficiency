@@ -21,7 +21,7 @@ class TodoWeeklyManagerDynamo(TodoWeeklyManager):
         todos = list()
         for item in self.table.scan()["Items"]:
             is_complete = int(getattr(item, f"Week_{time_id}", 0))
-            todos.append(WeeklyTodo(number=item["Id"],
+            todos.append(WeeklyTodo(number=int(item["id"]),
                                     day=int(item["Day"]),
                                     desc=item["Desc"],
                                     complete=is_complete == 1))
@@ -29,6 +29,6 @@ class TodoWeeklyManagerDynamo(TodoWeeklyManager):
 
     def complete_todo_for_item(self, number: int):
         time_id = self._get_time_id()
-        self.table.update_item(Key={"Id": number},
+        self.table.update_item(Key={"id": str(number)},
                                UpdateExpression=f"set Week_{time_id}=:s",
                                ExpressionAttributeValues={":s": 1})

@@ -14,7 +14,7 @@ class GoalsManagerDynamo(GoalsManager):
         for item in items:
             year = item["Year"]
             quarter = item["Quarter"]
-            name = item["Id"]
+            name = item["id"]
             progress = item["Progress"]
 
             if year not in goals:

@@ -11,18 +11,18 @@ class ShoppingListDynamo(ShoppingList):
         self.table = table
 
     def get_items(self) -> list[ShoppingListItem]:
-        return [ShoppingListItem(x["Id"], int(x["Quantity"]), string_to_datetime(x["DateAdded"]))
+        return [ShoppingListItem(x["id"], int(x["Quantity"]), string_to_datetime(x["DateAdded"]))
                 for x in self.table.scan()["Items"]]
 
     def add_item(self, item: ShoppingListItem):
-        self.table.put_item(Item={"Id": item.name,
+        self.table.put_item(Item={"id": item.name,
                                   "Quantity": item.quantity,
                                   "DateAdded": datetime_to_string(item.date_added)})
 
     def remove_item(self, item_name: str):
-        self.table.delete_item(Key={"Id": item_name})
+        self.table.delete_item(Key={"id": item_name})
 
     def set_item_quantity(self, item_name: str, quantity: int):
-        self.table.update_item(Key={"Id": item_name},
+        self.table.update_item(Key={"id": item_name},
                                UpdateExpression="set Quantity=:q",
                                ExpressionAttributeValues={":q": Decimal(str(quantity))})
