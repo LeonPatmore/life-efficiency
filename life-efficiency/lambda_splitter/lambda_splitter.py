@@ -67,7 +67,6 @@ class LambdaSplitter(object):
 
     def _handle_function(self, event, handler: callable) -> dict:
         kwargs = {}
-        # JSON
         try:
             handler_params = list(signature(handler).parameters.keys())
             if 'params' in handler_params:
@@ -75,6 +74,8 @@ class LambdaSplitter(object):
                     if "queryStringParameters" in event and event["queryStringParameters"] is not None else {}
             if 'json' in handler_params:
                 kwargs['json'] = json.loads(event['body'])
+            if 'path' in handler_params:
+                kwargs["path"] = event["path"]
         except Exception as e:
             return self._handle_json_exception(e)
         response = handler(**kwargs)

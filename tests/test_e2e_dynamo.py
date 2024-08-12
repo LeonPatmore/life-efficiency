@@ -1,12 +1,9 @@
 import json
-import os
 import uuid
-from unittest import mock
 
 import pytest
 
 from tests.test_helpers import cleanup_modules
-
 
 pytest.skip("TODO: Current this works only with local dynamo.", allow_module_level=True)
 

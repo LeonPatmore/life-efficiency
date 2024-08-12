@@ -48,3 +48,6 @@ class TodoListManager:
 
     def update_item(self, item_id: int, status: TodoStatus):
         raise NotImplementedError
+
+    def remove_item(self, item_id: int):
+        raise NotImplementedError

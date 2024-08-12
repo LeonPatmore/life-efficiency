@@ -48,3 +48,6 @@ class TodoListManagerDynamo(TodoListManager):
                                    ConditionExpression='attribute_exists(id)',
                                    UpdateExpression="set DateDone=:d",
                                    ExpressionAttributeValues={":d": current_time})
+
+    def remove_item(self, item_id: int):
+        self.table.delete_item(Key={"id": str(item_id)})

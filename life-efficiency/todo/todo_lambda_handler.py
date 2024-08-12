@@ -21,6 +21,7 @@ class TodoHandler(LambdaSplitter):
         self.add_sub_handler('list', LambdaTarget(self._update_item,
                                                   validators=[JsonBodyValidator(["id", "status"])],
                                                   response_handler=JsonResponseHandler()), 'PATCH')
+        self.add_sub_handler("list", LambdaTarget(self._remove_item), method="DELETE")
         self.add_sub_handler("weekly", LambdaTarget(self._get_weekly_items,
                                                     validators=[QueryParamValidator(["day"])],
                                                     response_handler=JsonResponseHandler()))
@@ -59,3 +60,7 @@ class TodoHandler(LambdaSplitter):
     def _update_item(self, json):
         self.todo_list_manager.update_item(json["id"], getattr(TodoStatus, json["status"]))
         return self.todo_list_manager.get_item(json["id"]).to_json()
+
+    def _remove_item(self, path):
+        item_id = int(path.split("/")[-1])
+        self.todo_list_manager.remove_item(item_id)
