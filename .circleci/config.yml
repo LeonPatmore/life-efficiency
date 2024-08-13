@@ -34,8 +34,7 @@ jobs:
     steps:
       - checkout
       - sam/install
-      - sam/build:
-          template: template.yaml
+      - run: sam build -u
       - run: sam deploy --stack-name life-efficiency-prod --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides ParameterKey=Environment,ParameterValue=Prod
 workflows:
   main:
