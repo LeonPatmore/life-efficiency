@@ -28,7 +28,7 @@ jobs:
     steps:
       - checkout
       - run: pipenv install -d
-      - run: make test-functional
+      - run: ENV=dev make test-functional
   deploy_prod:
     executor: sam/default
     steps:
