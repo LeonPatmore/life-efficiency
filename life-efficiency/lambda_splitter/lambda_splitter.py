@@ -67,7 +67,6 @@ class LambdaSplitter(object):
 
     def _handle_function(self, event, handler: callable) -> dict:
         kwargs = {}
-        # JSON
         try:
             handler_params = list(signature(handler).parameters.keys())
             if 'params' in handler_params:
@@ -75,6 +74,8 @@ class LambdaSplitter(object):
                     if "queryStringParameters" in event and event["queryStringParameters"] is not None else {}
             if 'json' in handler_params:
                 kwargs['json'] = json.loads(event['body'])
+            if 'path' in handler_params:
+                kwargs["path"] = event["path"]
         except Exception as e:
             return self._handle_json_exception(e)
         response = handler(**kwargs)
@@ -112,12 +113,13 @@ class LambdaSplitter(object):
 
     def _determine_method(self, event):
         sub_path = self.sanitise_path(event['pathParameters'][self.path_parameter_key])
-        if sub_path in self.sub_handlers:
+        sub_path_root = sub_path.split("/")[0]
+        if sub_path_root in self.sub_handlers:
             method = self.sanitise_method(event['httpMethod'])
-            if method in self.sub_handlers[sub_path]:
-                return self.sub_handlers[sub_path][method]
-            if ANY_METHOD in self.sub_handlers[sub_path]:
-                return self.sub_handlers[sub_path][ANY_METHOD]
+            if method in self.sub_handlers[sub_path_root]:
+                return self.sub_handlers[sub_path_root][method]
+            if ANY_METHOD in self.sub_handlers[sub_path_root]:
+                return self.sub_handlers[sub_path_root][ANY_METHOD]
             raise HTTPAwareException(405)
         else:
             raise HTTPAwareException(404, f"could not find path for this command, "

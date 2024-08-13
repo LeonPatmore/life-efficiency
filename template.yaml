@@ -4,7 +4,7 @@ Description: "Life efficiency endpoints!"
 Globals:
   Function:
     Timeout: 30
-    Runtime: python3.9
+    Runtime: python3.12
     Tracing: Active
     Environment:
       Variables:
@@ -14,7 +14,6 @@ Globals:
         POWERTOOLS_METRICS_NAMESPACE: MyServerlessApplication
         POWERTOOLS_SERVICE_NAME: hello
         SPREADSHEET_KEY_SECRET_NAME: !Sub "life-efficiency/${Environment}/spreadsheet-key"
-        BACKEND: "dynamodb"
 
 Parameters:
   Environment:

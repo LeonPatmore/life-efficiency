@@ -1,12 +1,12 @@
 version: 2.1
 
 orbs:
-  sam: circleci/aws-sam-serverless@2.0.0
+  sam: circleci/aws-sam-serverless@6.0.1
 
 executors:
   python:
     docker:
-      - image: cimg/python:3.9.17
+      - image: cimg/python:3.12.5
 
 jobs:
   test_and_lint:
@@ -14,31 +14,27 @@ jobs:
     steps:
       - checkout
       - run: pipenv install -d
-      - run: pipenv run python -m flake8
-      - run: export PYTHONPATH=./life-efficiency && pipenv run python -m pytest --cov=life-efficiency ./tests
+      - run: make lint
+      - run: make test
   deploy_staging:
     executor: sam/default
     steps:
       - checkout
       - sam/install
-      - sam/build:
-          template: template.yaml
-          s3-bucket: life-efficiency
+      - run: sam build -u
       - run: sam deploy --stack-name life-efficiency-dev --no-confirm-changeset --no-fail-on-empty-changeset
   functional_tests:
     executor: python
     steps:
       - checkout
       - run: pipenv install -d
-      - run: export PYTHONPATH=./life-efficiency && pipenv run python -m pytest functional
+      - run: ENV=dev make test-functional
   deploy_prod:
     executor: sam/default
     steps:
       - checkout
       - sam/install
-      - sam/build:
-          template: template.yaml
-          s3-bucket: life-efficiency
+      - run: sam build -u
       - run: sam deploy --stack-name life-efficiency-prod --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides ParameterKey=Environment,ParameterValue=Prod
 workflows:
   main:
