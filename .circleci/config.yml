@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  sam: circleci/aws-sam-serverless@2.0.0
+  sam: circleci/aws-sam-serverless@6.0.1
 
 executors:
   python:
