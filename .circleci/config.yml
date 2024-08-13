@@ -23,7 +23,6 @@ jobs:
       - sam/install
       - sam/build:
           template: template.yaml
-          s3-bucket: life-efficiency
       - run: sam deploy --stack-name life-efficiency-dev --no-confirm-changeset --no-fail-on-empty-changeset
   functional_tests:
     executor: python
