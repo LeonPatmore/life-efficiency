@@ -21,8 +21,7 @@ jobs:
     steps:
       - checkout
       - sam/install
-      - sam/build:
-          template: template.yaml
+      - run: sam build -u
       - run: sam deploy --stack-name life-efficiency-dev --no-confirm-changeset --no-fail-on-empty-changeset
   functional_tests:
     executor: python
