@@ -37,7 +37,6 @@ jobs:
       - sam/install
       - sam/build:
           template: template.yaml
-          s3-bucket: life-efficiency
       - run: sam deploy --stack-name life-efficiency-prod --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides ParameterKey=Environment,ParameterValue=Prod
 workflows:
   main:
