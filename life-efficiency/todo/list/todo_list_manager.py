@@ -17,17 +17,17 @@ class TodoItem:
                  desc: str,
                  status: TodoStatus,
                  date_added: datetime,
-                 item_number: int = None,
+                 item_id: str = None,
                  date_done: datetime = None):
         self.desc = desc
         self.status = status
         self.date_added = date_added
-        self.item_number = item_number
+        self.item_id = item_id
         self.date_done = date_done
 
     def to_json(self):
         return {
-            "id": self.item_number,
+            "id": self.item_id,
             "desc": self.desc,
             "status": self.status.name,
             "date_added": datetime_to_string(self.date_added),
@@ -40,14 +40,14 @@ class TodoListManager:
     def get_items(self) -> list[TodoItem]:
         raise NotImplementedError
 
-    def get_item(self, item_id: int) -> TodoItem:
+    def get_item(self, item_id: str) -> TodoItem:
         raise NotImplementedError
 
-    def add_item(self, item: TodoItem):
+    def add_item(self, item: TodoItem) -> TodoItem:
         raise NotImplementedError
 
-    def update_item(self, item_id: int, status: TodoStatus):
+    def update_item(self, item_id: str, status: TodoStatus):
         raise NotImplementedError
 
-    def remove_item(self, item_id: int):
+    def remove_item(self, item_id: str):
         raise NotImplementedError

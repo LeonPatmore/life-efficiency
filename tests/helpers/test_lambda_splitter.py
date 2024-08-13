@@ -238,3 +238,22 @@ def test_lambda_splitter_with_failing_validation(lambda_splitter_with_failing_va
 
     with pytest.raises(RuntimeError):
         lambda_splitter.__call__(_generate_event(PATH_PARAMETER_KEY, DEFAULT_SUB_PATH, None), {})
+
+
+def test_call_sub_path_works_with_extra_paths(setup_embedded_lambda_splitter):
+    lambda_splitter_top, top_sub_path, sub_path, top_path_parameter_key, return_value, mock_method = \
+        setup_embedded_lambda_splitter
+
+    event = {
+        'httpMethod': 'GET',
+        'pathParameters': {
+            top_path_parameter_key: top_sub_path,
+            PATH_PARAMETER_KEY: sub_path + "/some/extra"
+        },
+        'body': ''
+    }
+
+    result = lambda_splitter_top.__call__(event, {})
+
+    mock_method.assert_called_once_with()
+    assert result == return_value

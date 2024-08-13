@@ -17,7 +17,9 @@ class TodoHandler(LambdaSplitter):
         self.add_sub_handler("list", LambdaTarget(self._get_todo_list, response_handler=JsonResponseHandler()))
         self.add_sub_handler("non_completed",
                              LambdaTarget(self._get_non_completed_items, response_handler=JsonResponseHandler()))
-        self.add_sub_handler('list', LambdaTarget(self._add_item, [JsonBodyValidator(["desc"])]), 'POST')
+        self.add_sub_handler('list', LambdaTarget(self._add_item,
+                                                  [JsonBodyValidator(["desc"])],
+                                                  JsonResponseHandler()), 'POST')
         self.add_sub_handler('list', LambdaTarget(self._update_item,
                                                   validators=[JsonBodyValidator(["id", "status"])],
                                                   response_handler=JsonResponseHandler()), 'PATCH')
@@ -54,13 +56,13 @@ class TodoHandler(LambdaSplitter):
                                                                          TodoStatus.in_progress],
                                             self.todo_list_manager.get_items())]
 
-    def _add_item(self, json):
-        self.todo_list_manager.add_item(TodoItem(json["desc"], TodoStatus.not_started, get_current_datetime_utc()))
+    def _add_item(self, json) -> TodoItem:
+        return self.todo_list_manager.add_item(TodoItem(json["desc"], TodoStatus.not_started, get_current_datetime_utc()))
 
     def _update_item(self, json):
         self.todo_list_manager.update_item(json["id"], getattr(TodoStatus, json["status"]))
         return self.todo_list_manager.get_item(json["id"]).to_json()
 
-    def _remove_item(self, path):
-        item_id = int(path.split("/")[-1])
+    def _remove_item(self, path: str):
+        item_id = path.split("/")[-1]
         self.todo_list_manager.remove_item(item_id)

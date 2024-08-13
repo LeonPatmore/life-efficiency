@@ -113,12 +113,13 @@ class LambdaSplitter(object):
 
     def _determine_method(self, event):
         sub_path = self.sanitise_path(event['pathParameters'][self.path_parameter_key])
-        if sub_path in self.sub_handlers:
+        sub_path_root = sub_path.split("/")[0]
+        if sub_path_root in self.sub_handlers:
             method = self.sanitise_method(event['httpMethod'])
-            if method in self.sub_handlers[sub_path]:
-                return self.sub_handlers[sub_path][method]
-            if ANY_METHOD in self.sub_handlers[sub_path]:
-                return self.sub_handlers[sub_path][ANY_METHOD]
+            if method in self.sub_handlers[sub_path_root]:
+                return self.sub_handlers[sub_path_root][method]
+            if ANY_METHOD in self.sub_handlers[sub_path_root]:
+                return self.sub_handlers[sub_path_root][ANY_METHOD]
             raise HTTPAwareException(405)
         else:
             raise HTTPAwareException(404, f"could not find path for this command, "
