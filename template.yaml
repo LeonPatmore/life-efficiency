@@ -13,7 +13,6 @@ Globals:
         POWERTOOLS_LOGGER_LOG_EVENT: true
         POWERTOOLS_METRICS_NAMESPACE: MyServerlessApplication
         POWERTOOLS_SERVICE_NAME: hello
-        SPREADSHEET_KEY_SECRET_NAME: !Sub "life-efficiency/${Environment}/spreadsheet-key"
 
 Parameters:
   Environment:
@@ -48,10 +47,10 @@ Resources:
     Type: AWS::Serverless::SimpleTable
     Properties:
       TableName: !Sub "life-efficiency_${Environment}_todo-list"
-  SpreadsheetKeySecret:
-    Type: AWS::SecretsManager::Secret
+  TodoSetTable:
+    Type: AWS::Serverless::SimpleTable
     Properties:
-      Name: !Sub "life-efficiency/${Environment}/spreadsheet-key"
+      TableName: !Sub "life-efficiency_${Environment}_todo-sets"
   ShoppingFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -64,8 +63,6 @@ Resources:
       Policies:
         - S3ReadPolicy:
             BucketName: "life-efficiency"
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref SpreadsheetKeySecret
         - DynamoDBCrudPolicy:
             TableName: !Sub "life-efficiency_${Environment}_shopping-list"
         - DynamoDBCrudPolicy:
@@ -78,6 +75,8 @@ Resources:
             TableName: !Sub "life-efficiency_${Environment}_weekly-todos"
         - DynamoDBCrudPolicy:
             TableName: !Sub "life-efficiency_${Environment}_todo-list"
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "life-efficiency_${Environment}_todo-sets"
       Events:
         CatchAll:
           Type: Api
