@@ -41,6 +41,7 @@ shopping_history = ShoppingHistoryDynamo(dynamodb.Table(get_table_full_name("sho
 todo_list_manager = TodoListManagerDynamo(dynamodb.Table(get_table_full_name("todo-list")),
                                           get_current_datetime_utc)
 todo_weekly_manager = TodoWeeklyManagerDynamo(dynamodb.Table(get_table_full_name("weekly-todos")),
+                                              dynamodb.Table(get_table_full_name("todo-sets")),
                                               get_current_datetime_utc)
 goals_manager = GoalsManagerDynamo(dynamodb.Table(get_table_full_name("goals")))
 

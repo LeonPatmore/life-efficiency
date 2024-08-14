@@ -1,5 +1,3 @@
-import logging
-
 from helpers.datetime import get_current_datetime_utc
 from lambda_splitter.lambda_splitter import LambdaSplitter, LambdaTarget
 from lambda_splitter.response_handler import JsonResponseHandler
@@ -24,21 +22,19 @@ class TodoHandler(LambdaSplitter):
                                                   validators=[JsonBodyValidator(["id", "status"])],
                                                   response_handler=JsonResponseHandler()), 'PATCH')
         self.add_sub_handler("list", LambdaTarget(self._remove_item), method="DELETE")
-        self.add_sub_handler("weekly", LambdaTarget(self._get_weekly_items,
-                                                    validators=[QueryParamValidator(["day"])],
-                                                    response_handler=JsonResponseHandler()))
         self.add_sub_handler("weekly", LambdaTarget(self._get_weekly_items, response_handler=JsonResponseHandler()))
         self.add_sub_handler("weekly",
                              LambdaTarget(self._complete_weekly_item, validators=[QueryParamValidator(["id"])]),
                              "POST")
+        self.add_sub_handler("sets",
+                             LambdaTarget(self.todo_weekly_manager.get_sets, response_handler=JsonResponseHandler()),
+                             "GET")
 
     def _get_weekly_items(self, params):
-        if "day" in params:
-            logging.info(f"Looking up weekly items for day [ {params['day']} ]")
-            return [x.to_json() for x in self.todo_weekly_manager.get_todo_for_day(int(params["day"]))]
-        else:
-            logging.info("Looking up all weekly items")
-            return [x.to_json() for x in self.todo_weekly_manager.get_ordered_todos()]
+        day_filter = params["day"] if "day" in params else None
+        set_id_filter = params["set_id"] if "set_id" in params else None
+        return [x.to_json() for x in self.todo_weekly_manager.get_todos_with_filters(day=day_filter,
+                                                                                     set_id=set_id_filter)]
 
     def _complete_weekly_item(self, params):
         self.todo_weekly_manager.complete_todo_for_item(params["id"])

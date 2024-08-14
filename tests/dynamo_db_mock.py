@@ -1,8 +1,10 @@
 # noinspection PyPep8Naming
 class DynamoDbMock:
 
-    def __init__(self):
-        self.items = []
+    def __init__(self, items=None):
+        if items is None:
+            items = []
+        self.items = items
 
     def scan(self):
         return {
