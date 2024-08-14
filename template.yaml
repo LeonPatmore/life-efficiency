@@ -63,8 +63,6 @@ Resources:
       Policies:
         - S3ReadPolicy:
             BucketName: "life-efficiency"
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref SpreadsheetKeySecret
         - DynamoDBCrudPolicy:
             TableName: !Sub "life-efficiency_${Environment}_shopping-list"
         - DynamoDBCrudPolicy:
