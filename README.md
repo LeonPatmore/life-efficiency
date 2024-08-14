@@ -7,30 +7,6 @@ A project to improve the efficiency of my life!
 
 ## Running Locally
 
-All commands should be run from the root of the repo.
-
-1. Make sure that you set your python path to the source root (this is different from the repo root):
-
-    **Windows**:
-
-    `set PYTHONPATH=%PYTHONPATH%;.\life-efficiency`
-
-    **Linux**
-
-    `export PYTHONPATH=./life-efficiency`
-
-2. Make sure your AWS credentials are setup:
-
-    **Windows**:
-
-    `set AWS_CONFIG_FILE=D:\Tools\cygwin\home\Leon\.aws\config`
-
-    `set AWS_SHARED_CREDENTIALS_FILE=D:\Tools\cygwin\home\Leon\.aws\credentials`
-
-3. `pipenv install -d`
-
-4. `pipenv run python life-efficiency/main.py`
-
 ### Running Tests
 
 We are using pytest to test this project, and a pytest plugin to monitor the test coverage.
@@ -43,11 +19,11 @@ We are using flake8 as our super cool Python linter.
 
 `make lint`
 
-## Building
+### Building
 
 `make build`
 
-## Running Lambda Locally
+### Running Lambda Locally
 
 `make run`
 
@@ -63,9 +39,9 @@ We are using flake8 as our super cool Python linter.
 
 ## Functional Tests
 
-Note: You must have valid AWS environment setup.
-
 `make test-functional`
+
+Use the `ENV` environment variable to test against local or dev instance. Valid values are `dev` and `local`.
 
 ## TODO
 

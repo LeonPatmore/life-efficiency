@@ -1,11 +1,12 @@
+24/09/2020 Add auth to lambda endpoints
+08/06/2021 Support a multiple week meal plan
+
 x 19/09/2020 11/09/2020 Add CI @ci
 x 25/09/2020 19/09/2020 Fix git ignore file
-24/09/2020 Add auth to lambda endpoints
 x 08/10/2020 6/09/2020 Improve tests by adding mocks
 x 06/11/2020 08/10/2020 Add validation to insert purchase endpoint
 x 19/11/2020 01/11/2020 Add functional tests
 x 15/11/2020 12/11/2020 Add endpoint to get list and add to list of repeating items
 x 13/11/2020 12/11/2020 Add validation so that empty items do not get processed
 x 30/11/2020 23/11/2020 Don't deploy prod on branches
-25/11/2020 Fix casing, make it consistent
-08/06/2021 Support a multiple week meal plan
+x 14/08/2024 25/11/2020 Fix casing, make it consistent
