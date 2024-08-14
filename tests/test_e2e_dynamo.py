@@ -277,3 +277,32 @@ def test_weekly_todos_by_set_id_and_day(setup_dynamo_mock):
     assert len(res_json) == 1
 
     assert res_json[0]["id"] == 3
+
+
+def test_shopping_history_add_purchase_strips_whitespace(setup_dynamo_mock):
+    import configuration
+
+    item_name = str(uuid.uuid4())
+
+    configuration.handler({
+        'httpMethod': "POST",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "history"
+        },
+        "body": f"""{{"name": " {item_name} ","quantity": 3}}"""
+    }, {})
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "history"
+        }
+    }, {})
+
+    assert 200 == res["statusCode"]
+    body = json.loads(res["body"])
+    item_part = [x for x in body["purchases"] if x["name"] == item_name][0]
+    assert item_part["name"] == item_name
+    assert item_part["quantity"] == 3
