@@ -91,6 +91,32 @@ def test_repeating_items(setup_dynamo_mock):
     assert item_name in json.loads(res["body"])["items"]
 
 
+def test_repeating_items_removes_whitespace(setup_dynamo_mock):
+    import configuration
+
+    item_name = str(uuid.uuid4())
+
+    configuration.handler({
+        'httpMethod': "POST",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "repeating"
+        },
+        "body": f"""{{"item": " {item_name} "}}"""
+    }, {})
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "repeating"
+        }
+    }, {})
+
+    assert 200 == res["statusCode"]
+    assert item_name in json.loads(res["body"])["items"]
+
+
 def test_todo(setup_dynamo_mock):
     import configuration
 

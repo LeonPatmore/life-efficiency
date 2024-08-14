@@ -54,7 +54,7 @@ class RepeatingItemsTestImplementation(RepeatingItems):
     def get_repeating_items(self) -> list:
         return self.repeating_items
 
-    def add_repeating_item(self, item: str):
+    def add_repeating_item_impl(self, item: str):
         pass
 
 

@@ -9,5 +9,5 @@ class RepeatingItemsDynamo(RepeatingItems):
     def get_repeating_items(self) -> list:
         return [x["id"] for x in self.table.scan()["Items"]]
 
-    def add_repeating_item(self, item: str):
+    def add_repeating_item_impl(self, item: str):
         self.table.put_item(Item={"id": item})
