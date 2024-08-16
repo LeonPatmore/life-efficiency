@@ -306,3 +306,37 @@ def test_shopping_history_add_purchase_strips_whitespace(setup_dynamo_mock):
     item_part = [x for x in body["purchases"] if x["name"] == item_name][0]
     assert item_part["name"] == item_name
     assert item_part["quantity"] == 3
+
+
+@pytest.mark.parametrize('setup_dynamo_mock',
+                         [{
+                             "life-efficiency_local_goals": [
+                                 {"id": "do something", "Year": 2024, "Quarter": "q1", "Progress": "in_progress"},
+                                 {"id": "do something else", "Year": 2024, "Quarter": "q1", "Progress": "in_progress"},
+                                 {"id": "and this", "Year": 2025, "Quarter": "q1", "Progress": "in_progress"},
+                             ]
+                         }],
+                         indirect=True)
+def test_goals(setup_dynamo_mock):
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "goals",
+            "subcommand": "list"
+        }
+    }, {})
+
+    assert 200 == res["statusCode"]
+    body = json.loads(res["body"])
+    assert "2024" in body
+    assert len(body["2024"]["q1"]) == 2
+    assert len(body["2024"]["q2"]) == 0
+    assert len(body["2024"]["q3"]) == 0
+    assert len(body["2024"]["q4"]) == 0
+    assert "2025" in body
+    assert len(body["2025"]["q1"]) == 1
+    assert len(body["2025"]["q2"]) == 0
+    assert len(body["2025"]["q3"]) == 0
+    assert len(body["2025"]["q4"]) == 0
