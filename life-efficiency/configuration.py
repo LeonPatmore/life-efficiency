@@ -3,7 +3,10 @@ import os
 
 import boto3
 
+from dynamo import dynamo_repository
 from dynamo.dynamo_helpers import get_table_full_name
+from finance.finance_manager_dynamo import BalanceInstanceManagerDynamo
+from finance.finance_manager_handler import FinanceHandler
 from goals.goals_lambda_handler import GoalsHandler
 from goals.goals_manager_dynamo import GoalsManagerDynamo
 from helpers.datetime import get_current_datetime_utc
@@ -35,6 +38,8 @@ if os.environ.get("AWS_ENDPOINT_URL", None):
     AWS_CLIENT_KWARGS["endpoint_url"] = os.environ["AWS_ENDPOINT_URL"]
 
 dynamodb = boto3.resource('dynamodb', **AWS_CLIENT_KWARGS)
+dynamo_repository.table_generator = lambda name: dynamodb.Table(get_table_full_name(name))
+
 shopping_list = ShoppingListDynamo(dynamodb.Table(get_table_full_name("shopping-list")), get_current_datetime_utc)
 repeating_items = RepeatingItemsDynamo(dynamodb.Table(get_table_full_name("repeating-items")))
 shopping_history = ShoppingHistoryDynamo(dynamodb.Table(get_table_full_name("shopping-history")))
@@ -52,7 +57,9 @@ shopping_manager = ShoppingManager(shopping_history,
 shopping_handler = ShoppingHandler(shopping_manager)
 todo_handler = TodoHandler(todo_list_manager, todo_weekly_manager)
 goals_handler = GoalsHandler(goals_manager)
+finance_handler = FinanceHandler(BalanceInstanceManagerDynamo())
 
 handler = LifeEfficiencyLambdaHandler(shopping_handler=shopping_handler,
                                       todo_handler=todo_handler,
-                                      goals_handler=goals_handler)
+                                      goals_handler=goals_handler,
+                                      finance_handler=finance_handler)

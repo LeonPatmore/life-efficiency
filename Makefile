@@ -7,7 +7,7 @@ build:
 	pipenv requirements > life-efficiency/requirements.txt
 	sam build -u
 
-run:
+run: build
 	docker-compose -f compose.yaml up -d
 	sam local start-api --docker-network life-efficiency --debug-port 1234 --skip-pull-image --warm-containers EAGER --docker-network life-efficiency --parameter-overrides ParameterKey=Environment,ParameterValue=local --container-env-vars local_env.json
 
