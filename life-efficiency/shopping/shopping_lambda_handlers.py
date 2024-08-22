@@ -1,4 +1,3 @@
-from lambda_splitter.errors import HTTPAwareException
 from lambda_splitter.lambda_splitter import LambdaSplitter, LambdaTarget
 from lambda_splitter.response_handler import JsonResponseHandler
 from lambda_splitter.validators import JsonBodyValidator, QueryParamValidator, RequiredField
@@ -48,19 +47,13 @@ class ShoppingHandler(LambdaSplitter):
 
     def insert_purchase(self, json):
         name = json['name']
-        try:
-            quantity = int(json['quantity'])
-        except ValueError:
-            raise HTTPAwareException(400, 'quantity must be an integer')
+        quantity = int(json['quantity'])
         purchase = ShoppingItemPurchase(name, quantity)
         self.shopping_manager.shopping_history.add(purchase)
 
     def add_to_list(self, json):
         item_name = json['name']
-        try:
-            quantity = int(json['quantity'])
-        except ValueError:
-            raise HTTPAwareException(400, 'quantity must be an integer')
+        quantity = int(json['quantity'])
         self.shopping_manager.shopping_list.increase_quantity(item_name, quantity)
 
     def delete_item(self, params):
