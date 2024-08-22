@@ -57,3 +57,20 @@ def test_todo_list():
     assert delete_res.status_code == codes["ok"]
 
     assert not _todo_item_exists(todo_id)
+
+
+def _balance_instance_exists(instance_id: str) -> bool:
+    return len(list(filter(lambda x: x["id"] == instance_id, requests.get(f"{URL_ROOT}/finance/instances").json()))) > 0
+
+
+def test_balance_instance():
+    create_res = requests.post(f"{URL_ROOT}/finance/instances",
+                               json={
+                                   "amount": 1000,
+                                   "date": "21/08/2024, 13:00:00",
+                                   "holder": "bank"
+                               })
+    assert create_res.status_code == codes["ok"]
+    instance_id = create_res.json()["id"]
+
+    assert _balance_instance_exists(instance_id)

@@ -340,3 +340,38 @@ def test_goals(setup_dynamo_mock):
     assert len(body["2025"]["q2"]) == 0
     assert len(body["2025"]["q3"]) == 0
     assert len(body["2025"]["q4"]) == 0
+
+
+def test_finance_balance_instances(setup_dynamo_mock):
+    import configuration
+
+    create_res = configuration.handler({
+        'httpMethod': "POST",
+        'pathParameters': {
+            "command": "finance",
+            "subcommand": "instances"
+        },
+        "body": """{"amount": 1000, "date": "21/08/2024, 13:00:00", "holder": "bank"}"""
+    }, {})
+
+    assert 200 == create_res["statusCode"]
+    body = json.loads(create_res["body"])
+    assert body["amount"] == 1000
+    assert body["date"] == "21/08/2024, 13:00:00"
+    assert body["holder"] == "bank"
+    assert "id" in body and body["id"] is not None
+
+    get_res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "finance",
+            "subcommand": "instances"
+        }
+    }, {})
+    assert 200 == get_res["statusCode"]
+    body = json.loads(get_res["body"])
+    assert len(body) == 1
+    assert body[0]["amount"] == 1000
+    assert body[0]["date"] == "21/08/2024, 13:00:00"
+    assert body[0]["holder"] == "bank"
+    assert "id" in body[0]
