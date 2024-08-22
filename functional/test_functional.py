@@ -15,7 +15,7 @@ URL_ROOT = os.environ.get("URL_ROOT")
 @pytest.fixture
 def cleanup():
     response = requests.get(f"{URL_ROOT}/shopping/list")
-    for item in response.json()["items"]:
+    for item in response.json():
         delete_res = requests.delete(f"{URL_ROOT}/shopping/list", params={
             "quantity": item["quantity"],
             "name": item["name"]
@@ -33,7 +33,7 @@ def test_shopping_list(cleanup):
 
     response = requests.get(f"{URL_ROOT}/shopping/list")
     assert codes['ok'] == response.status_code
-    response_items = response.json()['items']
+    response_items = response.json()
     assert 1 == len(response_items)
     assert "Drink" == response_items[0]["name"]
     assert 6 == response_items[0]["quantity"]

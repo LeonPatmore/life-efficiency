@@ -1,15 +1,13 @@
+from repository.repository import Repository
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 
 
-class ShoppingHistory(object):
+class ShoppingHistory(Repository[ShoppingItemPurchase]):
 
-    def _load_all_purchases(self) -> list[ShoppingItemPurchase]:
-        raise NotImplementedError()
+    def __init__(self):
+        super().__init__(ShoppingItemPurchase)
 
-    def get_all_purchases(self) -> list[ShoppingItemPurchase]:
-        purchases = self._load_all_purchases()
+    def get_all_sorted(self) -> list[ShoppingItemPurchase]:
+        purchases = self.get_all()
         purchases.sort(key=lambda x: x.purchase_datetime.timestamp(), reverse=True)
         return purchases
-
-    def add_purchase(self, purchase: ShoppingItemPurchase):
-        raise NotImplementedError()

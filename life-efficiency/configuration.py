@@ -5,18 +5,20 @@ import boto3
 
 from dynamo import dynamo_repository
 from dynamo.dynamo_helpers import get_table_full_name
-from finance.finance_manager_dynamo import BalanceInstanceManagerDynamo
+from dynamo.dynamo_repository import DynamoRepository
+from finance.finance_manager import BalanceInstanceManager
 from finance.finance_manager_handler import FinanceHandler
 from goals.goals_lambda_handler import GoalsHandler
-from goals.goals_manager_dynamo import GoalsManagerDynamo
+from goals.goals_manager import GoalsManager
 from helpers.datetime import get_current_datetime_utc
 from lambda_handler import LifeEfficiencyLambdaHandler
-from shopping.history.shopping_history_dynamo import ShoppingHistoryDynamo
-from shopping.list.shopping_list_dynamo import ShoppingListDynamo
-from shopping.repeatingitems.shopping_repeating_items_dynamo import RepeatingItemsDynamo
+from repository import repository
+from shopping.history.shopping_history import ShoppingHistory
+from shopping.list.shopping_list import ShoppingList
+from shopping.repeatingitems.shopping_repeating_items import RepeatingItems
 from shopping.shopping_lambda_handlers import ShoppingHandler
 from shopping.shopping_manager import ShoppingManager
-from todo.list.todo_list_manager_dynamo import TodoListManagerDynamo
+from todo.list.todo_list_manager import TodoListManager
 from todo.todo_lambda_handler import TodoHandler
 from todo.weekly.todo_weekly_manager_dynamo import TodoWeeklyManagerDynamo
 
@@ -39,16 +41,16 @@ if os.environ.get("AWS_ENDPOINT_URL", None):
 
 dynamodb = boto3.resource('dynamodb', **AWS_CLIENT_KWARGS)
 dynamo_repository.table_generator = lambda name: dynamodb.Table(get_table_full_name(name))
+repository.repository_implementation = DynamoRepository
 
-shopping_list = ShoppingListDynamo(dynamodb.Table(get_table_full_name("shopping-list")), get_current_datetime_utc)
-repeating_items = RepeatingItemsDynamo(dynamodb.Table(get_table_full_name("repeating-items")))
-shopping_history = ShoppingHistoryDynamo(dynamodb.Table(get_table_full_name("shopping-history")))
-todo_list_manager = TodoListManagerDynamo(dynamodb.Table(get_table_full_name("todo-list")),
-                                          get_current_datetime_utc)
+shopping_list = ShoppingList(get_current_datetime_utc)
+repeating_items = RepeatingItems()
+shopping_history = ShoppingHistory()
+todo_list_manager = TodoListManager(get_current_datetime_utc)
 todo_weekly_manager = TodoWeeklyManagerDynamo(dynamodb.Table(get_table_full_name("weekly-todos")),
                                               dynamodb.Table(get_table_full_name("todo-sets")),
                                               get_current_datetime_utc)
-goals_manager = GoalsManagerDynamo(dynamodb.Table(get_table_full_name("goals")))
+goals_manager = GoalsManager()
 
 shopping_manager = ShoppingManager(shopping_history,
                                    shopping_list,
@@ -57,7 +59,7 @@ shopping_manager = ShoppingManager(shopping_history,
 shopping_handler = ShoppingHandler(shopping_manager)
 todo_handler = TodoHandler(todo_list_manager, todo_weekly_manager)
 goals_handler = GoalsHandler(goals_manager)
-finance_handler = FinanceHandler(BalanceInstanceManagerDynamo())
+finance_handler = FinanceHandler(BalanceInstanceManager())
 
 handler = LifeEfficiencyLambdaHandler(shopping_handler=shopping_handler,
                                       todo_handler=todo_handler,

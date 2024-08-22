@@ -1,3 +1,4 @@
+import enum
 import json
 from typing import Any
 
@@ -29,6 +30,8 @@ class JsonResponseHandler(BasicResponseHandler):
 
     @staticmethod
     def get_object_as_json(obj):
+        if isinstance(obj, enum.Enum):
+            return obj.name
         if hasattr(obj, "to_json"):
             return obj.to_json()
         else:

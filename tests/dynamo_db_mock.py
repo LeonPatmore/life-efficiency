@@ -12,9 +12,13 @@ class DynamoDbMock:
         }
 
     def get_item(self, Key: dict):
-        return {
-            "Item": list(filter(lambda x: x["id"] == Key["id"], self.items))[0]
-        }
+        matching_items = list(filter(lambda x: x["id"] == Key["id"], self.items))
+        if len(matching_items) > 0:
+            return {
+                "Item": list(filter(lambda x: x["id"] == Key["id"], self.items))[0]
+            }
+        else:
+            return {}
 
     def put_item(self, Item: dict):
         self.items.append(Item)

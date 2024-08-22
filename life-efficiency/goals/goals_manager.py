@@ -1,4 +1,8 @@
+from dataclasses import dataclass
 from enum import Enum
+
+from dynamo.dynamo_repository import dynamo_item
+from repository.repository import Repository
 
 
 class GoalProgress(Enum):
@@ -26,7 +30,32 @@ class YearlyGoals:
         self.q4 = list()
 
 
-class GoalsManager:
+@dynamo_item("goals")
+@dataclass
+class PersistedGoal:
+    year: str
+    quarter: str
+    id: str
+    progress: GoalProgress
+
+
+class GoalsManager(Repository[PersistedGoal]):
+
+    def __init__(self):
+        super().__init__(PersistedGoal)
 
     def get_goals(self) -> dict:
-        raise NotImplementedError
+        items = self.get_all()
+
+        goals = {}
+        for item in items:
+            year = item.year
+            quarter = item.quarter
+            name = item.id
+            progress = item.progress
+
+            if year not in goals:
+                goals[year] = YearlyGoals()
+            this_yearly_goals = goals[year]
+            getattr(this_yearly_goals, quarter).append(Goal(name, progress))
+        return goals
