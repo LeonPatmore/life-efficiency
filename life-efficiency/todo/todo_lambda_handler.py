@@ -40,25 +40,25 @@ class TodoHandler(LambdaSplitter):
         self.todo_weekly_manager.complete_todo_for_item(params["id"])
 
     def _get_todo_list(self, params):
-        items = self.todo_list_manager.get_items()
+        items = self.todo_list_manager.get_all()
         if params is not None and "status" in params:
             items = list(filter(lambda x: x.status.name == params["status"], items))
         if params is not None and "sort" in params and params["sort"]:
             items.sort(key=lambda x: x.date_added.timestamp(), reverse=True)
-        return [x.to_json() for x in items]
+        return [x for x in items]
 
     def _get_non_completed_items(self):
         return [x.to_json() for x in filter(lambda item: item.status in [TodoStatus.not_started,
                                                                          TodoStatus.in_progress],
-                                            self.todo_list_manager.get_items())]
+                                            self.todo_list_manager.get_all())]
 
     def _add_item(self, json) -> TodoItem:
-        return self.todo_list_manager.add_item(TodoItem(json["desc"], TodoStatus.not_started, get_current_datetime_utc()))
+        return self.todo_list_manager.add(TodoItem(json["desc"], TodoStatus.not_started, get_current_datetime_utc()))
 
     def _update_item(self, json):
         self.todo_list_manager.update_item(json["id"], getattr(TodoStatus, json["status"]))
-        return self.todo_list_manager.get_item(json["id"]).to_json()
+        return self.todo_list_manager.get(json["id"])
 
     def _remove_item(self, path: str):
         item_id = path.split("/")[-1]
-        self.todo_list_manager.remove_item(item_id)
+        self.todo_list_manager.remove(item_id)

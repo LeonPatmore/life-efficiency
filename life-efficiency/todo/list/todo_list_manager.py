@@ -1,7 +1,11 @@
+import logging
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
+from dynamo.dynamo_repository import dynamo_item
 from helpers.datetime import datetime_to_string
+from repository.repository import Repository
 
 
 class TodoStatus(Enum):
@@ -11,43 +15,25 @@ class TodoStatus(Enum):
     cancelled = 3
 
 
+@dynamo_item("todo-list", {"TodoStatus": "status"})
+@dataclass
 class TodoItem:
-
-    def __init__(self,
-                 desc: str,
-                 status: TodoStatus,
-                 date_added: datetime,
-                 item_id: str = None,
-                 date_done: datetime = None):
-        self.desc = desc
-        self.status = status
-        self.date_added = date_added
-        self.item_id = item_id
-        self.date_done = date_done
-
-    def to_json(self):
-        return {
-            "id": self.item_id,
-            "desc": self.desc,
-            "status": self.status.name,
-            "date_added": datetime_to_string(self.date_added),
-            "date_done": datetime_to_string(self.date_done) if self.date_done else None
-        }
+    desc: str
+    status: TodoStatus
+    date_added: datetime
+    id: str = None
+    date_done: datetime = None
 
 
-class TodoListManager:
+class TodoListManager(Repository):
 
-    def get_items(self) -> list[TodoItem]:
-        raise NotImplementedError
-
-    def get_item(self, item_id: str) -> TodoItem:
-        raise NotImplementedError
-
-    def add_item(self, item: TodoItem) -> TodoItem:
-        raise NotImplementedError
+    def __init__(self, current_time_provider: callable):
+        super().__init__(TodoItem)
+        self.current_time_provider = current_time_provider
 
     def update_item(self, item_id: str, status: TodoStatus):
-        raise NotImplementedError
-
-    def remove_item(self, item_id: str):
-        raise NotImplementedError
+        logging.info(f"Updating item {item_id} with status {status.name}")
+        self.update(item_id, "status", status)
+        if status == TodoStatus.done:
+            current_time = datetime_to_string(self.current_time_provider())
+            self.update(item_id, "date_done", current_time)

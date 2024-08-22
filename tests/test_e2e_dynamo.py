@@ -28,12 +28,65 @@ def setup_dynamo_mock(request):
     dynamodb_mock.Table.side_effect = lambda table_name: DynamoDbMock(table_init_config.get(table_name, []))
 
 
+def test_shopping_purchase_quantity_field_must_be_present(setup_dynamo_mock):
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "POST",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "history"
+        },
+        "body": """{"name": "my-item"}"""
+    }, {})
+
+    assert 400 == res["statusCode"]
+    body = json.loads(res["body"])
+    assert body["error"] == "field `quantity` is required"
+
+
+def test_shopping_purchase_quantity_field_must_be_an_integer(setup_dynamo_mock):
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "POST",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "history"
+        },
+        "body": """{"name": "my-item", "quantity": "four"}"""
+    }, {})
+
+    assert 400 == res["statusCode"]
+    body = json.loads(res["body"])
+    assert body["error"] == "field `quantity` must be of type int"
+
+
+def test_shopping_list_delete_item_name_must_be_present(setup_dynamo_mock):
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "DELETE",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "list"
+        },
+        'queryStringParameters': {
+            'quantity': 1
+        }
+    }, {})
+
+    assert 400 == res["statusCode"]
+    body = json.loads(res["body"])
+    assert body["error"] == "param `name` is required"
+
+
 def test_shopping_list_adding_items_together(setup_dynamo_mock):
     import configuration
 
     item_name = str(uuid.uuid4())
 
-    configuration.handler({
+    res_create_1 = configuration.handler({
         'httpMethod': "POST",
         'pathParameters': {
             "command": "shopping",
@@ -41,7 +94,8 @@ def test_shopping_list_adding_items_together(setup_dynamo_mock):
         },
         "body": f"""{{"name": "{item_name}","quantity": 3}}"""
     }, {})
-    configuration.handler({
+    assert 200 == res_create_1["statusCode"]
+    res_create_2 = configuration.handler({
         'httpMethod': "POST",
         'pathParameters': {
             "command": "shopping",
@@ -49,6 +103,7 @@ def test_shopping_list_adding_items_together(setup_dynamo_mock):
         },
         "body": f"""{{"name": "{item_name}","quantity": 3}}"""
     }, {})
+    assert 200 == res_create_2["statusCode"]
 
     res = configuration.handler({
         'httpMethod': "GET",
@@ -60,7 +115,7 @@ def test_shopping_list_adding_items_together(setup_dynamo_mock):
 
     assert 200 == res["statusCode"]
     body = json.loads(res["body"])
-    item_part = [x for x in body["items"] if x["name"] == item_name][0]
+    item_part = [x for x in body if x["name"] == item_name][0]
     assert item_part["name"] == item_name
     assert item_part["quantity"] == 6
 
@@ -88,7 +143,7 @@ def test_repeating_items(setup_dynamo_mock):
     }, {})
 
     assert 200 == res["statusCode"]
-    assert item_name in json.loads(res["body"])["items"]
+    assert item_name in json.loads(res["body"])
 
 
 def test_repeating_items_removes_whitespace(setup_dynamo_mock):
@@ -114,7 +169,45 @@ def test_repeating_items_removes_whitespace(setup_dynamo_mock):
     }, {})
 
     assert 200 == res["statusCode"]
-    assert item_name in json.loads(res["body"])["items"]
+    assert item_name in json.loads(res["body"])
+
+
+@pytest.mark.parametrize('setup_dynamo_mock',
+                         [{"life-efficiency_local_repeating-items": [{"id": "item-1"}, {"id": "item-2"}],
+                           "life-efficiency_local_shopping-history": [
+                               {
+                                   "id": str(uuid.uuid4()),
+                                   "name": "item-1",
+                                   "quantity": 1,
+                                   "purchase_datetime": "01/01/2000, 01:00:00"
+                               },
+                               {
+                                   "id": str(uuid.uuid4()),
+                                   "name": "item-1",
+                                   "quantity": 1,
+                                   "purchase_datetime": "03/01/2000, 02:00:00"
+                               }
+                           ]}],
+                         indirect=True)
+def test_repeating_items_detail(setup_dynamo_mock):
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "repeating-details"
+        }
+    }, {})
+
+    assert 200 == res["statusCode"]
+    body = json.loads(res["body"])
+    assert body["item-1"]["avg_gap_days"] == 2
+    assert "time_since_last_bought" in body["item-1"]
+    assert body["item-1"]["today"]
+    assert body["item-2"]["avg_gap_days"] is None
+    assert body["item-2"]["time_since_last_bought"] is None
+    assert not body["item-2"]["today"]
 
 
 def test_todo(setup_dynamo_mock):
@@ -303,7 +396,7 @@ def test_shopping_history_add_purchase_strips_whitespace(setup_dynamo_mock):
 
     assert 200 == res["statusCode"]
     body = json.loads(res["body"])
-    item_part = [x for x in body["purchases"] if x["name"] == item_name][0]
+    item_part = [x for x in body if x["name"] == item_name][0]
     assert item_part["name"] == item_name
     assert item_part["quantity"] == 3
 

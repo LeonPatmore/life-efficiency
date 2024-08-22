@@ -4,9 +4,9 @@ import pytest
 
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
 from shopping.predictor.shopping_predictor import ShoppingPredictor
-from shopping.shopping_items import PESTO
 
 CURRENT_DAY = 10
+PESTO = "pesto"
 
 
 def _datetime_from_day(day: int) -> datetime:

@@ -1,4 +1,5 @@
 import json
+from dataclasses import dataclass
 
 from lambda_splitter.errors import HTTPAwareException
 
@@ -9,25 +10,47 @@ class Validator:
         raise NotImplementedError()
 
 
-class JsonBodyValidator(Validator):
+@dataclass
+class RequiredField:
+    name: str
+    type: type = str
 
-    def __init__(self, required_fields: list[str]):
-        self.required_fields = required_fields
+
+class RequiredFieldValidator(Validator):
+
+    def __init__(self, required_fields: list[RequiredField or str]):
+        self.required_fields = [RequiredField(x) if isinstance(x, str) else x for x in required_fields]
+
+    def get_fields(self, event: dict) -> dict:
+        raise NotImplementedError
+
+    def get_field_type(self) -> str:
+        raise NotImplementedError
 
     def validate(self, event: dict):
-        body = json.loads(event['body'])
+        fields = self.get_fields(event)
         for required_field in self.required_fields:
-            if required_field not in body:
-                raise HTTPAwareException(400, f"field `{required_field}` is required")
+            if required_field.name not in fields:
+                raise HTTPAwareException(400, f"{self.get_field_type()} `{required_field.name}` is required")
+            field = fields[required_field.name]
+            if type(field) is not required_field.type:
+                raise HTTPAwareException(400, f"{self.get_field_type()} `{required_field.name}` "
+                                              f"must be of type {required_field.type.__name__}")
 
 
-class QueryParamValidator(Validator):
+class JsonBodyValidator(RequiredFieldValidator):
 
-    def __init__(self, required_params: list[str]):
-        self.required_params = required_params
+    def get_fields(self, event: dict) -> dict:
+        return json.loads(event['body'])
 
-    def validate(self, event: dict):
-        params = event['queryStringParameters'] or []
-        for required_param in self.required_params:
-            if required_param not in params:
-                raise HTTPAwareException(400, f"param `{required_param}` is required")
+    def get_field_type(self) -> str:
+        return "field"
+
+
+class QueryParamValidator(RequiredFieldValidator):
+
+    def get_fields(self, event: dict) -> dict:
+        return event['queryStringParameters'] or {}
+
+    def get_field_type(self) -> str:
+        return "param"

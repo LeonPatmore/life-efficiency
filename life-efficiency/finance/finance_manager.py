@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from dynamo.dynamo_repository import dynamo_item
+from repository.repository import Repository
 
 
 @dynamo_item("balance_instances")
@@ -26,10 +27,7 @@ class BalanceChange:
     date: datetime
 
 
-class BalanceInstanceManager:
+class BalanceInstanceManager(Repository[BalanceInstance]):
 
-    def add_instance(self, instance: BalanceInstance) -> BalanceInstance:
-        raise NotImplementedError
-
-    def get_instances(self) -> list[BalanceInstance]:
-        raise NotImplementedError
+    def __init__(self):
+        super().__init__(BalanceInstance)

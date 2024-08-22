@@ -1,10 +1,13 @@
-import json
-
 from lambda_splitter.errors import HTTPAwareException
 from lambda_splitter.lambda_splitter import LambdaSplitter, LambdaTarget
-from lambda_splitter.validators import JsonBodyValidator, QueryParamValidator
+from lambda_splitter.response_handler import JsonResponseHandler
+from lambda_splitter.validators import JsonBodyValidator, QueryParamValidator, RequiredField
 from shopping.history.shopping_item_purchase import ShoppingItemPurchase
+from shopping.repeatingitems.shopping_repeating_items import RepeatingItem
 from shopping.shopping_manager import ShoppingManager
+
+
+QUANTITY_FIELD = RequiredField("quantity", int)
 
 
 class ShoppingHandler(LambdaSplitter):
@@ -13,38 +16,35 @@ class ShoppingHandler(LambdaSplitter):
         super().__init__("subcommand")
         self.shopping_manager = shopping_manager
 
-        self.add_sub_handler('history', LambdaTarget(self.get_history))
+        self.add_sub_handler('history', LambdaTarget(self.shopping_manager.shopping_history.get_all,
+                                                     response_handler=JsonResponseHandler()))
         self.add_sub_handler('history',
-                             LambdaTarget(self.insert_purchase, [JsonBodyValidator(["name", "quantity"])]),
+                             LambdaTarget(self.insert_purchase, [JsonBodyValidator(["name", QUANTITY_FIELD])]),
                              'POST')
-        self.add_sub_handler('list', LambdaTarget(self.get_list))
+        self.add_sub_handler('list', LambdaTarget(self.shopping_manager.shopping_list.get_all,
+                                                  response_handler=JsonResponseHandler()))
         self.add_sub_handler('list',
-                             LambdaTarget(self.add_to_list, [JsonBodyValidator(["name", "quantity"])]),
+                             LambdaTarget(self.add_to_list, [JsonBodyValidator(["name", QUANTITY_FIELD])]),
                              'POST')
         self.add_sub_handler('list',
-                             LambdaTarget(self.delete_item, [QueryParamValidator(["name", "quantity"])]),
+                             LambdaTarget(self.delete_item, [QueryParamValidator(["name", QUANTITY_FIELD])]),
                              'DELETE')
         self.add_sub_handler('items',
                              LambdaTarget(self.complete_items, [JsonBodyValidator(["items"])]),
                              'POST')
-        self.add_sub_handler('today', LambdaTarget(self.get_today))
-        self.add_sub_handler('today', LambdaTarget(self.complete_today), 'POST')
+        self.add_sub_handler('today', LambdaTarget(self.shopping_manager.today_items,
+                                                   response_handler=JsonResponseHandler()))
+        self.add_sub_handler('today', LambdaTarget(self.shopping_manager.complete_today), 'POST')
         self.add_sub_handler('today',
-                             LambdaTarget(self.complete_item, [QueryParamValidator(["name", "quantity"])]),
+                             LambdaTarget(self.complete_item, [QueryParamValidator(["name", QUANTITY_FIELD])]),
                              'DELETE')
-        self.add_sub_handler('repeating', LambdaTarget(self.get_repeating_items))
+        self.add_sub_handler('repeating', LambdaTarget(self.shopping_manager.repeating_items.get_all,
+                                                       response_handler=JsonResponseHandler()))
         self.add_sub_handler('repeating',
                              LambdaTarget(self.add_to_repeating_items, [JsonBodyValidator(["item"])]),
                              'POST')
-        self.add_sub_handler('repeating-details', LambdaTarget(self.get_repeating_details))
-
-    def get_history(self):
-        return {
-            'statusCode': 200,
-            'body': json.dumps({
-                'purchases': [x.to_json() for x in self.shopping_manager.shopping_history.get_all_purchases()]
-            }, default=str)
-        }
+        self.add_sub_handler('repeating-details', LambdaTarget(self.shopping_manager.repeating_item_predictor,
+                                                               response_handler=JsonResponseHandler()))
 
     def insert_purchase(self, json):
         name = json['name']
@@ -53,15 +53,7 @@ class ShoppingHandler(LambdaSplitter):
         except ValueError:
             raise HTTPAwareException(400, 'quantity must be an integer')
         purchase = ShoppingItemPurchase(name, quantity)
-        self.shopping_manager.shopping_history.add_purchase(purchase)
-
-    def get_list(self):
-        return {
-            'statusCode': 200,
-            'body': json.dumps({
-                'items': [vars(x) for x in self.shopping_manager.shopping_list.get_items()]
-            }, default=str)
-        }
+        self.shopping_manager.shopping_history.add(purchase)
 
     def add_to_list(self, json):
         item_name = json['name']
@@ -76,38 +68,13 @@ class ShoppingHandler(LambdaSplitter):
         item_quantity = int(params['quantity'])
         self.shopping_manager.shopping_list.reduce_quantity(item_name, item_quantity)
 
-    def get_today(self):
-        return {
-            'statusCode': 200,
-            'body': json.dumps({
-                'items': self.shopping_manager.today_items()
-            }, default=str)
-        }
-
     def complete_items(self, json):
         self.shopping_manager.complete_items(json['items'])
-
-    def complete_today(self):
-        self.shopping_manager.complete_today()
 
     def complete_item(self, params):
         item_name = params['name']
         item_quantity = int(params['quantity'])
         self.shopping_manager.complete_item(item_name, item_quantity)
 
-    def get_repeating_items(self):
-        return {
-            'statusCode': 200,
-            'body': json.dumps({
-                'items': self.shopping_manager.repeating_items.get_repeating_items()
-            }, default=str)
-        }
-
-    def get_repeating_details(self):
-        return {
-            'statusCode': 200,
-            'body': json.dumps(self.shopping_manager.repeating_item_predictor(), default=str)
-        }
-
     def add_to_repeating_items(self, json):
-        self.shopping_manager.repeating_items.add_repeating_item(json['item'])
+        self.shopping_manager.repeating_items.add(RepeatingItem(json['item']))
