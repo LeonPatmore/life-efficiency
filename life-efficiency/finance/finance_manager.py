@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from itertools import groupby
 
 from dynamo.dynamo_repository import dynamo_item
 from repository.repository import Repository
@@ -51,7 +50,13 @@ class FinanceManager:
         self.balance_instance_manager = balance_instance_manager
 
     def get_balances_at(self, date: datetime) -> set[BalanceInstance]:
-        balances = {k: list(v) for k, v in groupby(self.balance_instance_manager.get_all(), lambda x: x.holder)}
+        balances = {}
+        for balance in self.balance_instance_manager.get_all():
+            if balance.holder in balances:
+                balances[balance.holder].append(balance)
+            else:
+                balances[balance.holder] = [balance]
+
         final_set = set()
         for holder_balances in balances.values():
             in_date_balances = [x for x in holder_balances if x.date <= date]
@@ -63,7 +68,7 @@ class FinanceManager:
     def generate_balances(self, start_date: datetime, end_date: datetime, step: timedelta) -> BalanceRange:
         balance_range = BalanceRange({})
         current_date = start_date
-        while current_date < end_date:
+        while current_date <= end_date:
             balances = self.get_balances_at(current_date)
             total = sum([x.amount for x in balances])
             balance_range.balances[current_date] = BalanceInstantSummary(balances, total)
