@@ -18,14 +18,14 @@ class ShoppingPredictor(object):
 
     def get_purchases_for_item(self, item) -> list[ShoppingItemPurchase]:
         purchases_for_item = [x for x in self.purchases if x.name.lower() == item.lower()]
-        purchases_for_item.sort(key=lambda x: x.purchase_datetime.timestamp())
+        purchases_for_item.sort(key=lambda x: x.date.timestamp())
         return purchases_for_item
 
     def get_average_buy_difference_timestamp(self, item: str) -> timedelta or None:
         purchases_for_item = self.get_purchases_for_item(item)
         if len(purchases_for_item) < 2:
             return None
-        total_range = purchases_for_item[-1].purchase_datetime.timestamp() - purchases_for_item[0].purchase_datetime.timestamp()
+        total_range = purchases_for_item[-1].date.timestamp() - purchases_for_item[0].date.timestamp()
         total_quantity = sum([x.quantity for x in purchases_for_item])
         return total_range / (total_quantity - 1)
 
@@ -34,11 +34,11 @@ class ShoppingPredictor(object):
         if len(purchases_for_item) < 2:
             return False
         avg_buy_difference_timestamp = self.get_average_buy_difference_timestamp(item)
-        return purchases_for_item[-1].purchase_datetime.timestamp() + avg_buy_difference_timestamp <= \
+        return purchases_for_item[-1].date.timestamp() + avg_buy_difference_timestamp <= \
             self._get_today_with_buffer().timestamp()
 
     def time_since_last_bought(self, item: str) -> timedelta or None:
         purchases_for_item = self.get_purchases_for_item(item)
         if len(purchases_for_item) < 1:
             return None
-        return self.current_timestamp - purchases_for_item[-1].purchase_datetime
+        return self.current_timestamp - purchases_for_item[-1].date
