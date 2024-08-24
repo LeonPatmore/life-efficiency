@@ -38,7 +38,7 @@ class TodoWeeklyManager:
         raise NotImplementedError
 
     def get_ordered_todos(self):
-        return sorted(self.get_todos(), key=lambda x: x.number)
+        return sorted(self.get_todos(), key=lambda x: x.day)
 
     def get_todos_with_filters(self, day: int or None = None, set_id: str or None = None) -> list[WeeklyTodo]:
         def todo_filter(todo: WeeklyTodo):
