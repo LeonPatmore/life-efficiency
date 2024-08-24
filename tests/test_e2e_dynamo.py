@@ -265,6 +265,43 @@ def test_todo(setup_dynamo_mock):
 
 
 @pytest.mark.parametrize('setup_dynamo_mock',
+                         [{"life-efficiency_local_todo-list": [
+                             {
+                                 "id": str(uuid.uuid4()),
+                                 "Desc": "item-1",
+                                 "Status": "in_progress",
+                                 "DateAdded": "01/01/2000, 01:00:00",
+                                 "DateDone": None
+                             },
+                             {
+                                 "id": str(uuid.uuid4()),
+                                 "Desc": "item-2",
+                                 "Status": "done",
+                                 "DateAdded": "01/01/2000, 01:00:00",
+                                 "DateDone": None
+                             },
+                         ]}],
+                         indirect=True)
+def test_todo_non_completed(setup_dynamo_mock):
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "todo",
+            "subcommand": "non_completed"
+        }
+    }, {})
+    assert 200 == res["statusCode"]
+    body = json.loads(res["body"])
+    assert len(body) == 1
+    assert body[0]["desc"] == "item-1"
+    assert body[0]["status"] == "in_progress"
+    assert body[0]["date_added"] == "01/01/2000, 01:00:00"
+    assert body[0]["date_done"] is None
+
+
+@pytest.mark.parametrize('setup_dynamo_mock',
                          [{"life-efficiency_local_todo-sets": [{"id": "abc123", "name": "set_one"}]}],
                          indirect=True)
 def test_todo_sets(setup_dynamo_mock):

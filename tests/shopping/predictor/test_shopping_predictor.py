@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from shopping.history.shopping_item_purchase import ShoppingItemPurchase
+from shopping.history.shopping_history import ShoppingItemPurchase
 from shopping.predictor.shopping_predictor import ShoppingPredictor
 
 CURRENT_DAY = 10

@@ -1,7 +1,7 @@
 from lambda_splitter.lambda_splitter import LambdaSplitter, LambdaTarget
 from lambda_splitter.response_handler import JsonResponseHandler
 from lambda_splitter.validators import JsonBodyValidator, QueryParamValidator, RequiredField
-from shopping.history.shopping_item_purchase import ShoppingItemPurchase
+from shopping.history.shopping_history import ShoppingItemPurchase
 from shopping.repeatingitems.shopping_repeating_items import RepeatingItem
 from shopping.shopping_manager import ShoppingManager
 
