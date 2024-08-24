@@ -1,9 +1,9 @@
 from datetime import timedelta, datetime
 
-from shopping.history.shopping_item_purchase import ShoppingItemPurchase
+from shopping.history.shopping_history import ShoppingItemPurchase
 
 
-class ShoppingPredictor(object):
+class ShoppingPredictor:
 
     def __init__(self,
                  purchases: list[ShoppingItemPurchase],

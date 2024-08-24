@@ -48,9 +48,9 @@ class TodoHandler(LambdaSplitter):
         return [x for x in items]
 
     def _get_non_completed_items(self):
-        return [x.to_json() for x in filter(lambda item: item.status in [TodoStatus.not_started,
-                                                                         TodoStatus.in_progress],
-                                            self.todo_list_manager.get_all())]
+        return [x for x in filter(lambda item: item.status in [TodoStatus.not_started,
+                                                               TodoStatus.in_progress],
+                                  self.todo_list_manager.get_all())]
 
     def _add_item(self, json) -> TodoItem:
         return self.todo_list_manager.add(TodoItem(json["desc"], TodoStatus.not_started, get_current_datetime_utc()))
