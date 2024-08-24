@@ -58,7 +58,7 @@ class DynamoRepository(RepositoryImplementation):
         if isinstance(obj, enum.Enum):
             return obj.name
         if isinstance(obj, float):
-            return Decimal(obj)
+            return Decimal(str(obj))
         return obj
 
     @staticmethod
