@@ -481,12 +481,12 @@ def test_finance_balance_instances(setup_dynamo_mock):
             "command": "finance",
             "subcommand": "instances"
         },
-        "body": """{"amount": 1000, "date": "21/08/2024, 13:00:00", "holder": "bank"}"""
+        "body": """{"amount": 1000.0, "date": "21/08/2024, 13:00:00", "holder": "bank"}"""
     }, {})
 
     assert 200 == create_res["statusCode"]
     body = json.loads(create_res["body"])
-    assert body["amount"] == 1000
+    assert body["amount"] == 1000.0
     assert body["date"] == "21/08/2024, 13:00:00"
     assert body["holder"] == "bank"
     assert "id" in body and body["id"] is not None
@@ -501,7 +501,7 @@ def test_finance_balance_instances(setup_dynamo_mock):
     assert 200 == get_res["statusCode"]
     body = json.loads(get_res["body"])
     assert len(body) == 1
-    assert body[0]["amount"] == 1000
+    assert body[0]["amount"] == 1000.0
     assert body[0]["date"] == "21/08/2024, 13:00:00"
     assert body[0]["holder"] == "bank"
     assert "id" in body[0]

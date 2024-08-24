@@ -2,6 +2,7 @@ import enum
 import re
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
 from helpers.datetime import datetime_to_string, string_to_datetime
 from repository.repository import RepositoryImplementation
@@ -56,6 +57,8 @@ class DynamoRepository(RepositoryImplementation):
             return datetime_to_string(obj)
         if isinstance(obj, enum.Enum):
             return obj.name
+        if isinstance(obj, float):
+            return Decimal(obj)
         return obj
 
     @staticmethod
@@ -87,7 +90,7 @@ class DynamoRepository(RepositoryImplementation):
 
     def add(self, item):
         if getattr(item, "id") is None:
-            setattr(item, "id", str(uuid.uuid4()))
+            item = type(item)(**vars(item) | {"id": str(uuid.uuid4())})
         self.table.put_item(Item={self._attribute_to_dynamo_key(key): self._object_to_dynamo_value(value)
                                   for key, value in vars(item).items()})
         return item

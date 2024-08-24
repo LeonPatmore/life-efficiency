@@ -66,7 +66,7 @@ def _balance_instance_exists(instance_id: str) -> bool:
 def test_balance_instance():
     create_res = requests.post(f"{URL_ROOT}/finance/instances",
                                json={
-                                   "amount": 1000,
+                                   "amount": 1000.0,
                                    "date": "21/08/2024, 13:00:00",
                                    "holder": "bank"
                                })
