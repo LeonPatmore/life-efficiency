@@ -178,14 +178,14 @@ def test_repeating_items_removes_whitespace(setup_dynamo_mock):
                                {
                                    "id": str(uuid.uuid4()),
                                    "name": "item-1",
-                                   "quantity": 1,
-                                   "purchase_datetime": "01/01/2000, 01:00:00"
+                                   "Quantity": 1,
+                                   "Date": "01/01/2000, 01:00:00"
                                },
                                {
                                    "id": str(uuid.uuid4()),
                                    "name": "item-1",
-                                   "quantity": 1,
-                                   "purchase_datetime": "03/01/2000, 02:00:00"
+                                   "Quantity": 1,
+                                   "Date": "03/01/2000, 02:00:00"
                                }
                            ]}],
                          indirect=True)

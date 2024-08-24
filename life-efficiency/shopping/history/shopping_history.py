@@ -9,5 +9,5 @@ class ShoppingHistory(Repository[ShoppingItemPurchase]):
 
     def get_all_sorted(self) -> list[ShoppingItemPurchase]:
         purchases = self.get_all()
-        purchases.sort(key=lambda x: x.purchase_datetime.timestamp(), reverse=True)
+        purchases.sort(key=lambda x: x.date.timestamp(), reverse=True)
         return purchases
