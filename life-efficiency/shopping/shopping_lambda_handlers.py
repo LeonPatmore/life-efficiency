@@ -29,7 +29,8 @@ class ShoppingHandler(LambdaSplitter):
                              LambdaTarget(self.delete_item, [QueryParamValidator(["name", QUANTITY_FIELD])]),
                              'DELETE')
         self.add_sub_handler('items',
-                             LambdaTarget(self.complete_items, [JsonBodyValidator(["items"])]),
+                             LambdaTarget(self.complete_items,
+                                          [JsonBodyValidator([RequiredField("items", list)])]),
                              'POST')
         self.add_sub_handler('today', LambdaTarget(self.shopping_manager.today_items,
                                                    response_handler=JsonResponseHandler()))

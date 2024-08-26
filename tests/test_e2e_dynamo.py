@@ -120,6 +120,56 @@ def test_shopping_list_adding_items_together(setup_dynamo_mock):
     assert item_part["quantity"] == 6
 
 
+def test_todays_items_with_completion(setup_dynamo_mock):
+    import configuration
+
+    item_name = str(uuid.uuid4())
+
+    res_create = configuration.handler({
+        'httpMethod': "POST",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "list"
+        },
+        "body": f"""{{"name": "{item_name}","quantity": 3}}"""
+    }, {})
+    assert 200 == res_create["statusCode"]
+
+    first_get = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "today"
+        }
+    }, {})
+
+    assert 200 == first_get["statusCode"]
+    first_get_list = json.loads(first_get["body"])
+    assert first_get_list == [item_name, item_name, item_name]
+
+    complete_res = configuration.handler({
+        'httpMethod': "POST",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "items"
+        },
+        "body": f"""{{"items": ["{item_name}", "{item_name}"]}}"""
+    }, {})
+    assert 200 == complete_res["statusCode"]
+
+    second_get = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "today"
+        }
+    }, {})
+
+    assert 200 == second_get["statusCode"]
+    second_get_list = json.loads(second_get["body"])
+    assert second_get_list == [item_name]
+
+
 def test_repeating_items(setup_dynamo_mock):
     import configuration
 

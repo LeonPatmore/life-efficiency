@@ -1,4 +1,5 @@
 import json
+import logging
 from dataclasses import dataclass
 
 from lambda_splitter.errors import HTTPAwareException
@@ -34,6 +35,7 @@ class RequiredFieldValidator(Validator):
         fields = self.get_fields(event)
         for required_field in self.required_fields:
             if required_field.name not in fields:
+                logging.info(f"Validation of field {required_field.name} failed, field is missing")
                 raise HTTPAwareException(400, f"{self.get_field_type()} `{required_field.name}` is required")
             field = fields[required_field.name]
             self.validate_type(field, required_field)
@@ -49,6 +51,7 @@ class JsonBodyValidator(RequiredFieldValidator):
 
     def validate_type(self, field, required_field: RequiredField):
         if type(field) is not required_field.type:
+            logging.info(f"Validation of field {required_field.name} failed, field is wrong type")
             raise HTTPAwareException(400, f"{self.get_field_type()} `{required_field.name}` "
                                           f"must be of type {required_field.type.__name__}")
 
