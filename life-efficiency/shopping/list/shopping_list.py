@@ -44,11 +44,12 @@ class ShoppingList(Repository[ShoppingListItem]):
             self.set_item_quantity(item_name, item.quantity - quantity)
 
     def increase_quantity(self, item_name: str, quantity: int):
-        item = self.get(item_name)
+        item_name_serialized = item_name.lower()
+        item = self.get(item_name_serialized)
         if item is None:
-            logging.info(f"Adding item [ {item_name} ] with quantity [ {quantity} ]")
-            self.add(ShoppingListItem(item_name, quantity, self.current_datetime_generator()))
+            logging.info(f"Adding item [ {item_name_serialized} ] with quantity [ {quantity} ]")
+            self.add(ShoppingListItem(item_name_serialized, quantity, self.current_datetime_generator()))
         else:
             new_quantity = quantity + item.quantity
-            logging.info(f"Setting item [ {item_name} ] to quantity [ {new_quantity} ]")
-            self.set_item_quantity(item_name, new_quantity)
+            logging.info(f"Setting item [ {item_name_serialized} ] to quantity [ {new_quantity} ]")
+            self.set_item_quantity(item_name_serialized, new_quantity)

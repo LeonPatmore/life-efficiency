@@ -35,7 +35,7 @@ def test_shopping_list(cleanup):
     assert codes['ok'] == response.status_code
     response_items = response.json()
     assert 1 == len(response_items)
-    assert "Drink" == response_items[0]["name"]
+    assert "drink" == response_items[0]["name"]
     assert 6 == response_items[0]["quantity"]
 
 

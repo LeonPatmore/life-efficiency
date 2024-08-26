@@ -72,3 +72,14 @@ def test_increase_quantity_adds_item_if_item_does_not_exist(setup_test_shopping_
 
     # noinspection PyUnresolvedReferences
     mocked_shopping_list.add.assert_called_once()
+
+
+def test_increase_quantity_ensures_that_item_is_lower_case(setup_test_shopping_list):
+    mocked_shopping_list = setup_test_shopping_list
+    setup_test_shopping_list.get.return_value = None
+
+    mocked_shopping_list.increase_quantity("Item-1", 2)
+
+    # noinspection PyUnresolvedReferences
+    called_item = mocked_shopping_list.add.call_args.args[0]
+    assert called_item.id == "item-1"
