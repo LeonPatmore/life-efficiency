@@ -83,3 +83,14 @@ def test_increase_quantity_ensures_that_item_is_lower_case(setup_test_shopping_l
     # noinspection PyUnresolvedReferences
     called_item = mocked_shopping_list.add.call_args.args[0]
     assert called_item.id == "item-1"
+
+
+def test_increase_quantity_ensures_that_item_is_stripped(setup_test_shopping_list):
+    mocked_shopping_list = setup_test_shopping_list
+    setup_test_shopping_list.get.return_value = None
+
+    mocked_shopping_list.increase_quantity(" item-1 ", 2)
+
+    # noinspection PyUnresolvedReferences
+    called_item = mocked_shopping_list.add.call_args.args[0]
+    assert called_item.id == "item-1"
