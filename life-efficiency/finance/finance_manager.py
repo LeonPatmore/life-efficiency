@@ -2,7 +2,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 
 from dynamo.dynamo_repository import dynamo_item
-from repository.repository import Repository, T
+from repository.repository import Repository
 
 
 @dynamo_item("balance_instances")

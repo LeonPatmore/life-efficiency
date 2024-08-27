@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from finance.finance_manager import BalanceInstanceManager, BalanceInstance
-from helpers.datetime import string_to_datetime
 from lambda_splitter.lambda_splitter import LambdaSplitter, LambdaTarget
 from lambda_splitter.response_handler import JsonResponseHandler
 from lambda_splitter.validators import JsonBodyValidator, TypedField
