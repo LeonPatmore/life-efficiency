@@ -1,8 +1,10 @@
+from datetime import datetime
+
 from finance.finance_manager import BalanceInstanceManager, BalanceInstance
 from helpers.datetime import string_to_datetime
 from lambda_splitter.lambda_splitter import LambdaSplitter, LambdaTarget
 from lambda_splitter.response_handler import JsonResponseHandler
-from lambda_splitter.validators import JsonBodyValidator, RequiredField
+from lambda_splitter.validators import JsonBodyValidator, TypedField
 
 
 class FinanceHandler(LambdaSplitter):
@@ -13,9 +15,10 @@ class FinanceHandler(LambdaSplitter):
                                                        response_handler=JsonResponseHandler()),
                              method="GET")
         self.add_sub_handler("instances", LambdaTarget(
-            handler=lambda json: balance_instance.add(BalanceInstance(amount=json["amount"],
-                                                                      holder=json["holder"],
-                                                                      date=string_to_datetime(json["date"]))),
+            handler=lambda fields: balance_instance.add(BalanceInstance(amount=fields["amount"],
+                                                                        holder=fields["holder"],
+                                                                        date=fields["date"])),
             response_handler=JsonResponseHandler(),
-            validators=[JsonBodyValidator([RequiredField("amount", float), "holder", "date"])]),
+            validators=[JsonBodyValidator(required_fields=[TypedField("amount", float), "holder"],
+                                          optional_fields=[TypedField("date", datetime)])]),
                              method="POST")

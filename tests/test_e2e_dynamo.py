@@ -555,3 +555,23 @@ def test_finance_balance_instances(setup_dynamo_mock):
     assert body[0]["date"] == "21/08/2024, 13:00:00"
     assert body[0]["holder"] == "bank"
     assert "id" in body[0]
+
+
+def test_finance_balance_instances_no_date_generates_one(setup_dynamo_mock):
+    import configuration
+
+    create_res = configuration.handler({
+        'httpMethod': "POST",
+        'pathParameters': {
+            "command": "finance",
+            "subcommand": "instances"
+        },
+        "body": """{"amount": 1000.0, "holder": "bank"}"""
+    }, {})
+
+    assert 200 == create_res["statusCode"]
+    body = json.loads(create_res["body"])
+    assert body["amount"] == 1000.0
+    assert body["date"] is not None
+    assert body["holder"] == "bank"
+    assert "id" in body and body["id"] is not None

@@ -59,7 +59,7 @@ shopping_manager = ShoppingManager(shopping_history,
 shopping_handler = ShoppingHandler(shopping_manager)
 todo_handler = TodoHandler(todo_list_manager, todo_weekly_manager)
 goals_handler = GoalsHandler(goals_manager)
-finance_handler = FinanceHandler(BalanceInstanceManager())
+finance_handler = FinanceHandler(BalanceInstanceManager(get_current_datetime_utc))
 
 handler = LifeEfficiencyLambdaHandler(shopping_handler=shopping_handler,
                                       todo_handler=todo_handler,

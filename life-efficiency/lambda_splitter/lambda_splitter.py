@@ -65,7 +65,7 @@ class LambdaSplitter(object):
                 })
             }
 
-    def _handle_function(self, event, handler: callable) -> dict:
+    def _handle_function(self, event, handler: callable, fields: dict) -> dict:
         kwargs = {}
         try:
             handler_params = list(signature(handler).parameters.keys())
@@ -76,6 +76,8 @@ class LambdaSplitter(object):
                 kwargs['json'] = json.loads(event['body'])
             if 'path' in handler_params:
                 kwargs["path"] = event["path"]
+            if 'fields' in handler_params:
+                kwargs["fields"] = fields
         except Exception as e:
             return self._handle_json_exception(e)
         response = handler(**kwargs)
@@ -84,21 +86,25 @@ class LambdaSplitter(object):
         return response
 
     @staticmethod
-    def _handle_lambda_splitter(event, context, handler) -> dict:
-        return handler(event, context)
+    def _handle_lambda_splitter(event, context, fields: dict, handler) -> dict:
+        return handler(event, context, fields=fields)
 
-    def __call__(self, event, context, **kwargs) -> dict:
+    def __call__(self, event, context: dict = None, fields: dict = None, **kwargs) -> dict:
+        if fields is None:
+            fields = {}
+        if context is None:
+            context = {}
         try:
             target = self._determine_method(event)
             if not isinstance(target, LambdaTarget):
                 raise RuntimeError("Target must be of type LambdaTarget")
             for validator in target.validators:
-                validator.validate(event)
+                fields = fields | validator.validate(event)
             handler = target.handler
             if issubclass(type(handler), LambdaSplitter):
-                response_obj = self._handle_lambda_splitter(event, context, handler)
+                response_obj = self._handle_lambda_splitter(event, context, fields, handler)
             elif callable(handler):
-                response_obj = self._handle_function(event, handler)
+                response_obj = self._handle_function(event, handler, fields)
             else:
                 raise RuntimeError(f'Target handler [ {type(handler)} ] not of type '
                                    'LambdaSplitter or Callable!')

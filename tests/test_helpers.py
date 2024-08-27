@@ -10,6 +10,17 @@ def cleanup_modules(modules):
             del sys.modules[module]
 
 
+def lambda_http_event(command: str, subcommand: str, body: str, method: str = "GET") -> dict:
+    return {
+        'httpMethod': method,
+        'pathParameters': {
+            "command": command,
+            "subcommand": subcommand
+        },
+        "body": body
+    }
+
+
 class InMemoryRepository(RepositoryImplementation):
     def __init__(self, object_type: type):
         super().__init__(object_type)
