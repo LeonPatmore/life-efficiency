@@ -58,6 +58,8 @@ class FieldValidator(Validator):
             if field_mappings[field] == datetime:
                 field_value = string_to_datetime(field_value)
             self.validate_type(field, field_value, field_mappings[field])
+            if field_mappings[field] == int:
+                field_value = int(field_value)
             additional_fields[field] = field_value
 
         for missing_optional_field in missing_optional_fields:
