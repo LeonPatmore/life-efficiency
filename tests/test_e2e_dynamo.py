@@ -575,3 +575,35 @@ def test_finance_balance_instances_no_date_generates_one(setup_dynamo_mock):
     assert body["date"] is not None
     assert body["holder"] == "bank"
     assert "id" in body and body["id"] is not None
+
+
+@pytest.mark.parametrize('setup_dynamo_mock',
+                         [{"life-efficiency_local_shopping-history": [
+                               {
+                                   "id": str(uuid.uuid4()),
+                                   "name": "item-2",
+                                   "Quantity": 1,
+                                   "Date": "03/01/1999, 02:00:00"
+                               },
+                             {
+                                 "id": str(uuid.uuid4()),
+                                 "name": "item-1",
+                                 "Quantity": 1,
+                                 "Date": "01/01/2000, 01:00:00"
+                             }
+                           ]}],
+                         indirect=True)
+def test_shopping_history_is_ordered(setup_dynamo_mock):
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "shopping",
+            "subcommand": "history"
+        }
+    }, {})
+
+    assert 200 == res["statusCode"]
+    items = json.loads(res["body"])
+    assert items[0]["name"] == "item-1"
