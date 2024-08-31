@@ -38,15 +38,24 @@ class BalanceInstanceManager(Repository[BalanceInstance]):
         return super().add(replace(item, date=date))
 
 
+@dataclass(frozen=True)
+class BalanceHolderInstantSummary:
+    increase: float or None
+    holder: str
+    amount: float
+
+
 @dataclass
 class BalanceInstantSummary:
-    holders: set[BalanceInstance]
+    holders: list[BalanceHolderInstantSummary]
     total: float
+    total_increase: float or None
 
 
 @dataclass
 class BalanceRange:
     balances: dict[datetime, BalanceInstantSummary]
+    all_holders: set[str]
 
 
 class FinanceManager:
@@ -54,7 +63,7 @@ class FinanceManager:
     def __init__(self, balance_instance_manager: BalanceInstanceManager):
         self.balance_instance_manager = balance_instance_manager
 
-    def get_balances_at(self, date: datetime) -> set[BalanceInstance]:
+    def get_balances_at(self, date: datetime) -> list[BalanceInstance]:
         balances = {}
         for balance in self.balance_instance_manager.get_all():
             if balance.holder in balances:
@@ -62,20 +71,44 @@ class FinanceManager:
             else:
                 balances[balance.holder] = [balance]
 
-        final_set = set()
+        final_list = []
         for holder_balances in balances.values():
             in_date_balances = [x for x in holder_balances if x.date <= date]
             sorted_balances = sorted(in_date_balances, key=lambda x: x.date.timestamp(), reverse=True)
             if len(sorted_balances) > 0:
-                final_set.add(sorted_balances[0])
-        return final_set
+                final_list.append(sorted_balances[0])
+        return final_list
 
-    def generate_balances(self, start_date: datetime, end_date: datetime, step: timedelta) -> BalanceRange:
-        balance_range = BalanceRange({})
+    def generate_balance_range(self, start_date: datetime, end_date: datetime, step: timedelta) -> BalanceRange:
+        all_holders = set()
+        balance_map = {}
         current_date = start_date
+        previous_summary = None
         while current_date <= end_date:
             balances = self.get_balances_at(current_date)
             total = sum([x.amount for x in balances])
-            balance_range.balances[current_date] = BalanceInstantSummary(balances, total)
+
+            def generate_balance_holder_instant_summary(balance_instance: BalanceInstance) -> (
+                    BalanceHolderInstantSummary):
+                holder = balance_instance.holder
+                amount = balance_instance.amount
+                all_holders.add(holder)
+
+                def get_increase():
+                    if not previous_summary:
+                        return None
+                    previous_holders_map = {x.holder: x for x in previous_summary.holders}
+                    if holder in previous_holders_map:
+                        return amount - previous_holders_map[holder].amount
+                    else:
+                        return None
+
+                return BalanceHolderInstantSummary(increase=get_increase(), holder=holder, amount=amount)
+
+            total_increase = total - previous_summary.total if previous_summary else None
+            holder_summaries = list(map(generate_balance_holder_instant_summary, balances))
+            instance_summary = BalanceInstantSummary(holder_summaries, total, total_increase)
+            balance_map[current_date] = instance_summary
+            previous_summary = instance_summary
             current_date += step
-        return balance_range
+        return BalanceRange(balance_map, all_holders)
