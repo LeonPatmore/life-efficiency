@@ -15,16 +15,30 @@ class BalanceInstance:
 
 
 class ChangeReason(enumerate):
-    SALARY = 0
-    YEARLY_SPEND = 1
-    INVESTMENT = 2
+    SALARY = lambda base_amount, change_amount: base_amount - change_amount
+    YEARLY_SPEND = lambda base_amount, change_amount: base_amount + change_amount
+    INVESTMENT = lambda base_amount, change_amount: base_amount + change_amount
 
 
-@dataclass
+@dataclass(frozen=True)
 class BalanceChange:
     reason: ChangeReason
     amount: float
     date: datetime
+
+
+class BalanceChangeManager(Repository[BalanceChange]):
+
+    def __init__(self, date_generator: callable):
+        super().__init__(BalanceInstance)
+        self.date_generator = date_generator
+
+    def add(self, item: BalanceChange) -> BalanceChange:
+        date = item.date if item.date is not None else self.date_generator()
+        return super().add(replace(item, date=date))
+
+    def get_all_between_dates(self, start_date: datetime, end_date: datetime):
+        return [x for x in self.get_all() if start_date <= x.date <= end_date]
 
 
 class BalanceInstanceManager(Repository[BalanceInstance]):
@@ -50,6 +64,7 @@ class BalanceInstantSummary:
     holders: list[BalanceHolderInstantSummary]
     total: float
     total_increase: float or None
+    balance_changes: set[BalanceChange]
 
 
 @dataclass
@@ -60,8 +75,11 @@ class BalanceRange:
 
 class FinanceManager:
 
-    def __init__(self, balance_instance_manager: BalanceInstanceManager):
+    def __init__(self,
+                 balance_instance_manager: BalanceInstanceManager,
+                 balance_change_manager: BalanceChangeManager):
         self.balance_instance_manager = balance_instance_manager
+        self.balance_change_manager = balance_change_manager
 
     def get_balances_at(self, date: datetime) -> list[BalanceInstance]:
         balances = {}
@@ -83,6 +101,7 @@ class FinanceManager:
         all_holders = set()
         balance_map = {}
         current_date = start_date
+        previous_date = None
         previous_summary = None
         while current_date <= end_date:
             balances = self.get_balances_at(current_date)
@@ -107,8 +126,21 @@ class FinanceManager:
 
             total_increase = total - previous_summary.total if previous_summary else None
             holder_summaries = list(map(generate_balance_holder_instant_summary, balances))
-            instance_summary = BalanceInstantSummary(holder_summaries, total, total_increase)
+            balance_changes = self.balance_change_manager.get_all_between_dates(previous_date, current_date) \
+                if previous_date else set()
+            instance_summary = BalanceInstantSummary(holder_summaries, total, total_increase, balance_changes)
             balance_map[current_date] = instance_summary
+            previous_date = current_date
             previous_summary = instance_summary
             current_date += step
         return BalanceRange(balance_map, all_holders)
+
+    @staticmethod
+    def get_increase_after_normalisation(instant_summary: BalanceInstantSummary) -> float or None:
+        final_increase = instant_summary.total_increase
+        if final_increase is None:
+            return None
+        for change in instant_summary.balance_changes:
+            # noinspection PyCallingNonCallable
+            final_increase = change.reason(final_increase, change.amount)
+        return final_increase
