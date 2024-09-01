@@ -20,6 +20,7 @@ class ChangeReason(enumerate):
     INVESTMENT = lambda base_amount, change_amount: base_amount + change_amount
 
 
+@dynamo_item("balance_changes")
 @dataclass(frozen=True)
 class BalanceChange:
     reason: ChangeReason
