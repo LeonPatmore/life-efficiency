@@ -1,5 +1,7 @@
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
+from enum import Enum
+from functools import partial
 
 from dynamo.dynamo_repository import dynamo_item
 from repository.repository import Repository
@@ -14,10 +16,16 @@ class BalanceInstance:
     id: str = None
 
 
-class ChangeReason(enumerate):
-    SALARY = lambda base_amount, change_amount: base_amount - change_amount
-    YEARLY_SPEND = lambda base_amount, change_amount: base_amount + change_amount
-    INVESTMENT = lambda base_amount, change_amount: base_amount + change_amount
+class ChangeReason(Enum):
+    # SALARY = lambda base_amount, change_amount: base_amount - change_amount
+    # YEARLY_SPEND = lambda base_amount, change_amount: base_amount + change_amount
+    # INVESTMENT = lambda base_amount, change_amount: base_amount + change_amount
+    # SALARY = "salary"
+    # YEARLY_SPEND = "yearly_spend"
+    # INVESTMENT = "investment"
+    SALARY = partial(lambda base_amount, change_amount: base_amount - change_amount)
+    YEARLY_SPEND = partial(lambda base_amount, change_amount: base_amount + change_amount)
+    INVESTMENT = partial(lambda base_amount, change_amount: base_amount + change_amount)
 
 
 @dynamo_item("balance_changes")
@@ -72,6 +80,7 @@ class BalanceInstantSummary:
 class BalanceRange:
     balances: dict[datetime, BalanceInstantSummary]
     all_holders: set[str]
+    step: timedelta
 
 
 class FinanceManager:
@@ -134,7 +143,7 @@ class FinanceManager:
             previous_date = current_date
             previous_summary = instance_summary
             current_date += step
-        return BalanceRange(balance_map, all_holders)
+        return BalanceRange(balance_map, all_holders, step=step)
 
     @staticmethod
     def get_increase_after_normalisation(instant_summary: BalanceInstantSummary) -> float or None:
@@ -143,5 +152,5 @@ class FinanceManager:
             return None
         for change in instant_summary.balance_changes:
             # noinspection PyCallingNonCallable
-            final_increase = change.reason(final_increase, change.amount)
+            final_increase = change.reason.value(final_increase, change.amount)
         return final_increase

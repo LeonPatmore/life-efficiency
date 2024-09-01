@@ -6,7 +6,7 @@ import boto3
 from dynamo import dynamo_repository
 from dynamo.dynamo_helpers import get_table_full_name
 from dynamo.dynamo_repository import DynamoRepository
-from finance.finance_manager import BalanceInstanceManager
+from finance.finance_manager import BalanceInstanceManager, FinanceManager, BalanceChangeManager
 from finance.finance_manager_handler import FinanceHandler
 from goals.goals_lambda_handler import GoalsHandler
 from goals.goals_manager import GoalsManager
@@ -59,7 +59,9 @@ shopping_manager = ShoppingManager(shopping_history,
 shopping_handler = ShoppingHandler(shopping_manager)
 todo_handler = TodoHandler(todo_list_manager, todo_weekly_manager)
 goals_handler = GoalsHandler(goals_manager)
-finance_handler = FinanceHandler(BalanceInstanceManager(get_current_datetime_utc))
+finance_manager = FinanceManager(balance_instance_manager=BalanceInstanceManager(get_current_datetime_utc),
+                                 balance_change_manager=BalanceChangeManager(get_current_datetime_utc))
+finance_handler = FinanceHandler(finance_manager=finance_manager)
 
 handler = LifeEfficiencyLambdaHandler(shopping_handler=shopping_handler,
                                       todo_handler=todo_handler,

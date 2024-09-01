@@ -4,6 +4,7 @@ import pytest
 
 from finance.finance_manager import BalanceRange, BalanceInstantSummary, BalanceChange, ChangeReason
 from finance.graphs.finance_graph_manager import FinanceGraphManager
+from finance.metadata.finance_metadata import FinanceMetadata, StoredFinanceMetadata
 
 DATE_TIME = datetime(2000, 1, 1, 12, 0, 0)
 
@@ -21,8 +22,8 @@ def setup_finance_graph_manager():
             BalanceInstantSummary([], 500.0, -1000.0,
                                   {BalanceChange(ChangeReason.YEARLY_SPEND, 700.0,
                                                  DATE_TIME + timedelta(weeks=3, days=3))})
-    }, {"bank", "investment"})
-    return FinanceGraphManager(balance_range)
+    }, {"bank", "investment"}, timedelta(weeks=1))
+    return FinanceGraphManager(balance_range, FinanceMetadata(StoredFinanceMetadata(1000.0, 100.0)))
 
 
 def test_generate_balance_summary(setup_finance_graph_manager):

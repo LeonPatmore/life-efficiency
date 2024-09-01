@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from datetime import timedelta
 
 WEEKS_IN_YEAR = 52.1429
+DAYS_IN_YEAR = 365.0
 
 
 @dataclass
@@ -23,6 +25,12 @@ class FinanceMetadata(StoredFinanceMetadata):
         self.yearly_tax = stored.monthly_tax * 12.0
         self.weekly_salary = self.yearly_salary / WEEKS_IN_YEAR
         self.weekly_tax = self.yearly_tax / WEEKS_IN_YEAR
+        self.daily_salary = self.yearly_salary / DAYS_IN_YEAR
+        self.daily_tax = self.yearly_tax / DAYS_IN_YEAR
+        self.daily_take_home = self.daily_salary - self.daily_tax
+
+    def get_take_home_for_timedelta(self, delta: timedelta) -> float:
+        return delta.days * self.daily_take_home
 
 
 class FinanceMetadataLoader:

@@ -3,12 +3,14 @@ from matplotlib import pyplot
 from matplotlib.ticker import FormatStrFormatter
 
 from finance.finance_manager import BalanceRange, FinanceManager
+from finance.metadata.finance_metadata import FinanceMetadata
 
 
 class FinanceGraphManager:
 
-    def __init__(self, balance_range: BalanceRange):
+    def __init__(self, balance_range: BalanceRange, metadata: FinanceMetadata):
         self.balance_range = balance_range
+        self.metadata = metadata
 
     def _setup_graph(self, func: callable):
         weeks_points = list(self.balance_range.balances.keys())
@@ -29,7 +31,9 @@ class FinanceGraphManager:
 
     def generate_weekly_difference_summary(self):
         def _(fig, axs, ind):
+            take_home = self.metadata.get_take_home_for_timedelta(self.balance_range.step)
             axs.axhline(y=0, color='black', linestyle='-')
+            axs.axhline(y=-take_home, color='red', linestyle='-')
             increases = [x.total_increase if x.total_increase else numpy.nan
                          for x in self.balance_range.balances.values()]
             width = 0.3

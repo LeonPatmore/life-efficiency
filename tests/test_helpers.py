@@ -10,7 +10,7 @@ def cleanup_modules(modules):
             del sys.modules[module]
 
 
-def lambda_http_event(command: str, subcommand: str, body: str, method: str = "GET") -> dict:
+def lambda_http_event(command: str, subcommand: str, body: str = None, method: str = "GET") -> dict:
     return {
         'httpMethod': method,
         'pathParameters': {
