@@ -586,7 +586,7 @@ def test_finance_changes(setup_dynamo_mock):
             "command": "finance",
             "subcommand": "changes"
         },
-        "body": """{"amount": 1000.0, "reason": "salary"}"""
+        "body": """{"amount": 1000.0, "reason": "salary", "desc": "some reason"}"""
     }, {})
 
     assert 200 == create_res["statusCode"]
@@ -594,6 +594,7 @@ def test_finance_changes(setup_dynamo_mock):
     assert body["amount"] == 1000.0
     assert "date" in body
     assert body["reason"] == "salary"
+    assert body["desc"] == "some reason"
     assert "id" in body and body["id"] is not None
 
     get_res = configuration.handler({
@@ -609,6 +610,7 @@ def test_finance_changes(setup_dynamo_mock):
     assert body[0]["amount"] == 1000.0
     assert "date" in body[0]
     assert body[0]["reason"] == "salary"
+    assert body[0]["desc"] == "some reason"
     assert "id" in body[0]
 
 

@@ -36,6 +36,7 @@ class BalanceChange:
     reason: ChangeReason
     amount: float
     date: datetime
+    desc: str
     id: str = None
 
 
