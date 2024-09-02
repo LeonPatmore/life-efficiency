@@ -1,6 +1,6 @@
 24/09/2020 Add auth to lambda endpoints
-08/06/2021 Support a multiple week meal plan
 14/08/2024 Add finance support
+03/09/2024 Add normalised increases to balance range object
 
 x 19/09/2020 11/09/2020 Add CI @ci
 x 25/09/2020 19/09/2020 Fix git ignore file
