@@ -40,11 +40,16 @@ class ShoppingList(Repository[ShoppingListItem]):
     def reduce_quantity(self, item_name: str, quantity: int):
         item = self.get(item_name)
         if item is None:
+            logging.info(f"Reducing item [ {item_name} ] by quantity [ {quantity} ] "
+                         f"will do nothing since item not present")
             return
         if quantity >= item.quantity:
+            logging.info(f"Removing item [ {item_name} ] from shopping list")
             self.remove(item_name)
         else:
-            self.set_item_quantity(item_name, item.quantity - quantity)
+            new_quantity = item.quantity - quantity
+            logging.info(f"Setting item [ {item_name} ] to quantity [ {new_quantity} ]")
+            self.set_item_quantity(item_name, new_quantity)
 
     def increase_quantity(self, item_name: str, quantity: int):
         item = self.get(item_name)

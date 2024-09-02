@@ -1,6 +1,6 @@
 import enum
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from helpers.datetime import datetime_to_string
@@ -39,5 +39,9 @@ class JsonResponseHandler(BasicResponseHandler):
             return datetime_to_string(obj)
         if hasattr(obj, "to_json"):
             return obj.to_json()
+        if isinstance(obj, set):
+            return list(obj)
+        if isinstance(obj, timedelta):
+            return str(obj)
         else:
             return vars(obj)

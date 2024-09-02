@@ -12,8 +12,7 @@ dotenv.load_dotenv(f"{pathlib.Path(__file__).parent.resolve()}/{ENV}.env")
 URL_ROOT = os.environ.get("URL_ROOT")
 
 
-@pytest.fixture
-def cleanup():
+def _cleanup_list():
     response = requests.get(f"{URL_ROOT}/shopping/list")
     for item in response.json():
         delete_res = requests.delete(f"{URL_ROOT}/shopping/list", params={
@@ -21,6 +20,13 @@ def cleanup():
             "name": item["name"]
         })
         assert delete_res.status_code == codes["ok"]
+
+
+@pytest.fixture
+def cleanup():
+    _cleanup_list()
+    yield
+    _cleanup_list()
 
 
 def test_shopping_list(cleanup):
@@ -59,10 +65,6 @@ def test_todo_list():
     assert not _todo_item_exists(todo_id)
 
 
-def _balance_instance_exists(instance_id: str) -> bool:
-    return len(list(filter(lambda x: x["id"] == instance_id, requests.get(f"{URL_ROOT}/finance/instances").json()))) > 0
-
-
 def test_balance_instance():
     create_res = requests.post(f"{URL_ROOT}/finance/instances",
                                json={
@@ -73,4 +75,16 @@ def test_balance_instance():
     assert create_res.status_code == codes["ok"]
     instance_id = create_res.json()["id"]
 
-    assert _balance_instance_exists(instance_id)
+    assert len(list(filter(lambda x: x["id"] == instance_id, requests.get(f"{URL_ROOT}/finance/instances").json()))) > 0
+
+
+def test_balance_changes():
+    create_res = requests.post(f"{URL_ROOT}/finance/changes",
+                               json={
+                                   "amount": 1000.0,
+                                   "reason": "salary"
+                               })
+    assert create_res.status_code == codes["ok"]
+    change_id = create_res.json()["id"]
+
+    assert len(list(filter(lambda x: x["id"] == change_id, requests.get(f"{URL_ROOT}/finance/changes").json()))) > 0

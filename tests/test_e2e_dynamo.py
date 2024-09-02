@@ -6,7 +6,7 @@ from unittest.mock import Mock
 import pytest
 
 from tests.dynamo_db_mock import DynamoDbMock
-from tests.test_helpers import cleanup_modules
+from tests.test_helpers import cleanup_modules, lambda_http_event
 
 
 @pytest.fixture(autouse=True)
@@ -575,3 +575,79 @@ def test_finance_balance_instances_no_date_generates_one(setup_dynamo_mock):
     assert body["date"] is not None
     assert body["holder"] == "bank"
     assert "id" in body and body["id"] is not None
+
+
+def test_finance_changes(setup_dynamo_mock):
+    import configuration
+
+    create_res = configuration.handler({
+        'httpMethod': "POST",
+        'pathParameters': {
+            "command": "finance",
+            "subcommand": "changes"
+        },
+        "body": """{"amount": 1000.0, "reason": "salary"}"""
+    }, {})
+
+    assert 200 == create_res["statusCode"]
+    body = json.loads(create_res["body"])
+    assert body["amount"] == 1000.0
+    assert "date" in body
+    assert body["reason"] == "salary"
+    assert "id" in body and body["id"] is not None
+
+    get_res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "finance",
+            "subcommand": "changes"
+        }
+    }, {})
+    assert 200 == get_res["statusCode"]
+    body = json.loads(get_res["body"])
+    assert len(body) == 1
+    assert body[0]["amount"] == 1000.0
+    assert "date" in body[0]
+    assert body[0]["reason"] == "salary"
+    assert "id" in body[0]
+
+
+def test_finance_range(setup_dynamo_mock):
+    import configuration
+
+    create_res = configuration.handler(lambda_http_event("finance", "range",
+                                                         query_params={"start_date": "01/01/2000, 12:00:00",
+                                                                       "end_date": "22/01/2000, 12:00:00"}))
+
+    assert 200 == create_res["statusCode"]
+    body = json.loads(create_res["body"])
+    assert body == {
+        "step": "7 days, 0:00:00",
+        "all_holders": [],
+        "balances": {
+            "01/01/2000, 12:00:00": {
+                "holders": [],
+                "balance_changes": [],
+                "total": 0,
+                "total_increase": None
+            },
+            "08/01/2000, 12:00:00": {
+                "holders": [],
+                "balance_changes": [],
+                "total": 0,
+                "total_increase": 0
+            },
+            "15/01/2000, 12:00:00": {
+                "holders": [],
+                "balance_changes": [],
+                "total": 0,
+                "total_increase": 0
+            },
+            "22/01/2000, 12:00:00": {
+                "holders": [],
+                "balance_changes": [],
+                "total": 0,
+                "total_increase": 0
+            }
+        }
+    }

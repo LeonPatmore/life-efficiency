@@ -4,6 +4,7 @@ from enum import Enum
 from functools import partial
 
 from dynamo.dynamo_repository import dynamo_item
+from helpers.datetime import datetime_to_string
 from repository.repository import Repository
 
 
@@ -17,15 +18,16 @@ class BalanceInstance:
 
 
 class ChangeReason(Enum):
-    # SALARY = lambda base_amount, change_amount: base_amount - change_amount
-    # YEARLY_SPEND = lambda base_amount, change_amount: base_amount + change_amount
-    # INVESTMENT = lambda base_amount, change_amount: base_amount + change_amount
-    # SALARY = "salary"
-    # YEARLY_SPEND = "yearly_spend"
-    # INVESTMENT = "investment"
     SALARY = partial(lambda base_amount, change_amount: base_amount - change_amount)
     YEARLY_SPEND = partial(lambda base_amount, change_amount: base_amount + change_amount)
     INVESTMENT = partial(lambda base_amount, change_amount: base_amount + change_amount)
+
+    @staticmethod
+    def from_string(name):
+        for member in ChangeReason:
+            if member.name.lower() == name.lower():
+                return member
+        raise KeyError(f"{name} is not a valid {ChangeReason.__name__}")
 
 
 @dynamo_item("balance_changes")
@@ -34,12 +36,13 @@ class BalanceChange:
     reason: ChangeReason
     amount: float
     date: datetime
+    id: str = None
 
 
 class BalanceChangeManager(Repository[BalanceChange]):
 
     def __init__(self, date_generator: callable):
-        super().__init__(BalanceInstance)
+        super().__init__(BalanceChange)
         self.date_generator = date_generator
 
     def add(self, item: BalanceChange) -> BalanceChange:
@@ -82,12 +85,21 @@ class BalanceRange:
     all_holders: set[str]
     step: timedelta
 
+    def to_json(self):
+        return {
+            "balances": {datetime_to_string(x): y for x, y in self.balances.items()},
+            "all_holders": self.all_holders,
+            "step": self.step
+        }
+
 
 class FinanceManager:
 
     def __init__(self,
+                 date_generator: callable,
                  balance_instance_manager: BalanceInstanceManager,
                  balance_change_manager: BalanceChangeManager):
+        self.date_generator = date_generator
         self.balance_instance_manager = balance_instance_manager
         self.balance_change_manager = balance_change_manager
 
@@ -107,7 +119,12 @@ class FinanceManager:
                 final_list.append(sorted_balances[0])
         return final_list
 
-    def generate_balance_range(self, start_date: datetime, end_date: datetime, step: timedelta) -> BalanceRange:
+    def generate_balance_range(self,
+                               start_date: datetime,
+                               end_date: datetime or None = None,
+                               step: timedelta = timedelta(weeks=1)) -> BalanceRange:
+        if end_date is None:
+            end_date = self.date_generator()
         all_holders = set()
         balance_map = {}
         current_date = start_date

@@ -12,7 +12,9 @@ START_TIME = datetime(year=2024, month=1, day=1)
 def setup_finance_manager():
     balance_instance_manager_mock = Mock()
     balance_change_manager_mock = Mock()
-    manager = FinanceManager(balance_instance_manager_mock, balance_change_manager_mock)
+    manager = FinanceManager(lambda: datetime(year=2000, month=1, day=1),
+                             balance_instance_manager_mock,
+                             balance_change_manager_mock)
     return manager, balance_instance_manager_mock
 
 

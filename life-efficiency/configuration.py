@@ -59,7 +59,8 @@ shopping_manager = ShoppingManager(shopping_history,
 shopping_handler = ShoppingHandler(shopping_manager)
 todo_handler = TodoHandler(todo_list_manager, todo_weekly_manager)
 goals_handler = GoalsHandler(goals_manager)
-finance_manager = FinanceManager(balance_instance_manager=BalanceInstanceManager(get_current_datetime_utc),
+finance_manager = FinanceManager(date_generator=get_current_datetime_utc,
+                                 balance_instance_manager=BalanceInstanceManager(get_current_datetime_utc),
                                  balance_change_manager=BalanceChangeManager(get_current_datetime_utc))
 finance_handler = FinanceHandler(finance_manager=finance_manager)
 
