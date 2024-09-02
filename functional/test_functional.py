@@ -45,6 +45,15 @@ def test_shopping_list(cleanup):
     assert 6 == response_items[0]["quantity"]
 
 
+def test_add_to_shopping_history(cleanup):
+    res = requests.post(f"{URL_ROOT}/shopping/history",
+                        json={
+                            "name": "Drink",
+                            "quantity": 6
+                        })
+    assert res.status_code == codes["ok"]
+
+
 def _todo_item_exists(item_id: str) -> bool:
     return len(list(filter(lambda x: x["id"] == item_id, requests.get(f"{URL_ROOT}/todo/list").json()))) > 0
 

@@ -15,12 +15,13 @@ class ShoppingHandler(LambdaSplitter):
         super().__init__("subcommand")
         self.shopping_manager = shopping_manager
 
-        self.add_sub_handler('history', LambdaTarget(self.shopping_manager.shopping_history.get_all,
+        self.add_sub_handler('history', LambdaTarget(self.shopping_manager.shopping_history.get_all_sorted,
                                                      response_handler=JsonResponseHandler()))
         self.add_sub_handler('history',
                              LambdaTarget(lambda fields: self.shopping_manager.shopping_history.add(
                                  ShoppingItemPurchase(fields["name"], fields["quantity"])),
-                                          [JsonBodyValidator(["name", QUANTITY_FIELD])]),
+                                          [JsonBodyValidator(["name", QUANTITY_FIELD])],
+                                          response_handler=JsonResponseHandler()),
                              'POST')
         self.add_sub_handler('list', LambdaTarget(self.shopping_manager.shopping_list.get_all,
                                                   response_handler=JsonResponseHandler()))
