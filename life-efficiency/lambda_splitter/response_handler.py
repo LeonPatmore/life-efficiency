@@ -1,6 +1,9 @@
 import enum
 import json
+from datetime import datetime, timedelta
 from typing import Any
+
+from helpers.datetime import datetime_to_string
 
 
 class ResponseHandler:
@@ -31,8 +34,14 @@ class JsonResponseHandler(BasicResponseHandler):
     @staticmethod
     def get_object_as_json(obj):
         if isinstance(obj, enum.Enum):
-            return obj.name
+            return obj.name.lower()
+        if isinstance(obj, datetime):
+            return datetime_to_string(obj)
         if hasattr(obj, "to_json"):
             return obj.to_json()
+        if isinstance(obj, set):
+            return list(obj)
+        if isinstance(obj, timedelta):
+            return str(obj)
         else:
             return vars(obj)

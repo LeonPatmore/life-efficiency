@@ -35,7 +35,8 @@ def setup_lambda_splitter_with_method_handler():
     return_value = {RESPONSE_STATUS_CODE_FIELD: 200}
     mock_method = Mock(return_value=return_value)
 
-    def handler_method(*args, **kwargs): return mock_method(*args, **kwargs)
+    def handler_method(*args, **kwargs):
+        return mock_method(*args, **kwargs)
     lambda_splitter = LambdaSplitter(PATH_PARAMETER_KEY)
     sub_path = 'sub_path'
     lambda_splitter.add_sub_handler(sub_path, LambdaTarget(handler_method))
@@ -69,7 +70,8 @@ def setup_lambda_splitter_with_json_handler():
     return_value = {RESPONSE_STATUS_CODE_FIELD: 200}
     mock_method = Mock(return_value=return_value)
 
-    def handler_method(json): return mock_method(json=json)
+    def handler_method(json):
+        return mock_method(json=json)
     lambda_splitter = LambdaSplitter(PATH_PARAMETER_KEY)
     sub_path = 'sub_path'
     lambda_splitter.add_sub_handler(sub_path, LambdaTarget(handler_method))
@@ -80,7 +82,8 @@ def setup_lambda_splitter_with_json_handler():
 def setup_lambda_splitter_with_method_handler_throws_http_aware_exception(request):
     mock_method = Mock(side_effect=request.param)
 
-    def handler_method(): return mock_method()
+    def handler_method():
+        return mock_method()
     lambda_splitter = LambdaSplitter(PATH_PARAMETER_KEY)
     sub_path = 'sub_path'
     lambda_splitter.add_sub_handler(sub_path, LambdaTarget(handler_method))

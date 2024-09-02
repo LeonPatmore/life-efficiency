@@ -55,6 +55,10 @@ Resources:
     Type: AWS::Serverless::SimpleTable
     Properties:
       TableName: !Sub "life-efficiency_${Environment}_balance_instances"
+  FinanceBalanceChanges:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub "life-efficiency_${Environment}_balance_changes"
   LifeEfficiencyFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -83,6 +87,8 @@ Resources:
             TableName: !Sub "life-efficiency_${Environment}_todo-sets"
         - DynamoDBCrudPolicy:
             TableName: !Sub "life-efficiency_${Environment}_balance_instances"
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "life-efficiency_${Environment}_balance_changes"
       Events:
         CatchAll:
           Type: Api

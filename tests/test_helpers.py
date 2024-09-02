@@ -10,14 +10,21 @@ def cleanup_modules(modules):
             del sys.modules[module]
 
 
-def lambda_http_event(command: str, subcommand: str, body: str, method: str = "GET") -> dict:
+def lambda_http_event(command: str,
+                      subcommand: str,
+                      body: str = None,
+                      method: str = "GET",
+                      query_params: dict = None) -> dict:
+    if query_params is None:
+        query_params = {}
     return {
         'httpMethod': method,
         'pathParameters': {
             "command": command,
             "subcommand": subcommand
         },
-        "body": body
+        "body": body,
+        'queryStringParameters': query_params
     }
 
 
@@ -32,6 +39,7 @@ class InMemoryRepository(RepositoryImplementation):
     def add(self, item):
         if getattr(item, "id") is None:
             setattr(item, "id", str(uuid.uuid4()))
+        # noinspection PyUnresolvedReferences
         self.item_list[item.id] = item
         return item
 

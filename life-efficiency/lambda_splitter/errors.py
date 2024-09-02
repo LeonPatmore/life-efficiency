@@ -12,7 +12,6 @@ class HTTPAwareException(Exception):
         if self.error_message:
             return {'error': self.error_message}
         elif self.root_cause:
-            return {'error': 'exception during request processing',
-                    'exception': self.root_cause}
+            return {'error': str(self.root_cause)}
         else:
             return {}

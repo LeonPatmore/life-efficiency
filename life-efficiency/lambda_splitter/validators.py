@@ -1,3 +1,4 @@
+import enum
 import json
 import logging
 from dataclasses import dataclass
@@ -36,6 +37,26 @@ class FieldValidator(Validator):
     def validate_type(self, field_name: str, field_value, expected_type: type):
         raise NotImplementedError
 
+    def _map_field_to_type_if_required(self, field: str, field_value: str, target_type: type):
+        if target_type == datetime:
+            try:
+                field_value = string_to_datetime(field_value)
+            except ValueError as e:
+                raise HTTPAwareException(400, root_cause=e)
+        if issubclass(target_type, enum.Enum):
+            try:
+                if hasattr(target_type, "from_string"):
+                    return target_type.from_string(field_value)
+                else:
+                    # noinspection PyUnresolvedReferences
+                    return target_type[field_value]
+            except KeyError:
+                # noinspection PyUnresolvedReferences
+                possible_values = list(target_type.__members__)
+                raise HTTPAwareException(
+                    400, f"{self.get_field_type()} `{field}` is not valid, possible values are {possible_values}")
+        return field_value
+
     def validate(self, event: dict) -> dict:
         fields = self.get_fields(event)
         present_field_names = set(fields.keys())
@@ -55,8 +76,7 @@ class FieldValidator(Validator):
             if field not in field_mappings.keys():
                 logging.info(f"Validation of field {field} failed, field is not valid for this endpoint")
                 raise HTTPAwareException(400, f"{self.get_field_type()} `{field}` is not supported")
-            if field_mappings[field] == datetime:
-                field_value = string_to_datetime(field_value)
+            field_value = self._map_field_to_type_if_required(field, field_value, field_mappings[field])
             self.validate_type(field, field_value, field_mappings[field])
             if field_mappings[field] == int:
                 field_value = int(field_value)

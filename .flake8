@@ -2,3 +2,4 @@
 max-line-length = 160
 max-complexity = 10
 exclude = .git, __pycache__, .aws-sam
+extend-ignore = E731
