@@ -81,7 +81,7 @@ def test_create_balance_amount_must_be_float(setup_finance_handler):
 def test_get_changes(setup_finance_handler):
     _, balance_changes_mock, _, finance_handler = setup_finance_handler
     balance_changes_mock.get_all.return_value = [BalanceChange(
-        ChangeReason.SALARY, 100.0, datetime(2012, 3, 2, 5, 1, 2), "some-id")]
+        ChangeReason.SALARY, 100.0, datetime(2012, 3, 2, 5, 1, 2), "some desc", "some-id")]
 
     res = finance_handler(lambda_http_event("finance", "changes"))
     assert 200 == res["statusCode"]
@@ -89,7 +89,8 @@ def test_get_changes(setup_finance_handler):
         "amount": 100.0,
         "date": "02/03/2012, 05:01:02",
         "id": "some-id",
-        "reason": "salary"
+        "reason": "salary",
+        "desc": "some desc"
     }]
 
 
@@ -98,6 +99,7 @@ def test_add_change_invalid_reason(setup_finance_handler):
 
     res = finance_handler(lambda_http_event("finance", "changes", body=json.dumps({
         "amount": 100.0,
+        "desc": "some desc",
         "reason": "asd"
     }), method="POST"))
 
@@ -110,7 +112,8 @@ def test_add_change_missing_reason(setup_finance_handler):
     _, balance_changes_mock, _, finance_handler = setup_finance_handler
 
     res = finance_handler(lambda_http_event("finance", "changes", body=json.dumps({
-        "amount": 100.0
+        "amount": 100.0,
+        "desc": "some desc"
     }), method="POST"))
 
     assert 400 == res["statusCode"]
@@ -122,12 +125,26 @@ def test_add_change_missing_amount(setup_finance_handler):
     _, balance_changes_mock, _, finance_handler = setup_finance_handler
 
     res = finance_handler(lambda_http_event("finance", "changes", body=json.dumps({
-        "reason": "salary"
+        "reason": "salary",
+        "desc": "some desc"
     }), method="POST"))
 
     assert 400 == res["statusCode"]
     body = json.loads(res["body"])
     assert body["error"] == "field `amount` is required"
+
+
+def test_add_change_missing_desc(setup_finance_handler):
+    _, balance_changes_mock, _, finance_handler = setup_finance_handler
+
+    res = finance_handler(lambda_http_event("finance", "changes", body=json.dumps({
+        "reason": "salary",
+        "amount": 100.0,
+    }), method="POST"))
+
+    assert 400 == res["statusCode"]
+    body = json.loads(res["body"])
+    assert body["error"] == "field `desc` is required"
 
 
 def test_finance_range_missing_start_date(setup_finance_handler):

@@ -91,7 +91,8 @@ def test_balance_changes():
     create_res = requests.post(f"{URL_ROOT}/finance/changes",
                                json={
                                    "amount": 1000.0,
-                                   "reason": "salary"
+                                   "reason": "salary",
+                                   "desc": "my salary for aug"
                                })
     assert create_res.status_code == codes["ok"]
     change_id = create_res.json()["id"]

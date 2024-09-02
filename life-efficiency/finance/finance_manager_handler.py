@@ -25,10 +25,11 @@ class FinanceHandler(LambdaSplitter):
                                           response_handler=JsonResponseHandler()))
         self.add_sub_handler("changes", LambdaTarget(
             handler=lambda fields: finance_manager.balance_change_manager.add(
-                BalanceChange(fields["reason"], fields["amount"], fields["date"])),
+                BalanceChange(fields["reason"], fields["amount"], fields["date"], fields["desc"])),
             response_handler=JsonResponseHandler(),
             validators=[JsonBodyValidator(required_fields=[TypedField("amount", float),
-                                                           TypedField("reason", ChangeReason)],
+                                                           TypedField("reason", ChangeReason),
+                                                           "desc"],
                                           optional_fields=[TypedField("date", datetime)])]),
                              method="POST")
         self.add_sub_handler("range", LambdaTarget(

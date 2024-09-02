@@ -17,11 +17,12 @@ def setup_finance_graph_manager():
         DATE_TIME + timedelta(weeks=2): BalanceInstantSummary([], 900.0, -100.0, set()),
         DATE_TIME + timedelta(weeks=3):
             BalanceInstantSummary([], 1500.0, 600.0,
-                                  {BalanceChange(ChangeReason.SALARY, 700.0, DATE_TIME + timedelta(weeks=2, days=3))}),
+                                  {BalanceChange(ChangeReason.SALARY, 700.0,
+                                                 DATE_TIME + timedelta(weeks=2, days=3), "some reason")}),
         DATE_TIME + timedelta(weeks=4):
             BalanceInstantSummary([], 500.0, -1000.0,
                                   {BalanceChange(ChangeReason.YEARLY_SPEND, 700.0,
-                                                 DATE_TIME + timedelta(weeks=3, days=3))})
+                                                 DATE_TIME + timedelta(weeks=3, days=3), "some reason")})
     }, {"bank", "investment"}, timedelta(weeks=1))
     return FinanceGraphManager(balance_range, FinanceMetadata(StoredFinanceMetadata(1000.0, 100.0)))
 
