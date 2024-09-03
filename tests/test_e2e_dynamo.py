@@ -631,25 +631,29 @@ def test_finance_range(setup_dynamo_mock):
                 "holders": [],
                 "balance_changes": [],
                 "total": 0,
-                "total_increase": None
+                "total_increase": None,
+                "total_increase_normalised": None
             },
             "08/01/2000, 12:00:00": {
                 "holders": [],
                 "balance_changes": [],
                 "total": 0,
-                "total_increase": 0
+                "total_increase": 0,
+                "total_increase_normalised": 0
             },
             "15/01/2000, 12:00:00": {
                 "holders": [],
                 "balance_changes": [],
                 "total": 0,
-                "total_increase": 0
+                "total_increase": 0,
+                "total_increase_normalised": 0
             },
             "22/01/2000, 12:00:00": {
                 "holders": [],
                 "balance_changes": [],
                 "total": 0,
-                "total_increase": 0
+                "total_increase": 0,
+                "total_increase_normalised": 0
             }
         }
     }

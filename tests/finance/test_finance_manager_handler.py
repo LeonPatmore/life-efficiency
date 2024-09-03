@@ -4,7 +4,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from finance.finance_manager import BalanceInstance, BalanceChange, ChangeReason, BalanceRange
+from finance.balance_change_manager import ChangeReason, BalanceChange
+from finance.balance_instance_manager import BalanceInstance
+from finance.finance_manager import BalanceRange
 from finance.finance_manager_handler import FinanceHandler
 from helpers.datetime import get_current_datetime_utc, DatetimeCustom
 from tests.test_helpers import lambda_http_event

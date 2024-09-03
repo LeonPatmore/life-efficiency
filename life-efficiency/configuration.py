@@ -6,7 +6,9 @@ import boto3
 from dynamo import dynamo_repository
 from dynamo.dynamo_helpers import get_table_full_name
 from dynamo.dynamo_repository import DynamoRepository
-from finance.finance_manager import BalanceInstanceManager, FinanceManager, BalanceChangeManager
+from finance.balance_change_manager import BalanceChangeManager
+from finance.balance_instance_manager import BalanceInstanceManager
+from finance.finance_manager import FinanceManager
 from finance.finance_manager_handler import FinanceHandler
 from goals.goals_lambda_handler import GoalsHandler
 from goals.goals_manager import GoalsManager
