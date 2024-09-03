@@ -2,7 +2,7 @@ import numpy
 from matplotlib import pyplot
 from matplotlib.ticker import FormatStrFormatter
 
-from finance.finance_manager import BalanceRange, FinanceManager
+from finance.finance_manager import BalanceRange
 from finance.metadata.finance_metadata import FinanceMetadata
 
 
@@ -38,8 +38,8 @@ class FinanceGraphManager:
                          for x in self.balance_range.balances.values()]
             width = 0.3
             axs.bar(ind - (width / 2.0), increases, width, label="total")
-            normalised_increases = [FinanceManager.get_increase_after_normalisation(x)
-                                    if x.total_increase else numpy.nan for x in self.balance_range.balances.values()]
+            normalised_increases = [x.total_increase_normalised if x.total_increase else numpy.nan
+                                    for x in self.balance_range.balances.values()]
             axs.bar(ind + (width / 2.0), normalised_increases, width, label="normalised")
             fig.legend(loc="upper left")
         return self._setup_graph(_)
