@@ -22,7 +22,11 @@ class TypedField:
 
 class FieldValidator(Validator):
 
-    def __init__(self, required_fields: list[TypedField or str], optional_fields: list[TypedField or str] = None):
+    def __init__(self,
+                 required_fields: list[TypedField or str] = None,
+                 optional_fields: list[TypedField or str] = None):
+        if required_fields is None:
+            required_fields = []
         if optional_fields is None:
             optional_fields = []
         self.required_fields = [TypedField(x) if isinstance(x, str) else x for x in required_fields]
@@ -106,7 +110,7 @@ class JsonBodyValidator(FieldValidator):
 class QueryParamValidator(FieldValidator):
 
     def get_fields(self, event: dict) -> dict:
-        return event['queryStringParameters'] or {}
+        return (event['queryStringParameters'] if "queryStringParameters" in event else None) or {}
 
     def get_field_type(self) -> str:
         return "param"

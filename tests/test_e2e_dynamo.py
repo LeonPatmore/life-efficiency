@@ -557,6 +557,31 @@ def test_finance_balance_instances(setup_dynamo_mock):
     assert "id" in body[0]
 
 
+def test_finance_balance_instances_with_filter(setup_dynamo_mock):
+    import configuration
+
+    create_res = configuration.handler(lambda_http_event(
+        "finance",
+        "instances",
+        """{"amount": 1000.0, "date": "21/08/2024, 13:00:00", "holder": "bank"}""", "POST"))
+    assert 200 == create_res["statusCode"]
+    create_res_not_bank = configuration.handler(lambda_http_event(
+        "finance",
+        "instances",
+        """{"amount": 1000.0, "date": "21/08/2024, 13:00:00", "holder": "not_bank"}""", "POST"))
+    assert 200 == create_res_not_bank["statusCode"]
+
+    get_res = configuration.handler(lambda_http_event(
+        "finance",
+        "instances",
+        query_params={
+            "holder": "not_bank"
+        }))
+    assert 200 == get_res["statusCode"]
+    body = json.loads(get_res["body"])
+    assert body[0]["id"] == json.loads(create_res_not_bank["body"])["id"]
+
+
 def test_finance_balance_instances_no_date_generates_one(setup_dynamo_mock):
     import configuration
 

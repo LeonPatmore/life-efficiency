@@ -12,8 +12,11 @@ class FinanceHandler(LambdaSplitter):
 
     def __init__(self, finance_manager: FinanceManager):
         super().__init__("subcommand")
-        self.add_sub_handler("instances", LambdaTarget(finance_manager.balance_instance_manager.get_all,
-                                                       response_handler=JsonResponseHandler()))
+        self.add_sub_handler("instances", LambdaTarget(
+            handler=lambda fields: finance_manager.balance_instance_manager.get_all_with_filters(fields["holder"],
+                                                                                                 fields["date"]),
+            response_handler=JsonResponseHandler(),
+            validators=[QueryParamValidator(optional_fields=["holder", TypedField("date", datetime)])]))
         self.add_sub_handler("instances", LambdaTarget(
             handler=lambda fields: finance_manager.balance_instance_manager.add(BalanceInstance(amount=fields["amount"],
                                                                                                 holder=fields["holder"],

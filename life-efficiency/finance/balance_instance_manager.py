@@ -23,3 +23,7 @@ class BalanceInstanceManager(Repository[BalanceInstance]):
     def add(self, item: BalanceInstance) -> BalanceInstance:
         date = item.date if item.date is not None else self.date_generator()
         return super().add(replace(item, date=date))
+
+    def get_all_with_filters(self, holder: str or None, date: datetime or None) -> list[BalanceInstance]:
+        return list(filter(lambda x: (holder is None or holder == x.holder) and (date is None or date == x.date),
+                           self.get_all()))
