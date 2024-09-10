@@ -26,7 +26,7 @@ Resources:
   Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "leon-patmore-life-efficiency_${Environment}"
+      BucketName: !Sub "leon-patmore-life-efficiency-${Environment}"
   ShoppingListTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -74,7 +74,7 @@ Resources:
           ENV: !Sub "${Environment}"
           S3_BUCKET_NAME: !Ref Bucket
       Policies:
-        - S3ReadPolicy:
+        - S3CrudPolicy:
             BucketName: !Ref Bucket
         - DynamoDBCrudPolicy:
             TableName: !Sub "life-efficiency_${Environment}_shopping-list"
