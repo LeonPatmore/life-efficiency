@@ -1,4 +1,5 @@
 import io
+import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -36,7 +37,8 @@ class FinanceGraphHandler(LambdaSplitter):
 
     def figure_to_link(self, fig: Figure) -> FigureLink:
         fig_bytes = self.figure_to_bytes(fig)
-        link = self.file_uploader.upload("todo", fig_bytes)
+        figure_id = str(uuid.uuid4())
+        link = self.file_uploader.upload(f"figure-{figure_id}", fig_bytes, "image/png")
         return FigureLink(link)
 
     @staticmethod

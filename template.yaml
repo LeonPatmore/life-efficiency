@@ -23,6 +23,10 @@ Parameters:
       - Prod
 
 Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "leon-patmore-life-efficiency_${Environment}"
   ShoppingListTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -68,9 +72,10 @@ Resources:
       Environment:
         Variables:
           ENV: !Sub "${Environment}"
+          S3_BUCKET_NAME: !Ref Bucket
       Policies:
         - S3ReadPolicy:
-            BucketName: "life-efficiency"
+            BucketName: !Ref Bucket
         - DynamoDBCrudPolicy:
             TableName: !Sub "life-efficiency_${Environment}_shopping-list"
         - DynamoDBCrudPolicy:

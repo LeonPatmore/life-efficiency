@@ -5,7 +5,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from finance.metadata.finance_metadata import StoredFinanceMetadata, FinanceMetadata
 from tests.dynamo_db_mock import DynamoDbMock
 from tests.test_helpers import cleanup_modules, lambda_http_event
 
@@ -18,22 +17,25 @@ def reset_configuration():
 
 
 @pytest.fixture
-def setup_mocks(request):
+def setup_mocks(request, monkeypatch):
+    monkeypatch.setenv("S3_BUCKET_NAME", "life-efficiency")
     boto3_mock = Mock()
     sys.modules['boto3'] = boto3_mock
+
+    s3_mock = Mock()
+    s3_object_body_mock = Mock()
+    s3_mock.get_object.return_value = {
+        "Body": s3_object_body_mock
+    }
+    s3_object_body_mock.read.return_value = """{"monthly_salary": 100.0, "monthly_tax": 10.0}""".encode("utf-8")
+    boto3_mock.client.return_value = s3_mock
+    s3_mock.generate_presigned_url.return_value = "some-url"
 
     dynamodb_mock = Mock()
     boto3_mock.resource.return_value = dynamodb_mock
 
     table_init_config = request.param if hasattr(request, "param") else {}
     dynamodb_mock.Table.side_effect = lambda table_name: DynamoDbMock(table_init_config.get(table_name, []))
-
-    metadata_loader_configuration_mock = Mock()
-    # TODO: Dont mock this, mock s3
-    sys.modules['config.finance_metadata_loader_configuration'] = metadata_loader_configuration_mock
-    metadata_loader_mock = Mock()
-    metadata_loader_mock.get_metadata.return_value = FinanceMetadata(StoredFinanceMetadata(100.0, 10.0))
-    metadata_loader_configuration_mock.FINANCE_METADATA_LOADER = metadata_loader_mock
 
 
 def test_shopping_purchase_quantity_field_must_be_present(setup_mocks):
@@ -734,5 +736,5 @@ def test_finance_graph_weekly_difference(setup_mocks):
     assert 200 == create_res["statusCode"]
     body = json.loads(create_res["body"])
     assert body == {
-        "link": "some-link"
+        "link": "some-url"
     }

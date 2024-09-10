@@ -98,3 +98,13 @@ def test_balance_changes():
     change_id = create_res.json()["id"]
 
     assert len(list(filter(lambda x: x["id"] == change_id, requests.get(f"{URL_ROOT}/finance/changes").json()))) > 0
+
+
+def test_weekly_difference_graph():
+    res = requests.get(f"{URL_ROOT}/finance/graph/weekly-difference", params={"start_date": "19/08/2024, 12:00:00"})
+    assert res.status_code == codes["ok"]
+    link = res.json()["link"]
+
+    image_res = requests.get(link)
+    assert image_res.status_code == codes["ok"]
+    assert image_res.headers["content-type"] == "image/png"

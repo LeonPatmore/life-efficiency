@@ -10,6 +10,6 @@ class FinanceMetadataS3Loader(FinanceMetadataLoader):
         self.bucket = bucket
 
     def _load_finance_metadata(self) -> StoredFinanceMetadata:
-        obj = self.s3_client.get_object(Bucket=self.bucket, Key="metadata.json")
+        obj = self.s3_client.get_object(Bucket=self.bucket, Key="finance_metadata.json")
         metadata_object = json.loads(obj['Body'].read().decode('utf-8'))
         return StoredFinanceMetadata(metadata_object["monthly_salary"], metadata_object["monthly_tax"])
