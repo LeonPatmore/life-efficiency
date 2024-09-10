@@ -2,7 +2,7 @@ import numpy
 from matplotlib import pyplot
 from matplotlib.ticker import FormatStrFormatter
 
-from finance.finance_manager import BalanceRange
+from finance.finance_domain import BalanceRange
 from finance.metadata.finance_metadata import FinanceMetadata
 
 

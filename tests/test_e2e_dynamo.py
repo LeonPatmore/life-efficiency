@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from finance.metadata.finance_metadata import StoredFinanceMetadata, FinanceMetadata
 from tests.dynamo_db_mock import DynamoDbMock
 from tests.test_helpers import cleanup_modules, lambda_http_event
 
@@ -17,7 +18,7 @@ def reset_configuration():
 
 
 @pytest.fixture
-def setup_dynamo_mock(request):
+def setup_mocks(request):
     boto3_mock = Mock()
     sys.modules['boto3'] = boto3_mock
 
@@ -27,8 +28,15 @@ def setup_dynamo_mock(request):
     table_init_config = request.param if hasattr(request, "param") else {}
     dynamodb_mock.Table.side_effect = lambda table_name: DynamoDbMock(table_init_config.get(table_name, []))
 
+    metadata_loader_configuration_mock = Mock()
+    # TODO: Dont mock this, mock s3
+    sys.modules['config.finance_metadata_loader_configuration'] = metadata_loader_configuration_mock
+    metadata_loader_mock = Mock()
+    metadata_loader_mock.get_metadata.return_value = FinanceMetadata(StoredFinanceMetadata(100.0, 10.0))
+    metadata_loader_configuration_mock.FINANCE_METADATA_LOADER = metadata_loader_mock
 
-def test_shopping_purchase_quantity_field_must_be_present(setup_dynamo_mock):
+
+def test_shopping_purchase_quantity_field_must_be_present(setup_mocks):
     import configuration
 
     res = configuration.handler({
@@ -45,7 +53,7 @@ def test_shopping_purchase_quantity_field_must_be_present(setup_dynamo_mock):
     assert body["error"] == "field `quantity` is required"
 
 
-def test_shopping_purchase_quantity_field_must_be_an_integer(setup_dynamo_mock):
+def test_shopping_purchase_quantity_field_must_be_an_integer(setup_mocks):
     import configuration
 
     res = configuration.handler({
@@ -62,7 +70,7 @@ def test_shopping_purchase_quantity_field_must_be_an_integer(setup_dynamo_mock):
     assert body["error"] == "field `quantity` must be of type int"
 
 
-def test_shopping_list_delete_item_name_must_be_present(setup_dynamo_mock):
+def test_shopping_list_delete_item_name_must_be_present(setup_mocks):
     import configuration
 
     res = configuration.handler({
@@ -81,7 +89,7 @@ def test_shopping_list_delete_item_name_must_be_present(setup_dynamo_mock):
     assert body["error"] == "param `name` is required"
 
 
-def test_shopping_list_adding_items_together(setup_dynamo_mock):
+def test_shopping_list_adding_items_together(setup_mocks):
     import configuration
 
     item_name = str(uuid.uuid4())
@@ -120,7 +128,7 @@ def test_shopping_list_adding_items_together(setup_dynamo_mock):
     assert item_part["quantity"] == 6
 
 
-def test_todays_items_with_completion(setup_dynamo_mock):
+def test_todays_items_with_completion(setup_mocks):
     import configuration
 
     item_name = str(uuid.uuid4())
@@ -170,7 +178,7 @@ def test_todays_items_with_completion(setup_dynamo_mock):
     assert second_get_list == [item_name]
 
 
-def test_repeating_items(setup_dynamo_mock):
+def test_repeating_items(setup_mocks):
     import configuration
 
     item_name = str(uuid.uuid4())
@@ -196,7 +204,7 @@ def test_repeating_items(setup_dynamo_mock):
     assert item_name in json.loads(res["body"])
 
 
-def test_repeating_items_removes_whitespace(setup_dynamo_mock):
+def test_repeating_items_removes_whitespace(setup_mocks):
     import configuration
 
     item_name = str(uuid.uuid4())
@@ -222,7 +230,7 @@ def test_repeating_items_removes_whitespace(setup_dynamo_mock):
     assert item_name in json.loads(res["body"])
 
 
-@pytest.mark.parametrize('setup_dynamo_mock',
+@pytest.mark.parametrize('setup_mocks',
                          [{"life-efficiency_local_repeating-items": [{"id": "item-1"}, {"id": "item-2"}],
                            "life-efficiency_local_shopping-history": [
                                {
@@ -239,7 +247,7 @@ def test_repeating_items_removes_whitespace(setup_dynamo_mock):
                                }
                            ]}],
                          indirect=True)
-def test_repeating_items_detail(setup_dynamo_mock):
+def test_repeating_items_detail(setup_mocks):
     import configuration
 
     res = configuration.handler({
@@ -260,7 +268,7 @@ def test_repeating_items_detail(setup_dynamo_mock):
     assert not body["item-2"]["today"]
 
 
-def test_todo(setup_dynamo_mock):
+def test_todo(setup_mocks):
     import configuration
 
     def _todo_item_exists(todo_id: str) -> bool:
@@ -314,7 +322,7 @@ def test_todo(setup_dynamo_mock):
     assert not _todo_item_exists(todo_id)
 
 
-@pytest.mark.parametrize('setup_dynamo_mock',
+@pytest.mark.parametrize('setup_mocks',
                          [{"life-efficiency_local_todo-list": [
                              {
                                  "id": str(uuid.uuid4()),
@@ -332,7 +340,7 @@ def test_todo(setup_dynamo_mock):
                              },
                          ]}],
                          indirect=True)
-def test_todo_non_completed(setup_dynamo_mock):
+def test_todo_non_completed(setup_mocks):
     import configuration
 
     res = configuration.handler({
@@ -351,10 +359,10 @@ def test_todo_non_completed(setup_dynamo_mock):
     assert body[0]["date_done"] is None
 
 
-@pytest.mark.parametrize('setup_dynamo_mock',
+@pytest.mark.parametrize('setup_mocks',
                          [{"life-efficiency_local_todo-sets": [{"id": "abc123", "name": "set_one"}]}],
                          indirect=True)
-def test_todo_sets(setup_dynamo_mock):
+def test_todo_sets(setup_mocks):
     import configuration
 
     res = configuration.handler({
@@ -372,7 +380,7 @@ def test_todo_sets(setup_dynamo_mock):
     assert res_json[0]["name"] == "set_one"
 
 
-@pytest.mark.parametrize('setup_dynamo_mock',
+@pytest.mark.parametrize('setup_mocks',
                          [{
                              "life-efficiency_local_weekly-todos": [
                                  {"id": "1", "Day": 1, "Desc": "something", "SetId": "setOne"},
@@ -380,7 +388,7 @@ def test_todo_sets(setup_dynamo_mock):
                              ]
                          }],
                          indirect=True)
-def test_weekly_todos_by_day(setup_dynamo_mock):
+def test_weekly_todos_by_day(setup_mocks):
     import configuration
 
     res = configuration.handler({
@@ -400,7 +408,7 @@ def test_weekly_todos_by_day(setup_dynamo_mock):
     assert res_json[0]["id"] == 1
 
 
-@pytest.mark.parametrize('setup_dynamo_mock',
+@pytest.mark.parametrize('setup_mocks',
                          [{
                              "life-efficiency_local_weekly-todos": [
                                  {"id": "1", "Day": 1, "Desc": "something", "SetId": "setOne"},
@@ -408,7 +416,7 @@ def test_weekly_todos_by_day(setup_dynamo_mock):
                              ]
                          }],
                          indirect=True)
-def test_weekly_todos_by_set_id(setup_dynamo_mock):
+def test_weekly_todos_by_set_id(setup_mocks):
     import configuration
 
     res = configuration.handler({
@@ -428,7 +436,7 @@ def test_weekly_todos_by_set_id(setup_dynamo_mock):
     assert res_json[0]["id"] == 2
 
 
-@pytest.mark.parametrize('setup_dynamo_mock',
+@pytest.mark.parametrize('setup_mocks',
                          [{
                              "life-efficiency_local_weekly-todos": [
                                  {"id": "1", "Day": 1, "Desc": "something", "SetId": "setOne"},
@@ -438,7 +446,7 @@ def test_weekly_todos_by_set_id(setup_dynamo_mock):
                              ]
                          }],
                          indirect=True)
-def test_weekly_todos_by_set_id_and_day(setup_dynamo_mock):
+def test_weekly_todos_by_set_id_and_day(setup_mocks):
     import configuration
 
     res = configuration.handler({
@@ -459,7 +467,7 @@ def test_weekly_todos_by_set_id_and_day(setup_dynamo_mock):
     assert res_json[0]["id"] == 3
 
 
-def test_shopping_history_add_purchase_strips_whitespace(setup_dynamo_mock):
+def test_shopping_history_add_purchase_strips_whitespace(setup_mocks):
     import configuration
 
     item_name = str(uuid.uuid4())
@@ -488,7 +496,7 @@ def test_shopping_history_add_purchase_strips_whitespace(setup_dynamo_mock):
     assert item_part["quantity"] == 3
 
 
-@pytest.mark.parametrize('setup_dynamo_mock',
+@pytest.mark.parametrize('setup_mocks',
                          [{
                              "life-efficiency_local_goals": [
                                  {"id": "do something", "Year": 2024, "Quarter": "q1", "Progress": "in_progress"},
@@ -497,7 +505,7 @@ def test_shopping_history_add_purchase_strips_whitespace(setup_dynamo_mock):
                              ]
                          }],
                          indirect=True)
-def test_goals(setup_dynamo_mock):
+def test_goals(setup_mocks):
     import configuration
 
     res = configuration.handler({
@@ -522,7 +530,7 @@ def test_goals(setup_dynamo_mock):
     assert len(body["2025"]["q4"]) == 0
 
 
-def test_finance_balance_instances(setup_dynamo_mock):
+def test_finance_balance_instances(setup_mocks):
     import configuration
 
     create_res = configuration.handler({
@@ -557,7 +565,7 @@ def test_finance_balance_instances(setup_dynamo_mock):
     assert "id" in body[0]
 
 
-def test_finance_balance_instances_with_filter(setup_dynamo_mock):
+def test_finance_balance_instances_with_filter(setup_mocks):
     import configuration
 
     create_res = configuration.handler(lambda_http_event(
@@ -582,7 +590,7 @@ def test_finance_balance_instances_with_filter(setup_dynamo_mock):
     assert body[0]["id"] == json.loads(create_res_not_bank["body"])["id"]
 
 
-def test_finance_balance_instances_no_date_generates_one(setup_dynamo_mock):
+def test_finance_balance_instances_no_date_generates_one(setup_mocks):
     import configuration
 
     create_res = configuration.handler({
@@ -602,7 +610,7 @@ def test_finance_balance_instances_no_date_generates_one(setup_dynamo_mock):
     assert "id" in body and body["id"] is not None
 
 
-def test_finance_changes(setup_dynamo_mock):
+def test_finance_changes(setup_mocks):
     import configuration
 
     create_res = configuration.handler({
@@ -639,7 +647,7 @@ def test_finance_changes(setup_dynamo_mock):
     assert "id" in body[0]
 
 
-def test_finance_range(setup_dynamo_mock):
+def test_finance_range(setup_mocks):
     import configuration
 
     create_res = configuration.handler(lambda_http_event("finance", "range",
@@ -684,7 +692,7 @@ def test_finance_range(setup_dynamo_mock):
     }
 
 
-@pytest.mark.parametrize('setup_dynamo_mock',
+@pytest.mark.parametrize('setup_mocks',
                          [{"life-efficiency_local_shopping-history": [
                              {
                                  "id": str(uuid.uuid4()),
@@ -700,7 +708,7 @@ def test_finance_range(setup_dynamo_mock):
                              }
                          ]}],
                          indirect=True)
-def test_shopping_history_is_ordered(setup_dynamo_mock):
+def test_shopping_history_is_ordered(setup_mocks):
     import configuration
 
     res = configuration.handler({
@@ -714,3 +722,17 @@ def test_shopping_history_is_ordered(setup_dynamo_mock):
     assert 200 == res["statusCode"]
     items = json.loads(res["body"])
     assert items[0]["name"] == "item-1"
+
+
+def test_finance_graph_weekly_difference(setup_mocks):
+    import configuration
+
+    create_res = configuration.handler(lambda_http_event("finance", "graph/weekly-difference",
+                                                         query_params={"start_date": "01/01/2000, 12:00:00",
+                                                                       "end_date": "22/01/2000, 12:00:00"}))
+
+    assert 200 == create_res["statusCode"]
+    body = json.loads(create_res["body"])
+    assert body == {
+        "link": "some-link"
+    }

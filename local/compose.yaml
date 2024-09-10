@@ -1,0 +1,46 @@
+services:
+  localstack:
+    container_name: localstack
+    image: localstack/localstack:latest
+    networks:
+      - backend
+    ports:
+      - '4566:4566'
+    environment:
+      - SERVICES=s3,dynamodb
+      - DEBUG=1
+  app-node:
+    depends_on:
+      - localstack
+    image: amazon/aws-cli
+    container_name: app-node
+    environment:
+      AWS_ACCESS_KEY_ID: 'DUMMYIDEXAMPLE'
+      AWS_SECRET_ACCESS_KEY: 'DUMMYEXAMPLEKEY'
+    networks:
+      - backend
+    entrypoint:
+      - /bin/sh
+    volumes:
+      - ./finance_metadata.json:/app/finance_metadata.json
+    command:
+      - -c
+      - >-
+        aws dynamodb create-table --endpoint-url http://localstack:4566 --region eu-west-1 --table-name life-efficiency_local_shopping-list --key-schema AttributeName=id,KeyType=HASH --attribute-definitions AttributeName=id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD;
+        aws dynamodb create-table --endpoint-url http://localstack:4566 --region eu-west-1 --table-name life-efficiency_local_repeating-items --key-schema AttributeName=id,KeyType=HASH --attribute-definitions AttributeName=id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD;
+        aws dynamodb create-table --endpoint-url http://localstack:4566 --region eu-west-1 --table-name life-efficiency_local_shopping-history --key-schema AttributeName=id,KeyType=HASH --attribute-definitions AttributeName=id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD;
+        aws dynamodb create-table --endpoint-url http://localstack:4566 --region eu-west-1 --table-name life-efficiency_local_goals --key-schema AttributeName=id,KeyType=HASH --attribute-definitions AttributeName=id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD;
+        aws dynamodb create-table --endpoint-url http://localstack:4566 --region eu-west-1 --table-name life-efficiency_local_weekly-todos --key-schema AttributeName=id,KeyType=HASH --attribute-definitions AttributeName=id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD;
+        aws dynamodb create-table --endpoint-url http://localstack:4566 --region eu-west-1 --table-name life-efficiency_local_todo-list --key-schema AttributeName=id,KeyType=HASH --attribute-definitions AttributeName=id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD;
+        aws dynamodb create-table --endpoint-url http://localstack:4566 --region eu-west-1 --table-name life-efficiency_local_todo-sets --key-schema AttributeName=id,KeyType=HASH --attribute-definitions AttributeName=id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD;
+        aws dynamodb create-table --endpoint-url http://localstack:4566 --region eu-west-1 --table-name life-efficiency_local_balance_instances --key-schema AttributeName=id,KeyType=HASH --attribute-definitions AttributeName=id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD;
+        aws dynamodb create-table --endpoint-url http://localstack:4566 --region eu-west-1 --table-name life-efficiency_local_balance_changes --key-schema AttributeName=id,KeyType=HASH --attribute-definitions AttributeName=id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD;
+        aws --region eu-west-1 --endpoint-url http://localstack:4566 s3api create-bucket --bucket life-efficiency --create-bucket-configuration LocationConstraint=eu-west-1;
+        aws --endpoint-url http://localstack:4566 --region eu-west-1 s3 cp /app/finance_metadata.json s3://life-efficiency/finance_metadata.json;
+
+networks:
+  backend:
+    name: life-efficiency
+
+volumes:
+  dynamodata: {}
