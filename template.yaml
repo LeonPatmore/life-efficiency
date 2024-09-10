@@ -33,7 +33,7 @@ Resources:
     Properties:
       BucketName: !Sub
         - "leon-patmore-life-efficiency-${LowerEnvironment}"
-        - LowerEnvironment: !FindInMap [EnvironmentMap, !Sub "${Environment}", "Lower"]
+        - LowerEnvironment: !FindInMap [EnvironmentMap, !Ref Environment, "Lower"]
   ShoppingListTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
