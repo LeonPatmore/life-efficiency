@@ -15,8 +15,10 @@ Globals:
         POWERTOOLS_SERVICE_NAME: hello
 Mappings:
   EnvironmentMap:
-    Dev: dev
-    Prod: prod
+    Dev:
+      Lower: dev
+    Prod:
+      Lower: prod
 Parameters:
   Environment:
     Type: String
@@ -31,7 +33,7 @@ Resources:
     Properties:
       BucketName: !Sub
         - "leon-patmore-life-efficiency-${LowerEnvironment}"
-        - LowerEnvironment: !FindInMap [EnvironmentMap, !Sub "${Environment}"]
+        - LowerEnvironment: !FindInMap [EnvironmentMap, !Sub "${Environment}", "Lower"]
   ShoppingListTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
