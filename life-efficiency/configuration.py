@@ -9,7 +9,8 @@ from dynamo.dynamo_repository import DynamoRepository
 from finance.balance_change_manager import BalanceChangeManager
 from finance.balance_instance_manager import BalanceInstanceManager
 from finance.finance_manager import FinanceManager
-from finance.finance_manager_handler import FinanceHandler
+from finance.finance_manager_handler import FinanceHandler, FinanceGraphHandler
+from finance.metadata.finance_metadata_s3_loader import FinanceMetadataS3Loader
 from goals.goals_lambda_handler import GoalsHandler
 from goals.goals_manager import GoalsManager
 from helpers.datetime import get_current_datetime_utc
@@ -23,6 +24,7 @@ from shopping.shopping_manager import ShoppingManager
 from todo.list.todo_list_manager import TodoListManager
 from todo.todo_lambda_handler import TodoHandler
 from todo.weekly.todo_weekly_manager_dynamo import TodoWeeklyManagerDynamo
+from uploader.s3_uploader import S3Uploader
 
 logging.root.setLevel(logging.INFO)
 
@@ -45,6 +47,12 @@ dynamodb = boto3.resource('dynamodb', **AWS_CLIENT_KWARGS)
 dynamo_repository.table_generator = lambda name: dynamodb.Table(get_table_full_name(name))
 repository.repository_implementation = DynamoRepository
 
+s3_client = boto3.client('s3')
+S3_BUCKET_NAME = os.environ["S3_BUCKET_NAME"]
+logging.info(f"Using bucket name [ {S3_BUCKET_NAME} ]")
+FINANCE_METADATA_LOADER = FinanceMetadataS3Loader(s3_client, S3_BUCKET_NAME)
+file_uploader = S3Uploader(s3_client, S3_BUCKET_NAME)
+
 shopping_list = ShoppingList(get_current_datetime_utc)
 repeating_items = RepeatingItems()
 shopping_history = ShoppingHistory()
@@ -61,10 +69,13 @@ shopping_manager = ShoppingManager(shopping_history,
 shopping_handler = ShoppingHandler(shopping_manager)
 todo_handler = TodoHandler(todo_list_manager, todo_weekly_manager)
 goals_handler = GoalsHandler(goals_manager)
+
 finance_manager = FinanceManager(date_generator=get_current_datetime_utc,
                                  balance_instance_manager=BalanceInstanceManager(get_current_datetime_utc),
-                                 balance_change_manager=BalanceChangeManager(get_current_datetime_utc))
-finance_handler = FinanceHandler(finance_manager=finance_manager)
+                                 balance_change_manager=BalanceChangeManager(get_current_datetime_utc),
+                                 metadata_loader=FINANCE_METADATA_LOADER)
+graph_handler = FinanceGraphHandler(finance_manager=finance_manager, file_uploader=file_uploader)
+finance_handler = FinanceHandler(finance_manager=finance_manager, graph_handler=graph_handler)
 
 handler = LifeEfficiencyLambdaHandler(shopping_handler=shopping_handler,
                                       todo_handler=todo_handler,

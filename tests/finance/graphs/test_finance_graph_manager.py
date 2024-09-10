@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from finance.balance_change_manager import ChangeReason, BalanceChange
-from finance.finance_manager import BalanceRange, BalanceInstantSummary
+from finance.finance_domain import BalanceInstantSummary, BalanceRange
 from finance.graphs.finance_graph_manager import FinanceGraphManager
 from finance.metadata.finance_metadata import FinanceMetadata, StoredFinanceMetadata
 

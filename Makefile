@@ -8,8 +8,8 @@ build:
 	sam build -u
 
 run: build
-	docker-compose -f compose.yaml up -d
-	sam local start-api --docker-network life-efficiency --debug-port 1234 --skip-pull-image --warm-containers EAGER --docker-network life-efficiency --parameter-overrides ParameterKey=Environment,ParameterValue=local --container-env-vars local_env.json
+	cd local && docker-compose -f compose.yaml up -d
+	sam local start-api --docker-network life-efficiency --debug-port 1234 --skip-pull-image --warm-containers EAGER --docker-network life-efficiency --parameter-overrides ParameterKey=Environment,ParameterValue=local --container-env-vars local/local_env.json
 
 deploy-dev: build
 	sam deploy --no-confirm-changeset --region eu-west-1 --stack-name life-efficiency-dev --parameter-overrides ParameterKey=Environment,ParameterValue=Dev
@@ -25,4 +25,4 @@ test-functional:
 
 debug-local-dynamo:
 	docker run --network life-efficiency --rm -it --entrypoint /bin/sh amazon/aws-cli
-	# export AWS_ACCESS_KEY_ID='a'; export AWS_SECRET_ACCESS_KEY='b'; aws dynamodb list-tables --endpoint-url http://dynamodb:8000 --region eu-west-1
+	# export AWS_ACCESS_KEY_ID='a'; export AWS_SECRET_ACCESS_KEY='b'; aws dynamodb list-tables --endpoint-url http://localstack:4566 --region eu-west-1

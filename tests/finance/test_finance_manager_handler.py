@@ -6,7 +6,7 @@ import pytest
 
 from finance.balance_change_manager import ChangeReason, BalanceChange
 from finance.balance_instance_manager import BalanceInstance
-from finance.finance_manager import BalanceRange
+from finance.finance_domain import BalanceRange
 from finance.finance_manager_handler import FinanceHandler
 from helpers.datetime import get_current_datetime_utc, DatetimeCustom
 from tests.test_helpers import lambda_http_event
@@ -19,7 +19,8 @@ def setup_finance_handler():
     finance_manager_mock = Mock()
     finance_manager_mock.balance_instance_manager = balance_instance_mock
     finance_manager_mock.balance_change_manager = balance_changes_mock
-    finance_handler = FinanceHandler(finance_manager_mock)
+    finance_graph_handler_mock = Mock()
+    finance_handler = FinanceHandler(finance_manager_mock, finance_graph_handler_mock)
     return balance_instance_mock, balance_changes_mock, finance_manager_mock, finance_handler
 
 

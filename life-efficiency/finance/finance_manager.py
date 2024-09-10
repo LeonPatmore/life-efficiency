@@ -1,39 +1,10 @@
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from finance.balance_change_manager import BalanceChange, BalanceChangeManager
 from finance.balance_instance_manager import BalanceInstanceManager, BalanceInstance
-from helpers.datetime import datetime_to_string
-
-
-@dataclass(frozen=True)
-class BalanceHolderInstantSummary:
-    increase: float or None
-    holder: str
-    amount: float
-
-
-@dataclass
-class BalanceInstantSummary:
-    holders: list[BalanceHolderInstantSummary]
-    total: float
-    total_increase: float or None
-    balance_changes: set[BalanceChange]
-    total_increase_normalised: float or None
-
-
-@dataclass
-class BalanceRange:
-    balances: dict[datetime, BalanceInstantSummary]
-    all_holders: set[str]
-    step: timedelta
-
-    def to_json(self):
-        return {
-            "balances": {datetime_to_string(x): y for x, y in self.balances.items()},
-            "all_holders": self.all_holders,
-            "step": self.step
-        }
+from finance.finance_domain import BalanceHolderInstantSummary, BalanceInstantSummary, BalanceRange
+from finance.graphs.finance_graph_manager import FinanceGraphManager
+from finance.metadata.finance_metadata import FinanceMetadataLoader
 
 
 class FinanceManager:
@@ -41,10 +12,12 @@ class FinanceManager:
     def __init__(self,
                  date_generator: callable,
                  balance_instance_manager: BalanceInstanceManager,
-                 balance_change_manager: BalanceChangeManager):
+                 balance_change_manager: BalanceChangeManager,
+                 metadata_loader: FinanceMetadataLoader):
         self.date_generator = date_generator
         self.balance_instance_manager = balance_instance_manager
         self.balance_change_manager = balance_change_manager
+        self.metadata_loader = metadata_loader
 
     def get_balances_by_holder(self) -> dict:
         balances = {}
@@ -122,3 +95,6 @@ class FinanceManager:
             # noinspection PyCallingNonCallable
             value = change.reason.value(value, change.amount)
         return value
+
+    def generate_graph_manager(self, balance_range: BalanceRange):
+        return FinanceGraphManager(balance_range, self.metadata_loader.get_metadata())

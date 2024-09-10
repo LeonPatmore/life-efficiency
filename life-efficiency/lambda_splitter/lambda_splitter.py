@@ -24,8 +24,9 @@ class LambdaTarget:
 
 class LambdaSplitter(object):
 
-    def __init__(self, path_parameter_key: str):
+    def __init__(self, path_parameter_key: str, path_index: int = 0):
         self.path_parameter_key = path_parameter_key
+        self.path_index = path_index
         self.sub_handlers = dict()
 
     def add_sub_handler(self, sub_path: str, target: LambdaTarget, method: str = "GET"):
@@ -119,7 +120,7 @@ class LambdaSplitter(object):
 
     def _determine_method(self, event):
         sub_path = self.sanitise_path(event['pathParameters'][self.path_parameter_key])
-        sub_path_root = sub_path.split("/")[0]
+        sub_path_root = sub_path.split("/")[self.path_index]
         if sub_path_root in self.sub_handlers:
             method = self.sanitise_method(event['httpMethod'])
             if method in self.sub_handlers[sub_path_root]:
