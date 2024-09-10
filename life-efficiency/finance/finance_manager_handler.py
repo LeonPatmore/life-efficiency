@@ -84,3 +84,6 @@ class FinanceHandler(LambdaSplitter):
             response_handler=JsonResponseHandler(),
             validators=[RANGE_VALIDATOR]))
         self.add_sub_handler("graph", LambdaTarget(graph_handler))
+        self.add_sub_handler("metadata", LambdaTarget(
+            handler=finance_manager.metadata_loader.get_metadata,
+            response_handler=JsonResponseHandler()))

@@ -738,3 +738,14 @@ def test_finance_graph_weekly_difference(setup_mocks):
     assert body == {
         "link": "some-url"
     }
+
+
+def test_get_finance_metadata(setup_mocks):
+    import configuration
+
+    res = configuration.handler(lambda_http_event("finance", "metadata"))
+
+    assert 200 == res["statusCode"]
+    body = json.loads(res["body"])
+    assert body["yearly_salary"] == 1200.0
+    assert body["monthly_salary"] == 100.0
