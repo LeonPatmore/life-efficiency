@@ -13,7 +13,10 @@ Globals:
         POWERTOOLS_LOGGER_LOG_EVENT: true
         POWERTOOLS_METRICS_NAMESPACE: MyServerlessApplication
         POWERTOOLS_SERVICE_NAME: hello
-
+Mappings:
+  EnvironmentMap:
+    Dev: dev
+    Prod: prod
 Parameters:
   Environment:
     Type: String
@@ -26,7 +29,9 @@ Resources:
   Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "leon-patmore-life-efficiency-${Environment}"
+      BucketName: !Sub
+        - "leon-patmore-life-efficiency-${LowerEnvironment}"
+        - LowerEnvironment: !FindInMap [EnvironmentMap, !Sub "${Environment}"]
   ShoppingListTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
