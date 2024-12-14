@@ -70,6 +70,16 @@ Resources:
     Type: AWS::Serverless::SimpleTable
     Properties:
       TableName: !Sub "life-efficiency_${Environment}_balance_changes"
+  ShoppingItemIgnore:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "life-efficiency_${Environment}_shopping_item_ignore"
+      TimeToLiveSpecification:
+        Enabled: true
+        AttributeName: ttl
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
   LifeEfficiencyFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -101,6 +111,8 @@ Resources:
             TableName: !Sub "life-efficiency_${Environment}_balance_instances"
         - DynamoDBCrudPolicy:
             TableName: !Sub "life-efficiency_${Environment}_balance_changes"
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "life-efficiency_${Environment}_shopping_item_ignore"
       Events:
         CatchAll:
           Type: Api
