@@ -749,3 +749,50 @@ def test_get_finance_metadata(setup_mocks):
     body = json.loads(res["body"])
     assert body["yearly_salary"] == 1200.0
     assert body["monthly_salary"] == 100.0
+
+
+@pytest.mark.parametrize('setup_mocks',
+                         [{"life-efficiency_local_shopping-history": [
+                             {
+                                 "id": str(uuid.uuid4()),
+                                 "name": "item-1",
+                                 "Quantity": 1,
+                                 "Date": "01/01/1999, 01:00:00"
+                             },
+                             {
+                                 "id": str(uuid.uuid4()),
+                                 "name": "item-1",
+                                 "Quantity": 1,
+                                 "Date": "02/01/2000, 01:00:00"
+                             },
+                             {
+                                 "id": str(uuid.uuid4()),
+                                 "name": "item-2",
+                                 "Quantity": 1,
+                                 "Date": "01/01/2000, 01:00:00"
+                             },
+                             {
+                                 "id": str(uuid.uuid4()),
+                                 "name": "item-2",
+                                 "Quantity": 1,
+                                 "Date": "02/01/2000, 01:00:00"
+                             }
+                         ],
+                             "life-efficiency_local_repeating-items": [{"id": "item-1"}, {"id": "item-2"}]}],
+                         indirect=True)
+def test_todays_items_with_ignored(setup_mocks):
+    import configuration
+
+    get_today_no_ignore = configuration.handler(lambda_http_event("shopping", "today"))
+    assert 200 == get_today_no_ignore["statusCode"]
+    today_no_ignore = json.loads(get_today_no_ignore["body"])
+    assert today_no_ignore == ["item-1", "item-2"]
+
+    configuration.handler(lambda_http_event("shopping", "ignore", {
+        "item_name": "item-1"
+    }, "POST"))
+
+    get_today_with_ignore = configuration.handler(lambda_http_event("shopping", "today"))
+    assert 200 == get_today_with_ignore["statusCode"]
+    today_with_ignore = json.loads(get_today_with_ignore["body"])
+    assert today_with_ignore == ["item-2"]

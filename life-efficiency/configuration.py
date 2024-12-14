@@ -17,6 +17,7 @@ from helpers.datetime import get_current_datetime_utc
 from lambda_handler import LifeEfficiencyLambdaHandler
 from repository import repository
 from shopping.history.shopping_history import ShoppingHistory
+from shopping.ignore.shopping_ignore import ShoppingIgnore
 from shopping.list.shopping_list import ShoppingList
 from shopping.repeatingitems.shopping_repeating_items import RepeatingItems
 from shopping.shopping_lambda_handlers import ShoppingHandler
@@ -61,10 +62,12 @@ todo_weekly_manager = TodoWeeklyManagerDynamo(dynamodb.Table(get_table_full_name
                                               dynamodb.Table(get_table_full_name("todo-sets")),
                                               get_current_datetime_utc)
 goals_manager = GoalsManager()
+shopping_ignore = ShoppingIgnore()
 
 shopping_manager = ShoppingManager(shopping_history,
                                    shopping_list,
                                    repeating_items,
+                                   shopping_ignore,
                                    get_current_datetime_utc)
 shopping_handler = ShoppingHandler(shopping_manager)
 todo_handler = TodoHandler(todo_list_manager, todo_weekly_manager)

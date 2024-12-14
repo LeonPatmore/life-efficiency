@@ -52,3 +52,8 @@ class ShoppingHandler(LambdaSplitter):
                              'POST')
         self.add_sub_handler('repeating-details', LambdaTarget(self.shopping_manager.repeating_item_predictor,
                                                                response_handler=JsonResponseHandler()))
+        self.add_sub_handler('ignore',
+                             LambdaTarget(handler=lambda fields: self.shopping_manager.shopping_ignore.add_item(
+                                              fields["item_name"]),
+                                          validators=[JsonBodyValidator(["item_name"])],
+                                          response_handler=JsonResponseHandler()), method="POST")

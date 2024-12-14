@@ -1,3 +1,4 @@
+import json
 import sys
 import uuid
 
@@ -12,11 +13,13 @@ def cleanup_modules(modules):
 
 def lambda_http_event(command: str,
                       subcommand: str,
-                      body: str = None,
+                      body: str or dict = None,
                       method: str = "GET",
                       query_params: dict = None) -> dict:
     if query_params is None:
         query_params = {}
+    if type(body) is dict:
+        body = json.dumps(body)
     return {
         'httpMethod': method,
         'pathParameters': {

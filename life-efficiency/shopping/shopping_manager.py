@@ -2,6 +2,7 @@ import logging
 
 from lambda_splitter.errors import HTTPAwareException
 from shopping.history.shopping_history import ShoppingHistory, ShoppingItemPurchase
+from shopping.ignore.shopping_ignore import ShoppingIgnore
 from shopping.list.shopping_list import ShoppingList
 from shopping.predictor.shopping_predictor import ShoppingPredictor
 from shopping.repeatingitems.shopping_repeating_items import RepeatingItems
@@ -30,12 +31,13 @@ class ShoppingManager(object):
                  shopping_history: ShoppingHistory,
                  shopping_list: ShoppingList,
                  repeating_items: RepeatingItems,
+                 shopping_ignore: ShoppingIgnore,
                  current_timestamp_provider):
         self.current_timestamp_provider = current_timestamp_provider
         self.shopping_history = shopping_history
         self.shopping_list = shopping_list
         self.repeating_items = repeating_items
-
+        self.shopping_ignore = shopping_ignore
         self.reduction_functions = [self._check_shopping_list]
 
     @staticmethod
@@ -54,8 +56,10 @@ class ShoppingManager(object):
     def today_items(self) -> list[str]:
         shopping_predictor = ShoppingPredictor(self.shopping_history.get_all(),
                                                self.current_timestamp_provider())
+        ignored = self.shopping_ignore.get_all_within_ttl()
         predicted_repeating_items = [x.id for x in self.repeating_items.get_all()
-                                     if shopping_predictor.should_buy_today(x.id)]
+                                     if shopping_predictor.should_buy_today(x.id) and x.id not in ignored]
+
         shopping_list = []
         for list_item in self.shopping_list.get_all():
             for _ in range(list_item.quantity):

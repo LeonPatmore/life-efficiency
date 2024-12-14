@@ -5,6 +5,7 @@ import pytest
 from helpers.datetime import get_current_datetime_utc
 from repository import repository
 from shopping.history.shopping_history import ShoppingHistory, ShoppingItemPurchase
+from shopping.ignore.shopping_ignore import ShoppingIgnore
 from shopping.list.shopping_list import ShoppingList
 from shopping.repeatingitems.shopping_repeating_items import RepeatingItems, RepeatingItem
 from shopping.shopping_manager import ShoppingManager, UnexpectedBuyException
@@ -45,6 +46,7 @@ def setup_shopping_manager(request):
     shopping_manager = ShoppingManager(shopping_history,
                                        test_shopping_list,
                                        repeating_items_obj,
+                                       ShoppingIgnore(),
                                        lambda: CURRENT_TIME + timedelta(days=1))
 
     return shopping_manager, test_shopping_list, shopping_history
