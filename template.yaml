@@ -75,6 +75,9 @@ Resources:
     Properties:
       TableName: !Sub "life-efficiency_${Environment}_shopping_item_ignore"
       BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
       TimeToLiveSpecification:
         Enabled: true
         AttributeName: ttl
