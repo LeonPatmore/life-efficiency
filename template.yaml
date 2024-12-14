@@ -74,6 +74,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub "life-efficiency_${Environment}_shopping_item_ignore"
+      BillingMode: PAY_PER_REQUEST
       TimeToLiveSpecification:
         Enabled: true
         AttributeName: ttl
