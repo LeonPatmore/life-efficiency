@@ -185,7 +185,7 @@ def test_repeating_items(setup_mocks):
 
     item_name = str(uuid.uuid4())
 
-    configuration.handler({
+    create_res = configuration.handler({
         'httpMethod': "POST",
         'pathParameters': {
             "command": "shopping",
@@ -193,6 +193,7 @@ def test_repeating_items(setup_mocks):
         },
         "body": f"""{{"item": "{item_name}"}}"""
     }, {})
+    assert 200 == create_res["statusCode"]
 
     res = configuration.handler({
         'httpMethod': "GET",

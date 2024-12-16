@@ -48,7 +48,9 @@ class ShoppingHandler(LambdaSplitter):
                                                        response_handler=JsonResponseHandler()))
         self.add_sub_handler('repeating',
                              LambdaTarget(lambda fields: self.shopping_manager.repeating_items.add(
-                                 RepeatingItem(fields['item'])), [JsonBodyValidator(["item"])]),
+                                 RepeatingItem(fields['item'])),
+                                          validators=[JsonBodyValidator(["item"])],
+                                          response_handler=JsonResponseHandler()),
                              'POST')
         self.add_sub_handler('repeating-details', LambdaTarget(self.shopping_manager.repeating_item_predictor,
                                                                response_handler=JsonResponseHandler()))
