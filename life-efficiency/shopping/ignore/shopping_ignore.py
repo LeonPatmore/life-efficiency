@@ -14,6 +14,9 @@ class ShoppingItemIgnore:
     item_name: str
     id: str = None
 
+    def __post_init__(self):
+        self.item_name = self.item_name.strip().lower()
+
 
 class ShoppingIgnore(Repository[ShoppingItemIgnore]):
 
