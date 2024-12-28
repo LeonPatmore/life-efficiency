@@ -5,8 +5,10 @@ from unittest.mock import Mock
 
 import pytest
 
+from helpers.datetime import get_current_datetime_utc
 from tests.dynamo_db_mock import DynamoDbMock
 from tests.test_helpers import cleanup_modules, lambda_http_event
+from todo.weekly.todo_weekly_manager_dynamo import TodoWeeklyManagerDynamo
 
 
 @pytest.fixture(autouse=True)
@@ -409,6 +411,81 @@ def test_weekly_todos_by_day(setup_mocks):
     assert len(res_json) == 1
 
     assert res_json[0]["id"] == 1
+
+
+@pytest.mark.parametrize('setup_mocks',
+                         [{
+                             "life-efficiency_local_weekly-todos": [
+                                 {"id": "1", "Day": 1, "Desc": "something", "SetId": "setOne",
+                                  f"Week_{TodoWeeklyManagerDynamo._get_time_id(get_current_datetime_utc)}": 1}
+                             ]
+                         }],
+                         indirect=True)
+def test_weekly_todos_when_complete(setup_mocks):
+    import configuration
+
+    res = configuration.handler(lambda_http_event("todo", "weekly"))
+
+    assert 200 == res["statusCode"]
+    res_json = json.loads(res["body"])
+    assert len(res_json) == 1
+
+    assert res_json[0]["id"] == 1
+    assert res_json[0]["complete"]
+
+
+@pytest.mark.parametrize('setup_mocks',
+                         [{
+                             "life-efficiency_local_weekly-todos": [
+                                 {"id": "1", "Day": 1, "Desc": "something", "SetId": "setOne",
+                                  f"Week_{TodoWeeklyManagerDynamo._get_time_id(get_current_datetime_utc)-1}": 1}
+                             ]
+                         }],
+                         indirect=True)
+def test_weekly_todos_completed_last_week_still_shows(setup_mocks):
+    import configuration
+
+    res = configuration.handler(lambda_http_event("todo", "weekly"))
+
+    assert 200 == res["statusCode"]
+    res_json = json.loads(res["body"])
+    assert len(res_json) == 1
+
+
+@pytest.mark.parametrize('setup_mocks',
+                         [{
+                             "life-efficiency_local_weekly-todos": [
+                                 {"id": "1", "Day": 1, "Desc": "something", "SetId": "setOne", "WeekFrequency": 2,
+                                  f"Week_{TodoWeeklyManagerDynamo._get_time_id(get_current_datetime_utc)-1}": 1}
+                             ]
+                         }],
+                         indirect=True)
+def test_weekly_todos_completed_last_week_and_biweekly_does_not_show(setup_mocks):
+    import configuration
+
+    res = configuration.handler(lambda_http_event("todo", "weekly"))
+
+    assert 200 == res["statusCode"]
+    res_json = json.loads(res["body"])
+    assert len(res_json) == 0
+
+
+@pytest.mark.parametrize('setup_mocks',
+                         [{
+                             "life-efficiency_local_weekly-todos": [
+                                 {"id": "1", "Day": 1, "Desc": "something", "SetId": "setOne", "WeekFrequency": 2,
+                                  f"Week_{TodoWeeklyManagerDynamo._get_time_id(get_current_datetime_utc)-2}": 1}
+                             ]
+                         }],
+                         indirect=True)
+def test_weekly_todos_completed_two_weeks_ago_and_biweekly_shows(setup_mocks):
+    import configuration
+
+    res = configuration.handler(lambda_http_event("todo", "weekly"))
+
+    assert 200 == res["statusCode"]
+    res_json = json.loads(res["body"])
+    assert len(res_json) == 1
 
 
 @pytest.mark.parametrize('setup_mocks',
