@@ -43,8 +43,10 @@ class TodoWeeklyManagerDynamo(TodoWeeklyManager):
 
     @staticmethod
     def _get_weeks_since_last_done(item: dict, current_time_id: int) -> int or None:
-        completed_attributes = sorted(list(
-            filter(lambda x: x.startswith("Week_") and x is not f"Week_{current_time_id}", item.keys())))
+        completed_attributes = sorted(
+            list(filter(lambda x: x.startswith("Week_") and x is not f"Week_{current_time_id}", item.keys())),
+            key=lambda x: int(x.split("_")[1]),
+            reverse=True)
         for attribute in completed_attributes:
             if int(item[attribute]) == 1:
                 return current_time_id - int(attribute.split("_")[1])

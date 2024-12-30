@@ -456,6 +456,8 @@ def test_weekly_todos_completed_last_week_still_shows(setup_mocks):
                          [{
                              "life-efficiency_local_weekly-todos": [
                                  {"id": "1", "Day": 1, "Desc": "something", "SetId": "setOne", "WeekFrequency": 2,
+                                  "Week_1": 1, "Week_2": 1, "Week_3": 1, "Week_4": 1, "Week_5": 1, "Week_6": 1,
+                                  "Week_7": 1, "Week_8": 1, "Week_9": 1,
                                   f"Week_{TodoWeeklyManagerDynamo._get_time_id(get_current_datetime_utc)-1}": 1}
                              ]
                          }],
