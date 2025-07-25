@@ -197,16 +197,19 @@ def test_repeating_items(setup_mocks):
     }, {})
     assert 200 == create_res["statusCode"]
 
-    res = configuration.handler({
-        'httpMethod': "GET",
-        'pathParameters': {
-            "command": "shopping",
-            "subcommand": "repeating"
-        }
-    }, {})
-
+    res = configuration.handler(lambda_http_event("shopping", "repeating"))
     assert 200 == res["statusCode"]
     assert item_name in json.loads(res["body"])
+
+    res = configuration.handler(lambda_http_event("shopping",
+                                                  "repeating",
+                                                  method="DELETE",
+                                                  query_params={"item": item_name}))
+    assert 200 == res["statusCode"]
+
+    res = configuration.handler(lambda_http_event("shopping", "repeating"))
+    assert 200 == res["statusCode"]
+    assert item_name not in json.loads(res["body"])
 
 
 def test_repeating_items_removes_whitespace(setup_mocks):
