@@ -1,0 +1,9 @@
+# Run Tests and Linting After Changes
+
+After making code changes, always run:
+
+1. **Linting**: `make lint`
+2. **Tests**: `make test`
+
+Run these before considering the change complete. Fix any failures before finishing.
+
