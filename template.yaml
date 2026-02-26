@@ -4,7 +4,7 @@ Description: "Life efficiency endpoints!"
 Globals:
   Function:
     Timeout: 30
-    Runtime: python3.12
+    Runtime: python3.14
     Tracing: Active
     Environment:
       Variables:
@@ -26,6 +26,46 @@ Parameters:
     AllowedValues:
       - Dev
       - Prod
+  TelegramTargetChatUsername:
+    Type: String
+    Default: ""
+    Description: "Telegram username of the chat to monitor (e.g. johndoe or @johndoe)"
+  TelegramSecretArn:
+    Type: String
+    Default: ""
+    Description: "ARN of Secrets Manager secret with keys api_id and api_hash (Telegram credentials from my.telegram.org)"
+  TelegramSessionString:
+    Type: String
+    Default: ""
+    Description: "Telethon StringSession"
+  ReplyAlertThresholdHours:
+    Type: String
+    Default: "3"
+    Description: "Telegram stale-reply threshold in hours"
+  MailgunDomain:
+    Type: String
+    Default: ""
+    Description: "Mailgun sending domain (e.g. mg.example.com)"
+  MailgunApiKey:
+    Type: String
+    Default: ""
+    NoEcho: true
+    Description: "Mailgun API key"
+  MailgunFrom:
+    Type: String
+    Default: ""
+    Description: "Mailgun from address (e.g. Life Efficiency <postmaster@mg.example.com>)"
+  MailgunTo:
+    Type: String
+    Default: "leon.patmore@gmail.com,leon.patmore@gendigital.com"
+    Description: "Comma-separated recipient list"
+  MailgunAlertWindowMinutes:
+    Type: String
+    Default: "20"
+    Description: "Only send the email when crossing the threshold within this window"
+
+Conditions:
+  HasTelegramSecret: !Not [!Equals [!Ref TelegramSecretArn, ""]]
 
 Resources:
   Bucket:
@@ -124,6 +164,44 @@ Resources:
             Path: /{command}/{subcommand+}
             Method: any
             RestApiId: !Ref Api
+  TelegramCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: telegram.handler.handler
+      CodeUri: life-efficiency
+      Description: Check Telegram chat for stale replies every 15 minutes
+      Timeout: 30
+      Layers:
+        - "arn:aws:lambda:eu-west-1:015030872274:layer:AWS-Parameters-and-Secrets-Lambda-Extension:63"
+      Environment:
+        Variables:
+          TARGET_CHAT_USERNAME: !Ref TelegramTargetChatUsername
+          TELEGRAM_SECRET_ARN: !Ref TelegramSecretArn
+          TELEGRAM_SESSION_STRING: !Ref TelegramSessionString
+          REPLY_ALERT_THRESHOLD_HOURS: !Ref ReplyAlertThresholdHours
+          MAILGUN_DOMAIN: !Ref MailgunDomain
+          MAILGUN_API_KEY: !Ref MailgunApiKey
+          MAILGUN_FROM: !Ref MailgunFrom
+          MAILGUN_TO: !Ref MailgunTo
+          MAILGUN_ALERT_WINDOW_MINUTES: !Ref MailgunAlertWindowMinutes
+          AWS_ENDPOINT_URL: ""
+          AWS_DEFAULT_REGION: "eu-west-1"
+      Policies:
+        - !If
+          - HasTelegramSecret
+          - Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref TelegramSecretArn
+          - !Ref AWS::NoValue
+      Events:
+        EveryFifteenMinutes:
+          Type: Schedule
+          Properties:
+            # EventBridge cron is evaluated in UTC. 11:00–11:59 MYT (UTC+8) == 03:00–03:59 UTC.
+            Schedule: cron(0/15 3 ? * * *)
+            Description: Run Telegram reply check every 15 minutes during 11am-12pm MYT
   Api:
     Type: AWS::Serverless::Api
     Properties:

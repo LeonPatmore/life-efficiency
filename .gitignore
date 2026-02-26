@@ -6,3 +6,5 @@ credentials.json
 **/__pycache__
 .aws-sam
 **/test*.png
+local/telegram_env.json
+local/telegram_secrets.json

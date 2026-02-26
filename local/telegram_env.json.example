@@ -1,0 +1,16 @@
+{
+  "TelegramCheckFunction": {
+    "AWS_ENDPOINT_URL": "http://localstack:4566",
+    "AWS_DEFAULT_REGION": "eu-west-1",
+    "AWS_ACCESS_KEY_ID": "test",
+    "AWS_SECRET_ACCESS_KEY": "test",
+    "TELEGRAM_SECRET_ARN": "telegram",
+    "TARGET_CHAT_USERNAME": "username-to-monitor",
+    "REPLY_ALERT_THRESHOLD_HOURS": "3",
+    "MAILGUN_DOMAIN": "your-mailgun-domain.example",
+    "MAILGUN_API_KEY": "your-mailgun-api-key",
+    "MAILGUN_FROM": "Life Efficiency <postmaster@your-mailgun-domain.example>",
+    "MAILGUN_TO": "leon.patmore@gmail.com,leon.patmore@gendigital.com",
+    "MAILGUN_ALERT_WINDOW_MINUTES": "20"
+  }
+}

@@ -11,6 +11,9 @@ run: build
 	cd local && docker-compose -f compose.yaml up -d
 	sam local start-api --docker-network life-efficiency --debug-port 1234 --skip-pull-image --warm-containers EAGER --docker-network life-efficiency --parameter-overrides ParameterKey=Environment,ParameterValue=local --container-env-vars local/local_env.json
 
+invoke-telegram-check: build
+	sam local invoke TelegramCheckFunction --event events/telegram_schedule.json --env-vars local/telegram_env.json --parameter-overrides ParameterKey=Environment,ParameterValue=local
+
 deploy-dev: build
 	sam deploy --no-confirm-changeset --region eu-west-1 --stack-name life-efficiency-dev --parameter-overrides ParameterKey=Environment,ParameterValue=Dev
 
