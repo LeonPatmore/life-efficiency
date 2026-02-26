@@ -1,0 +1,26 @@
+---
+description: Keep comments and docstrings minimal; prefer clear names
+alwaysApply: true
+---
+
+# Comments and Docstrings
+
+- **Keep comments and docstrings to a minimum.** Only add them for statements that genuinely need clarification (e.g. non-obvious business logic, workarounds, or subtle bugs).
+- **Prefer clear function and variable names over comments.** If a comment is needed to explain what something does, consider renaming it instead.
+
+## Examples
+
+```python
+# Prefer clear names
+def calculate_weekly_difference(current: float, previous: float) -> float:
+    return current - previous
+
+# Avoid redundant docstrings for obvious functions
+# BAD: """Subtracts previous from current and returns the result."""
+```
+
+```python
+# Add comments only when clarification is needed
+# Workaround: API returns UTC but we need local midnight for reporting
+report_date = utc_to_local_midnight(api_timestamp)
+```
