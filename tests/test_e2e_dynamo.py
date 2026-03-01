@@ -20,6 +20,7 @@ def reset_configuration():
 
 @pytest.fixture
 def setup_mocks(request, monkeypatch):
+    monkeypatch.setenv("ENV", "local")
     monkeypatch.setenv("S3_BUCKET_NAME", "life-efficiency")
     boto3_mock = Mock()
     sys.modules['boto3'] = boto3_mock

@@ -109,6 +109,38 @@ def _parse_api_id(api_id_str: str) -> int | dict:
         return {"status": "error", "reason": "invalid TELEGRAM_API_ID"}
 
 
+def _load_checker_config() -> dict | tuple[dict, int, str, str, str, float]:
+    api_id_str = os.environ.get("TELEGRAM_API_ID", "").strip()
+    api_hash_env = os.environ.get("TELEGRAM_API_HASH", "").strip()
+    session_string = os.environ.get("TELEGRAM_SESSION_STRING")
+    target_chat_username = os.environ.get("TARGET_CHAT_USERNAME")
+    threshold_str = os.environ.get("REPLY_ALERT_THRESHOLD_HOURS", "2.5")
+
+    if not target_chat_username:
+        logger.error("Missing required env var TARGET_CHAT_USERNAME; skipping Telegram reply check")
+        return {"status": "skipped", "reason": "missing env: TARGET_CHAT_USERNAME"}
+    if not api_id_str or not api_hash_env:
+        logger.error("Missing credentials: set TELEGRAM_API_ID and TELEGRAM_API_HASH")
+        return {"status": "skipped", "reason": "missing env: TELEGRAM_API_ID/TELEGRAM_API_HASH"}
+    if not session_string:
+        logger.error("Missing required TELEGRAM_SESSION_STRING; skipping Telegram reply check")
+        return {"status": "skipped", "reason": "missing env: TELEGRAM_SESSION_STRING"}
+
+    parsed_api_id = _parse_api_id(api_id_str)
+    if isinstance(parsed_api_id, dict):
+        return parsed_api_id
+    threshold_hours = _parse_threshold_hours(threshold_str)
+
+    return (
+        {},
+        parsed_api_id,
+        api_hash_env,
+        session_string,
+        target_chat_username.strip(),
+        threshold_hours,
+    )
+
+
 def handler(event, context):
     start = time.perf_counter()
     request_id = getattr(context, "aws_request_id", "unknown")
@@ -123,40 +155,19 @@ def handler(event, context):
         if load_error:
             return load_error
 
-    api_id_str = os.environ.get("TELEGRAM_API_ID", "").strip()
-    api_hash_env = os.environ.get("TELEGRAM_API_HASH", "").strip()
-    session_string = os.environ.get("TELEGRAM_SESSION_STRING")
-    target_chat_username = os.environ.get("TARGET_CHAT_USERNAME")
-    threshold_str = os.environ.get("REPLY_ALERT_THRESHOLD_HOURS", "2.5")
-
-    if not target_chat_username:
-        logger.error("Missing required env var TARGET_CHAT_USERNAME; skipping Telegram reply check")
-        return {"status": "skipped", "reason": "missing env: TARGET_CHAT_USERNAME"}
-
-    if not api_id_str or not api_hash_env:
-        logger.error("Missing credentials: set TELEGRAM_API_ID and TELEGRAM_API_HASH")
-        return {"status": "skipped", "reason": "missing env: TELEGRAM_API_ID/TELEGRAM_API_HASH"}
-
-    parsed_api_id = _parse_api_id(api_id_str)
-    if isinstance(parsed_api_id, dict):
-        return parsed_api_id
-    api_id = parsed_api_id
-    api_hash = api_hash_env
-
-    if not session_string:
-        logger.error("Missing required TELEGRAM_SESSION_STRING; skipping Telegram reply check")
-        return {"status": "skipped", "reason": "missing env: TELEGRAM_SESSION_STRING"}
-
-    threshold_hours = _parse_threshold_hours(threshold_str)
+    config_result = _load_checker_config()
+    if isinstance(config_result, dict):
+        return config_result
+    _, api_id, api_hash, session_string, target_chat_username, threshold_hours = config_result
 
     try:
         checker_start = time.perf_counter()
-        logger.info("Running Telegram checker for chat [%s]", target_chat_username.strip())
+        logger.info("Running Telegram checker for chat [%s]", target_chat_username)
         stats = check_reply_age(
             api_id=api_id,
             api_hash=api_hash,
             session_string=session_string,
-            target_chat_username=target_chat_username.strip(),
+            target_chat_username=target_chat_username,
             max_age_hours=threshold_hours,
         )
         logger.info("Telegram checker finished in %.1fms", (time.perf_counter() - checker_start) * 1000)
@@ -168,7 +179,7 @@ def handler(event, context):
             email_start = time.perf_counter()
             logger.info("Threshold crossed, sending Mailgun alert (%s)", email_decision)
             email = send_stale_reply_alert_if_configured(
-                chat_username=target_chat_username.strip(),
+                chat_username=target_chat_username,
                 threshold_hours=threshold_hours,
                 stats=stats,
             )

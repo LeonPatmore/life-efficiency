@@ -100,6 +100,7 @@ Resources:
         Variables:
           ENV: !Sub "${Environment}"
           S3_BUCKET_NAME: !Ref Bucket
+          MPLCONFIGDIR: /tmp
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref Bucket

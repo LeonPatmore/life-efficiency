@@ -43,6 +43,74 @@ def _probe_tcp(host: str, port: int, timeout_seconds: float) -> None:
         )
 
 
+def _extract_message_timings(messages: list, now: datetime) -> dict:
+    latest_message_out = None
+    if messages:
+        latest_message_out = bool(getattr(messages[0], "out", False))
+
+    latest_incoming = None
+    latest_outgoing = None
+    for msg in messages:
+        if latest_outgoing is None and getattr(msg, "out", False):
+            latest_outgoing = msg
+        if latest_incoming is None and not getattr(msg, "out", True):
+            latest_incoming = msg
+        if latest_incoming is not None and latest_outgoing is not None:
+            break
+
+    latest_incoming_time = _ensure_utc(latest_incoming.date) if latest_incoming else None
+    latest_outgoing_time = _ensure_utc(latest_outgoing.date) if latest_outgoing else None
+    incoming_times = [_ensure_utc(msg.date) for msg in messages if not getattr(msg, "out", True)]
+
+    latest_incoming_age_hours = (
+        (now - latest_incoming_time).total_seconds() / 3600.0 if latest_incoming_time else None
+    )
+    latest_outgoing_age_hours = (
+        (now - latest_outgoing_time).total_seconds() / 3600.0 if latest_outgoing_time else None
+    )
+
+    return {
+        "latest_message_out": latest_message_out,
+        "latest_incoming_time": latest_incoming_time,
+        "latest_outgoing_time": latest_outgoing_time,
+        "incoming_times": incoming_times,
+        "latest_incoming_age_hours": latest_incoming_age_hours,
+        "latest_outgoing_age_hours": latest_outgoing_age_hours,
+    }
+
+
+def _first_unreplied_incoming_time(
+    incoming_times: list[datetime], latest_outgoing_time: datetime | None
+) -> datetime | None:
+    if not incoming_times:
+        return None
+    if latest_outgoing_time is None:
+        return min(incoming_times)
+    unreplied_candidates = [dt for dt in incoming_times if dt > latest_outgoing_time]
+    if unreplied_candidates:
+        return min(unreplied_candidates)
+    return None
+
+
+def _build_alert_state(
+    *,
+    now: datetime,
+    incoming_times: list[datetime],
+    latest_outgoing_time: datetime | None,
+) -> tuple[bool, float | None, datetime | None]:
+    first_unreplied_incoming_time = _first_unreplied_incoming_time(
+        incoming_times=incoming_times,
+        latest_outgoing_time=latest_outgoing_time,
+    )
+    needs_reply = first_unreplied_incoming_time is not None
+    unreplied_age_hours = (
+        (now - first_unreplied_incoming_time).total_seconds() / 3600.0
+        if first_unreplied_incoming_time
+        else None
+    )
+    return needs_reply, unreplied_age_hours, first_unreplied_incoming_time
+
+
 async def check_reply_age_async(
     api_id: int,
     api_hash: str,
@@ -90,47 +158,13 @@ async def check_reply_age_async(
         messages_start = time.perf_counter()
         messages = await client.get_messages(entity, limit=STATS_MESSAGE_LIMIT)
         logger.info("Telegram get_messages finished in %.1fms", (time.perf_counter() - messages_start) * 1000)
-        latest_message_out = None
-        if messages:
-            latest_message_out = bool(getattr(messages[0], "out", False))
-        latest_incoming = None
-        latest_outgoing = None
-        for msg in messages:
-            if latest_outgoing is None and getattr(msg, "out", False):
-                latest_outgoing = msg
-            if latest_incoming is None and not getattr(msg, "out", True):
-                latest_incoming = msg
-            if latest_incoming is not None and latest_outgoing is not None:
-                break
 
         now = datetime.now(timezone.utc)
-        latest_incoming_time = _ensure_utc(latest_incoming.date) if latest_incoming else None
-        latest_outgoing_time = _ensure_utc(latest_outgoing.date) if latest_outgoing else None
-        incoming_times = [
-            _ensure_utc(msg.date) for msg in messages if not getattr(msg, "out", True)
-        ]
-
-        latest_incoming_age_hours = (
-            (now - latest_incoming_time).total_seconds() / 3600.0 if latest_incoming_time else None
-        )
-        latest_outgoing_age_hours = (
-            (now - latest_outgoing_time).total_seconds() / 3600.0 if latest_outgoing_time else None
-        )
-
-        first_unreplied_incoming_time = None
-        if incoming_times:
-            if latest_outgoing_time is None:
-                first_unreplied_incoming_time = min(incoming_times)
-            else:
-                unreplied_candidates = [dt for dt in incoming_times if dt > latest_outgoing_time]
-                if unreplied_candidates:
-                    first_unreplied_incoming_time = min(unreplied_candidates)
-
-        needs_reply = first_unreplied_incoming_time is not None
-        unreplied_age_hours = (
-            (now - first_unreplied_incoming_time).total_seconds() / 3600.0
-            if first_unreplied_incoming_time
-            else None
+        timings = _extract_message_timings(messages=messages, now=now)
+        needs_reply, unreplied_age_hours, first_unreplied_incoming_time = _build_alert_state(
+            now=now,
+            incoming_times=timings["incoming_times"],
+            latest_outgoing_time=timings["latest_outgoing_time"],
         )
 
         logger.info(
@@ -139,13 +173,13 @@ async def check_reply_age_async(
             "unreplied_age_hours=%s latest_message_out=%s needs_reply=%s "
             "(checked_at=%s, threshold_hours=%.1f)",
             target_chat_username,
-            latest_incoming_time.isoformat() if latest_incoming_time else None,
-            round(latest_incoming_age_hours, 2) if latest_incoming_age_hours is not None else None,
-            latest_outgoing_time.isoformat() if latest_outgoing_time else None,
-            round(latest_outgoing_age_hours, 2) if latest_outgoing_age_hours is not None else None,
+            timings["latest_incoming_time"].isoformat() if timings["latest_incoming_time"] else None,
+            round(timings["latest_incoming_age_hours"], 2) if timings["latest_incoming_age_hours"] is not None else None,
+            timings["latest_outgoing_time"].isoformat() if timings["latest_outgoing_time"] else None,
+            round(timings["latest_outgoing_age_hours"], 2) if timings["latest_outgoing_age_hours"] is not None else None,
             first_unreplied_incoming_time.isoformat() if first_unreplied_incoming_time else None,
             round(unreplied_age_hours, 2) if unreplied_age_hours is not None else None,
-            latest_message_out,
+            timings["latest_message_out"],
             needs_reply,
             now.isoformat(),
             max_age_hours,
@@ -177,12 +211,12 @@ async def check_reply_age_async(
         return {
             "alerted": alerted,
             "needs_reply": needs_reply,
-            "latest_message_out": latest_message_out,
+            "latest_message_out": timings["latest_message_out"],
             "checked_at": now.isoformat(),
-            "last_incoming_at": latest_incoming_time.isoformat() if latest_incoming_time else None,
-            "last_incoming_age_hours": latest_incoming_age_hours,
-            "last_outgoing_at": latest_outgoing_time.isoformat() if latest_outgoing_time else None,
-            "last_outgoing_age_hours": latest_outgoing_age_hours,
+            "last_incoming_at": timings["latest_incoming_time"].isoformat() if timings["latest_incoming_time"] else None,
+            "last_incoming_age_hours": timings["latest_incoming_age_hours"],
+            "last_outgoing_at": timings["latest_outgoing_time"].isoformat() if timings["latest_outgoing_time"] else None,
+            "last_outgoing_age_hours": timings["latest_outgoing_age_hours"],
             "first_unreplied_incoming_at": (
                 first_unreplied_incoming_time.isoformat() if first_unreplied_incoming_time else None
             ),

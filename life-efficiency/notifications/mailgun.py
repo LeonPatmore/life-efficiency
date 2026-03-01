@@ -134,4 +134,3 @@ def send_stale_reply_alert_if_configured(
     except Exception as e:
         logger.exception("Mailgun alert email exception: %s", e)
         return {"sent": False, "reason": str(e)}
-
