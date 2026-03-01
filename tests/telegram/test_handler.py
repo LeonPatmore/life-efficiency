@@ -47,7 +47,7 @@ def test_handler_uses_default_threshold_when_invalid():
     assert result["status"] == "ok"
     mock_check.assert_called_once()
     call_kw = mock_check.call_args[1]
-    assert call_kw["max_age_hours"] == 3.0
+    assert call_kw["max_age_hours"] == 2.5
 
 
 def test_handler_sends_email_when_threshold_crossed():
@@ -56,7 +56,6 @@ def test_handler_sends_email_when_threshold_crossed():
         _env_with_secret_arn(
             {
                 "REPLY_ALERT_THRESHOLD_HOURS": "3",
-                "MAILGUN_ALERT_WINDOW_MINUTES": "20",
             }
         ),
         clear=True,
@@ -79,13 +78,12 @@ def test_handler_sends_email_when_threshold_crossed():
     mock_send.assert_called_once()
 
 
-def test_handler_does_not_send_email_outside_window():
+def test_handler_sends_email_when_age_is_above_threshold():
     with patch.dict(
         os.environ,
         _env_with_secret_arn(
             {
                 "REPLY_ALERT_THRESHOLD_HOURS": "3",
-                "MAILGUN_ALERT_WINDOW_MINUTES": "20",
             }
         ),
         clear=True,
@@ -101,10 +99,11 @@ def test_handler_does_not_send_email_outside_window():
                 },
             ):
                 with patch("telegram.handler.send_stale_reply_alert_if_configured") as mock_send:
+                    mock_send.return_value = {"sent": True}
                     result = handler({}, None)
     assert result["status"] == "ok"
-    assert result["email"] is None
-    mock_send.assert_not_called()
+    assert result["email"] == {"sent": True}
+    mock_send.assert_called_once()
 
 
 def test_handler_calls_checker_with_stripped_username():
@@ -188,7 +187,6 @@ def test_handler_never_sends_email_when_latest_message_is_outgoing():
         _env_with_secret_arn(
             {
                 "REPLY_ALERT_THRESHOLD_HOURS": "3",
-                "MAILGUN_ALERT_WINDOW_MINUTES": "20",
             }
         ),
         clear=True,

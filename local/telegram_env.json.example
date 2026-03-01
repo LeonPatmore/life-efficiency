@@ -5,12 +5,11 @@
     "AWS_ACCESS_KEY_ID": "test",
     "AWS_SECRET_ACCESS_KEY": "test",
     "TELEGRAM_SECRET_ARN": "telegram",
-    "TARGET_CHAT_USERNAME": "username-to-monitor",
-    "REPLY_ALERT_THRESHOLD_HOURS": "3",
+    "TARGET_CHAT_USERNAME": "target-chat-username",
+    "REPLY_ALERT_THRESHOLD_HOURS": "2.5",
     "MAILGUN_DOMAIN": "your-mailgun-domain.example",
     "MAILGUN_API_KEY": "your-mailgun-api-key",
     "MAILGUN_FROM": "Life Efficiency <postmaster@your-mailgun-domain.example>",
-    "MAILGUN_TO": "leon.patmore@gmail.com,leon.patmore@gendigital.com",
-    "MAILGUN_ALERT_WINDOW_MINUTES": "20"
+    "MAILGUN_TO": "alerts@example.com"
   }
 }

@@ -1,0 +1,15 @@
+---
+description: Deploy immediately when user requests deployment
+alwaysApply: true
+---
+
+# Deployment Requests
+
+When the user requests deployment (for example "deploy", "deploy dev", or "push this to dev"), execute the deployment steps immediately without asking for additional confirmation.
+
+After deployment:
+1. Report whether deployment succeeded or failed.
+2. Include the target environment and stack.
+3. Include the key error if deployment fails and the next fix attempt.
+
+Do not ask "should I deploy?" after a direct deployment request.

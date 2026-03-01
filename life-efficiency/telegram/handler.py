@@ -73,24 +73,32 @@ def _parse_threshold_hours(threshold_str: str) -> float:
     try:
         return float(threshold_str)
     except ValueError:
-        logger.warning("Invalid REPLY_ALERT_THRESHOLD_HOURS %s; using 3", threshold_str)
-        return 3.0
+        logger.warning("Invalid REPLY_ALERT_THRESHOLD_HOURS %s; using 2.5", threshold_str)
+        return 2.5
 
 
-def _should_send_email_alert(*, stats: dict, threshold_hours: float) -> bool:
+def _should_send_email_alert(*, stats: dict, threshold_hours: float) -> tuple[bool, str]:
     if not stats.get("alerted"):
-        return False
+        return False, "skip email: checker did not alert"
     if not stats.get("needs_reply", False):
-        return False
+        return False, "skip email: needs_reply is false"
     if stats.get("latest_message_out") is True:
-        return False
+        return False, "skip email: latest message is outgoing"
     age = stats.get("unreplied_age_hours", stats.get("last_incoming_age_hours"))
     if age is None:
-        return False
+        return False, "skip email: no unreplied/last incoming age available"
 
-    window_minutes = float(os.environ.get("MAILGUN_ALERT_WINDOW_MINUTES", "20"))
-    window_hours = window_minutes / 60.0
-    return threshold_hours <= float(age) < (threshold_hours + window_hours)
+    age_hours = float(age)
+    should_send = age_hours >= threshold_hours
+    if should_send:
+        return (
+            True,
+            f"send email: age_hours={age_hours:.2f} is >= threshold_hours={threshold_hours:.2f}",
+        )
+    return (
+        False,
+        f"skip email: age_hours={age_hours:.2f} is below threshold_hours={threshold_hours:.2f}",
+    )
 
 
 def _parse_api_id(api_id_str: str) -> int | dict:
@@ -119,7 +127,7 @@ def handler(event, context):
     api_hash_env = os.environ.get("TELEGRAM_API_HASH", "").strip()
     session_string = os.environ.get("TELEGRAM_SESSION_STRING")
     target_chat_username = os.environ.get("TARGET_CHAT_USERNAME")
-    threshold_str = os.environ.get("REPLY_ALERT_THRESHOLD_HOURS", "3")
+    threshold_str = os.environ.get("REPLY_ALERT_THRESHOLD_HOURS", "2.5")
 
     if not target_chat_username:
         logger.error("Missing required env var TARGET_CHAT_USERNAME; skipping Telegram reply check")
@@ -155,15 +163,18 @@ def handler(event, context):
         if not isinstance(stats, dict):
             stats = {"alerted": False}
         email = None
-        if _should_send_email_alert(stats=stats, threshold_hours=threshold_hours):
+        should_send_email, email_decision = _should_send_email_alert(stats=stats, threshold_hours=threshold_hours)
+        if should_send_email:
             email_start = time.perf_counter()
-            logger.info("Threshold crossed, sending Mailgun alert")
+            logger.info("Threshold crossed, sending Mailgun alert (%s)", email_decision)
             email = send_stale_reply_alert_if_configured(
                 chat_username=target_chat_username.strip(),
                 threshold_hours=threshold_hours,
                 stats=stats,
             )
             logger.info("Mailgun alert step finished in %.1fms", (time.perf_counter() - email_start) * 1000)
+        else:
+            logger.info("Mailgun alert not sent (%s)", email_decision)
         logger.info("Telegram handler completed in %.1fms", (time.perf_counter() - start) * 1000)
         return {"status": "ok", "stats": stats, "email": email}
     except Exception as e:

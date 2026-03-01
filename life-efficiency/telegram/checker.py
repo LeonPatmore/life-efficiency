@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
-REPLY_ALERT_THRESHOLD_HOURS = 2.0
+REPLY_ALERT_THRESHOLD_HOURS = 2.5
 STATS_MESSAGE_LIMIT = 30
 TELEGRAM_CONNECT_TIMEOUT_SECONDS = 12.0
 
