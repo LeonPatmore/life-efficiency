@@ -27,6 +27,9 @@ Parameters:
       - Dev
       - Prod
 
+Conditions:
+  TelegramEventsEnabled: !Equals [!Ref Environment, Dev]
+
 Resources:
   Bucket:
     Type: AWS::S3::Bucket
@@ -86,6 +89,7 @@ Resources:
           KeyType: HASH
   TelegramEnvSecret:
     Type: AWS::SecretsManager::Secret
+    Condition: TelegramEventsEnabled
     Properties:
       Name: !Sub "life-efficiency/${Environment}/telegram-env"
       Description: "Key/value env vars for TelegramCheckFunction"
@@ -133,6 +137,7 @@ Resources:
             RestApiId: !Ref Api
   TelegramCheckFunction:
     Type: AWS::Serverless::Function
+    Condition: TelegramEventsEnabled
     Properties:
       Handler: telegram.handler.handler
       CodeUri: life-efficiency
