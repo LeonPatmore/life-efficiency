@@ -3,8 +3,8 @@ Transform: AWS::Serverless-2016-10-31
 Description: "Life efficiency endpoints!"
 Globals:
   Function:
-    Timeout: 30
-    Runtime: python3.12
+    Timeout: 60
+    Runtime: python3.14
     Tracing: Active
     Environment:
       Variables:
@@ -26,6 +26,9 @@ Parameters:
     AllowedValues:
       - Dev
       - Prod
+
+Conditions:
+  TelegramEventsEnabled: !Equals [!Ref Environment, Dev]
 
 Resources:
   Bucket:
@@ -84,6 +87,13 @@ Resources:
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+  TelegramEnvSecret:
+    Type: AWS::SecretsManager::Secret
+    Condition: TelegramEventsEnabled
+    Properties:
+      Name: !Sub "life-efficiency/${Environment}/telegram-env"
+      Description: "Key/value env vars for TelegramCheckFunction"
+      SecretString: "{}"
   LifeEfficiencyFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -94,6 +104,7 @@ Resources:
         Variables:
           ENV: !Sub "${Environment}"
           S3_BUCKET_NAME: !Ref Bucket
+          MPLCONFIGDIR: /tmp
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref Bucket
@@ -124,6 +135,34 @@ Resources:
             Path: /{command}/{subcommand+}
             Method: any
             RestApiId: !Ref Api
+  TelegramCheckFunction:
+    Type: AWS::Serverless::Function
+    Condition: TelegramEventsEnabled
+    Properties:
+      Handler: telegram.handler.handler
+      CodeUri: life-efficiency
+      Description: Check Telegram chat for stale replies every 15 minutes
+      Timeout: 60
+      MemorySize: 1024
+      Layers:
+        - "arn:aws:lambda:eu-west-1:015030872274:layer:AWS-Parameters-and-Secrets-Lambda-Extension:63"
+      Environment:
+        Variables:
+          TELEGRAM_SECRET_ARN: !Ref TelegramEnvSecret
+          AWS_ENDPOINT_URL: ""
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref TelegramEnvSecret
+      Events:
+        EveryFifteenMinutes:
+          Type: Schedule
+          Properties:
+            # EventBridge cron is evaluated in UTC. 11:00–23:59 MYT (UTC+8) == 03:00–15:59 UTC.
+            Schedule: cron(0/15 3-15 ? * * *)
+            Description: Run Telegram reply check every 15 minutes during 11am-11pm MYT
   Api:
     Type: AWS::Serverless::Api
     Properties:

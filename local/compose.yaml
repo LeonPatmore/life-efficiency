@@ -7,7 +7,7 @@ services:
     ports:
       - '4566:4566'
     environment:
-      - SERVICES=s3,dynamodb
+      - SERVICES=s3,dynamodb,secretsmanager
       - DEBUG=1
   app-node:
     depends_on:
@@ -23,6 +23,7 @@ services:
       - /bin/sh
     volumes:
       - ./finance_metadata.json:/app/finance_metadata.json
+      - ./telegram_secrets.json:/app/telegram_secrets.json:ro
     command:
       - -c
       - >-
@@ -37,6 +38,12 @@ services:
         aws dynamodb create-table --endpoint-url http://localstack:4566 --region eu-west-1 --table-name life-efficiency_local_balance_changes --key-schema AttributeName=id,KeyType=HASH --attribute-definitions AttributeName=id,AttributeType=S --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --table-class STANDARD;
         aws --region eu-west-1 --endpoint-url http://localstack:4566 s3api create-bucket --bucket life-efficiency --create-bucket-configuration LocationConstraint=eu-west-1;
         aws --endpoint-url http://localstack:4566 --region eu-west-1 s3 cp /app/finance_metadata.json s3://life-efficiency/finance_metadata.json;
+        SECRET_JSON="$$(cat /app/telegram_secrets.json)";
+        if aws --endpoint-url http://localstack:4566 --region eu-west-1 secretsmanager describe-secret --secret-id telegram >/dev/null 2>&1; then
+          aws --endpoint-url http://localstack:4566 --region eu-west-1 secretsmanager put-secret-value --secret-id telegram --secret-string "$$SECRET_JSON";
+        else
+          aws --endpoint-url http://localstack:4566 --region eu-west-1 secretsmanager create-secret --name telegram --secret-string "$$SECRET_JSON";
+        fi;
 
 networks:
   backend:

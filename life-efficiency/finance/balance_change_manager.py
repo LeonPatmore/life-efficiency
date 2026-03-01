@@ -1,16 +1,15 @@
 from dataclasses import replace, dataclass
 from datetime import datetime
 from enum import Enum
-from functools import partial
 
 from dynamo.dynamo_repository import dynamo_item
 from repository.repository import Repository
 
 
 class ChangeReason(Enum):
-    SALARY = partial(lambda base_amount, change_amount: base_amount - change_amount)
-    YEARLY_SPEND = partial(lambda base_amount, change_amount: base_amount + change_amount)
-    INVESTMENT = partial(lambda base_amount, change_amount: base_amount + change_amount)
+    SALARY = "salary"
+    YEARLY_SPEND = "yearly_spend"
+    INVESTMENT = "investment"
 
     @staticmethod
     def from_string(name):
@@ -18,6 +17,11 @@ class ChangeReason(Enum):
             if member.name.lower() == name.lower():
                 return member
         raise KeyError(f"{name} is not a valid {ChangeReason.__name__}")
+
+    def apply(self, base_amount: float, change_amount: float) -> float:
+        if self == ChangeReason.SALARY:
+            return base_amount - change_amount
+        return base_amount + change_amount
 
 
 @dynamo_item("balance_changes")

@@ -5,4 +5,7 @@ credentials.json
 .coverage
 **/__pycache__
 .aws-sam
+.sam-cli-venv
 **/test*.png
+local/telegram_env.json
+local/telegram_secrets.json

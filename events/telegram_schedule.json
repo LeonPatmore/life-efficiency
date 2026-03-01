@@ -1,0 +1,6 @@
+{
+  "version": "0",
+  "id": "local-test",
+  "detail-type": "Scheduled Event",
+  "source": "aws.events"
+}

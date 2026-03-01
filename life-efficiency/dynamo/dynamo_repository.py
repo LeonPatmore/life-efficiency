@@ -1,6 +1,7 @@
 import enum
 import re
 import uuid
+from dataclasses import fields, is_dataclass
 from datetime import datetime
 from decimal import Decimal
 
@@ -79,8 +80,13 @@ class DynamoRepository(RepositoryImplementation):
 
     def _get_key_value_from_dynamo_pair(self, key: str, value) -> tuple:
         attribute = self._dynamo_key_to_attribute(key)
-        value_type = vars(self.object_type)["__annotations__"][attribute]
-        final_value = self._dynamo_value_to_object(value, value_type)
+        value_type = None
+        if is_dataclass(self.object_type):
+            dataclass_fields = {field.name: field.type for field in fields(self.object_type)}
+            value_type = dataclass_fields.get(attribute)
+        else:
+            value_type = getattr(self.object_type, "__annotations__", {}).get(attribute)
+        final_value = self._dynamo_value_to_object(value, value_type) if value_type else value
         return attribute, final_value
 
     # noinspection PyTypeChecker

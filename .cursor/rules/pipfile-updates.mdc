@@ -1,0 +1,14 @@
+---
+description: Run pipenv lock and install after Pipfile changes
+globs: Pipfile
+alwaysApply: false
+---
+
+# Pipfile Updates
+
+After modifying the Pipfile, always run:
+
+1. `pipenv lock` — regenerate the lockfile
+2. `pipenv install` — install dependencies from the lockfile
+
+Run both commands before considering the change complete.

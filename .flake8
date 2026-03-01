@@ -1,5 +1,5 @@
 [flake8]
 max-line-length = 160
 max-complexity = 10
-exclude = .git, __pycache__, .aws-sam
+exclude = .git, __pycache__, .aws-sam, .sam-cli-venv
 extend-ignore = E731

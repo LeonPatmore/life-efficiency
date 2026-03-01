@@ -92,8 +92,7 @@ class FinanceManager:
     @staticmethod
     def get_value_after_normalisation(value: float, changes: list[BalanceChange]) -> float or None:
         for change in changes:
-            # noinspection PyCallingNonCallable
-            value = change.reason.value(value, change.amount)
+            value = change.reason.apply(value, change.amount)
         return value
 
     def generate_graph_manager(self, balance_range: BalanceRange):

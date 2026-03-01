@@ -27,7 +27,28 @@ We are using flake8 as our super cool Python linter.
 
 `make run`
 
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/sam.ps1` | Runs SAM CLI via a Python 3.12 venv. Use when `pipenv run sam` fails (e.g. on Python 3.14). |
+| `scripts/build-deploy-dev.ps1` | Clean build and deploy to dev: removes `.aws-sam`, regenerates requirements.txt (UTF-8), runs `sam build -u`, deploys. Use instead of `make deploy-dev` on Windows. |
+
 ## Deploying
+
+### SAM CLI on Python 3.14
+
+If your local environment uses Python 3.14, `pipenv run sam ...` can fail due to upstream SAM CLI
+dependency compatibility. Use the repo script below instead; it bootstraps a dedicated SAM CLI venv
+on Python 3.12:
+
+`powershell -ExecutionPolicy Bypass -File scripts/sam.ps1 --version`
+
+Examples:
+
+`powershell -ExecutionPolicy Bypass -File scripts/sam.ps1 build -u`
+
+`powershell -ExecutionPolicy Bypass -File scripts/sam.ps1 deploy --no-confirm-changeset --region eu-west-1 --stack-name life-efficiency-dev --parameter-overrides ParameterKey=Environment,ParameterValue=Dev`
 
 ### Dev
 

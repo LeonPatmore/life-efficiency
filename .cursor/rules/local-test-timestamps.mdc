@@ -1,0 +1,15 @@
+---
+description: Report timestamps after local test runs
+alwaysApply: true
+---
+
+# Local Test Timestamp Reporting
+
+When the user asks to run a local test or local invoke, always include timestamps in the result summary.
+
+Report, when available:
+1. Start timestamp from runtime logs.
+2. End/report timestamp or duration from runtime logs.
+3. Any function-level timestamps in the returned payload (for example `checked_at`, `last_incoming_at`, `last_outgoing_at`).
+
+If a timestamp is unavailable, explicitly say it was not present in output.

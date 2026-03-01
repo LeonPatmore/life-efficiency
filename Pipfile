@@ -1,13 +1,16 @@
 [requires]
-python_version = '3.12'
+python_version = '3.14'
 
 [packages]
 boto3 = "*"
 matplotlib = "*"
+numpy = "*"
+telethon = "*"
+requests = "*"
 
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
 flake8 = "*"
 python-dotenv = "*"
-requests = "*"
+aws-sam-cli = "*"
