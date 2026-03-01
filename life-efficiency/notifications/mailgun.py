@@ -2,8 +2,6 @@ import logging
 import os
 from typing import Iterable
 
-import requests
-
 logger = logging.getLogger(__name__)
 
 
@@ -22,6 +20,8 @@ def send_email_via_mailgun(
     from_email: str,
     timeout_seconds: int = 15,
 ) -> dict:
+    import requests
+
     url = f"https://api.mailgun.net/v3/{domain}/messages"
     to_list = list(to_emails)
     res = requests.post(

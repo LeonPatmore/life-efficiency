@@ -40,7 +40,7 @@ def test_handler_returns_error_when_secret_invalid():
 
 def test_handler_uses_default_threshold_when_invalid():
     with patch.dict(os.environ, _env_with_secret_arn(), clear=True):
-        with patch("telegram.handler._get_secret_json", return_value={"api_id": "12345", "api_hash": "abc"}):
+        with patch("telegram.handler._get_secret_json", return_value={"TELEGRAM_API_ID": "12345", "TELEGRAM_API_HASH": "abc"}):
             with patch("telegram.handler.check_reply_age") as mock_check:
                 mock_check.return_value = None
                 result = handler({}, None)
@@ -61,7 +61,7 @@ def test_handler_sends_email_when_threshold_crossed():
         ),
         clear=True,
     ):
-        with patch("telegram.handler._get_secret_json", return_value={"api_id": "12345", "api_hash": "abc"}):
+        with patch("telegram.handler._get_secret_json", return_value={"TELEGRAM_API_ID": "12345", "TELEGRAM_API_HASH": "abc"}):
             with patch(
                 "telegram.handler.check_reply_age",
                 return_value={
@@ -90,7 +90,7 @@ def test_handler_does_not_send_email_outside_window():
         ),
         clear=True,
     ):
-        with patch("telegram.handler._get_secret_json", return_value={"api_id": "12345", "api_hash": "abc"}):
+        with patch("telegram.handler._get_secret_json", return_value={"TELEGRAM_API_ID": "12345", "TELEGRAM_API_HASH": "abc"}):
             with patch(
                 "telegram.handler.check_reply_age",
                 return_value={
@@ -113,7 +113,7 @@ def test_handler_calls_checker_with_stripped_username():
         _env_with_secret_arn({"TARGET_CHAT_USERNAME": "  @someone  ", "REPLY_ALERT_THRESHOLD_HOURS": "3"}),
         clear=True,
     ):
-        with patch("telegram.handler._get_secret_json", return_value={"api_id": "12345", "api_hash": "abc"}):
+        with patch("telegram.handler._get_secret_json", return_value={"TELEGRAM_API_ID": "12345", "TELEGRAM_API_HASH": "abc"}):
             with patch("telegram.handler.check_reply_age") as mock_check:
                 mock_check.return_value = None
                 result = handler({}, None)
@@ -126,7 +126,7 @@ def test_handler_calls_checker_with_stripped_username():
 
 def test_handler_returns_error_on_check_exception():
     with patch.dict(os.environ, _env_with_secret_arn(), clear=True):
-        with patch("telegram.handler._get_secret_json", return_value={"api_id": "12345", "api_hash": "abc"}):
+        with patch("telegram.handler._get_secret_json", return_value={"TELEGRAM_API_ID": "12345", "TELEGRAM_API_HASH": "abc"}):
             with patch("telegram.handler.check_reply_age") as mock_check:
                 mock_check.side_effect = RuntimeError("connection failed")
                 result = handler({}, None)
@@ -156,6 +156,32 @@ def test_handler_uses_env_credentials_when_no_secret_arn():
     assert call_kw["api_hash"] == "abc"
 
 
+def test_handler_loads_envs_from_secret_before_checks():
+    with patch.dict(
+        os.environ,
+        {
+            "TELEGRAM_SECRET_ARN": "arn:aws:secretsmanager:eu-west-1:123:secret:telegram",
+            "TELEGRAM_SESSION_STRING": "",
+            "TARGET_CHAT_USERNAME": "",
+        },
+        clear=True,
+    ):
+        with patch(
+            "telegram.handler._get_secret_json",
+            return_value={
+                "TELEGRAM_API_ID": "12345",
+                "TELEGRAM_API_HASH": "abc",
+                "TELEGRAM_SESSION_STRING": "xyz",
+                "TARGET_CHAT_USERNAME": "someone",
+            },
+        ):
+            with patch("telegram.handler.check_reply_age") as mock_check:
+                mock_check.return_value = None
+                result = handler({}, None)
+    assert result["status"] == "ok"
+    mock_check.assert_called_once()
+
+
 def test_handler_never_sends_email_when_latest_message_is_outgoing():
     with patch.dict(
         os.environ,
@@ -167,7 +193,7 @@ def test_handler_never_sends_email_when_latest_message_is_outgoing():
         ),
         clear=True,
     ):
-        with patch("telegram.handler._get_secret_json", return_value={"api_id": "12345", "api_hash": "abc"}):
+        with patch("telegram.handler._get_secret_json", return_value={"TELEGRAM_API_ID": "12345", "TELEGRAM_API_HASH": "abc"}):
             with patch(
                 "telegram.handler.check_reply_age",
                 return_value={
