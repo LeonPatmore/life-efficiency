@@ -347,6 +347,13 @@ def test_todo(setup_mocks):
                                  "DateAdded": "01/01/2000, 01:00:00",
                                  "DateDone": None
                              },
+                             {
+                                 "id": str(uuid.uuid4()),
+                                 "Desc": "item-3",
+                                 "Status": "deferred",
+                                 "DateAdded": "01/01/2000, 01:00:00",
+                                 "DateDone": None
+                             },
                          ]}],
                          indirect=True)
 def test_todo_non_completed(setup_mocks):
@@ -366,6 +373,64 @@ def test_todo_non_completed(setup_mocks):
     assert body[0]["status"] == "in_progress"
     assert body[0]["date_added"] == "01/01/2000, 01:00:00"
     assert body[0]["date_done"] is None
+
+
+def test_todo_deferred(setup_mocks):
+    import configuration
+
+    res = configuration.handler({
+        'httpMethod': "POST",
+        'pathParameters': {
+            "command": "todo",
+            "subcommand": "list"
+        },
+        'body': json.dumps({
+            "desc": "deferred todo"
+        })
+    }, {})
+    assert 200 == res["statusCode"]
+    todo_id = json.loads(res["body"])["id"]
+
+    res = configuration.handler({
+        'httpMethod': "PATCH",
+        'pathParameters': {
+            "command": "todo",
+            "subcommand": "list"
+        },
+        'body': json.dumps({
+            "id": todo_id,
+            "status": "deferred"
+        })
+    }, {})
+    assert 200 == res["statusCode"]
+    body = json.loads(res["body"])
+    assert body["status"] == "deferred"
+    assert body["date_done"] is None
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "todo",
+            "subcommand": "list"
+        },
+        'queryStringParameters': {
+            "status": "deferred"
+        }
+    }, {})
+    assert 200 == res["statusCode"]
+    deferred_items = json.loads(res["body"])
+    assert len(deferred_items) == 1
+    assert deferred_items[0]["id"] == todo_id
+
+    res = configuration.handler({
+        'httpMethod': "GET",
+        'pathParameters': {
+            "command": "todo",
+            "subcommand": "non_completed"
+        }
+    }, {})
+    assert 200 == res["statusCode"]
+    assert todo_id not in [item["id"] for item in json.loads(res["body"])]
 
 
 @pytest.mark.parametrize('setup_mocks',
