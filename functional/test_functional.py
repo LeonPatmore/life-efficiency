@@ -1,5 +1,6 @@
 import os
 import pathlib
+import time
 
 import dotenv
 import pytest
@@ -10,6 +11,17 @@ ENV = os.environ.get("ENV", "local")
 dotenv.load_dotenv(f"{pathlib.Path(__file__).parent.resolve()}/{ENV}.env")
 
 URL_ROOT = os.environ.get("URL_ROOT")
+
+
+def _get_with_retry(url, **kwargs):
+    retryable = {codes["gateway_timeout"], codes["bad_gateway"], codes["service_unavailable"]}
+    last_res = None
+    for attempt in range(3):
+        last_res = requests.get(url, timeout=60, **kwargs)
+        if last_res.status_code not in retryable or attempt == 2:
+            return last_res
+        time.sleep(5)
+    return last_res
 
 
 def _cleanup_list():
@@ -101,7 +113,10 @@ def test_balance_changes():
 
 
 def test_weekly_difference_graph():
-    res = requests.get(f"{URL_ROOT}/finance/graph/weekly-difference", params={"start_date": "19/08/2024, 12:00:00"})
+    res = _get_with_retry(
+        f"{URL_ROOT}/finance/graph/weekly-difference",
+        params={"start_date": "19/08/2024, 12:00:00"},
+    )
     assert res.status_code == codes["ok"]
     link = res.json()["link"]
 

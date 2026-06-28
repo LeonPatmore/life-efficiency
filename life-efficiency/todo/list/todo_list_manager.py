@@ -13,6 +13,7 @@ class TodoStatus(Enum):
     in_progress = 1
     done = 2
     cancelled = 3
+    deferred = 4
 
 
 @dynamo_item("todo-list", {"TodoStatus": "status"})

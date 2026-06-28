@@ -99,6 +99,7 @@ Resources:
     Properties:
       Handler: configuration.handler
       CodeUri: life-efficiency
+      MemorySize: 1024
       Description: Function for life efficiency
       Environment:
         Variables:
